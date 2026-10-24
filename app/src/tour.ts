@@ -1,8 +1,8 @@
 import { must, reduceMotion } from './player.ts';
 
-// A short tour of the editor: four steps, each lighting up one part of the editor with a card beside it. Skip,
-// Esc or Done ends it, and it is then remembered so "Try the sample" doesn't start it again; Help → Take the tour
-// always does. Parts hidden at the current size are left out.
+// A short tour of the editor: each step lights up one part of the editor with a card beside it. The last steps open
+// a menu and light up one of its items. Skip, Esc or Done ends it, and it is then remembered so "Try the sample"
+// doesn't start it again; Help → Take the tour always does. Parts hidden at the current size are left out.
 
 const STEPS = [
   {
@@ -24,6 +24,18 @@ const STEPS = [
     target: '.bar',
     title: 'Tools',
     text: 'Speaker notes, laser pointer, slide numbers and Present. Hover a tool to see its name and shortcut.',
+  },
+  {
+    target: '.menu-edit',
+    item: 'Slide Creation Prompt',
+    title: 'Write slides with an AI agent',
+    text: 'Edit → Slide Creation Prompt gives you a prompt that has an AI agent write a whole presentation in this format. Copy it, fill in the topic, then open the folder the agent writes.',
+  },
+  {
+    target: '.menu-help',
+    item: 'Personalize your editor',
+    title: 'Make the editor yours',
+    text: 'Help → Personalize your editor shows how to change its colours, fonts, slide layouts and shortcuts, yourself or with an AI agent.',
   },
 ];
 
@@ -62,10 +74,25 @@ const takeQueued = () => {
   }
 };
 
-type Step = (typeof STEPS)[number] & { el: HTMLElement };
+type Step = { target: string; item?: string; title: string; text: string; el: HTMLElement };
 
 const visible = (el: HTMLElement | null): el is HTMLElement =>
   el !== null && el.getClientRects().length > 0 && getComputedStyle(el).display !== 'none';
+
+// A step with an `item` opens its menu and lights up that entry; any other step closes the menu again.
+const menuButton = (menu: HTMLElement) => menu.querySelector<HTMLElement>('.menu-button');
+const setMenu = (menu: HTMLElement, open: boolean) => {
+  const button = menuButton(menu);
+  if (button && (button.getAttribute('aria-expanded') === 'true') !== open) button.click();
+};
+const lit = (step: Step) => {
+  if (!step.item) return step.el;
+  setMenu(step.el, true);
+  const entry = [...step.el.querySelectorAll<HTMLElement>('.menu-list button')].find(
+    (b) => b.textContent === step.item,
+  );
+  return entry ?? step.el;
+};
 
 export const startTour = () => {
   const steps = STEPS.map((step) => ({ ...step, el: document.querySelector<HTMLElement>(step.target) })).filter(
@@ -93,11 +120,15 @@ export const startTour = () => {
   const spot = $('.tour-spot');
   const card = $('.tour-card');
   let at = 0;
+  let target = steps[0].el;
+  const closeMenus = () => {
+    for (const step of steps) if (step.item) setMenu(step.el, false);
+  };
 
   // The card goes beside the lit part: to its right if there is room, else below it, else above it, and always
   // inside the window. A large part, such as the slide, keeps the card inside its top-left corner instead.
   const place = () => {
-    const r = steps[at].el.getBoundingClientRect();
+    const r = target.getBoundingClientRect();
     const pad = 6;
     Object.assign(spot.style, {
       left: `${r.left + pad}px`,
@@ -120,10 +151,13 @@ export const startTour = () => {
     $('.tour-title').textContent = step.title;
     $('.tour-text').textContent = step.text;
     $('.tour-next').textContent = at === steps.length - 1 ? 'Done' : 'Next';
+    closeMenus();
+    target = lit(step);
     place();
     $('.tour-next').focus();
   };
   const end = () => {
+    closeMenus();
     markSeen();
     removeEventListener('resize', place);
     dialog.close();

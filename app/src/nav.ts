@@ -82,8 +82,10 @@ const createMenu = (title: string, entries: Entry[]) => {
   button.addEventListener('click', () => {
     setOpen(!isOpen());
   });
+  // The tour opens menus itself, so its own clicks leave them open.
   document.addEventListener('click', (e) => {
-    if (isOpen() && e.target instanceof Node && !root.contains(e.target)) setOpen(false);
+    if (!isOpen() || !(e.target instanceof Element) || root.contains(e.target) || e.target.closest('.tour')) return;
+    setOpen(false);
   });
   list.addEventListener('keydown', (e) => {
     const enabled = items.map(({ item }) => item).filter((item) => !item.disabled);
