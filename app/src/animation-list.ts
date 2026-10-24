@@ -4,7 +4,7 @@ import { describeAnimation } from './animations.ts';
 import { must, reduceMotion, type Player } from './player.ts';
 
 // At the bottom of the slide area: every step of the current slide's animation, one per row, read from GSAP.
-export const createAnimationList = (presentation: Presentation, player: Player) => {
+export const createAnimationList = (presentation: Presentation, player: Player, { empty = false } = {}) => {
   const strip = document.createElement('div');
   strip.className = 'anim-strip';
   must(document.querySelector('.stage'), '.stage').append(strip);
@@ -18,6 +18,12 @@ export const createAnimationList = (presentation: Presentation, player: Player) 
 
   return {
     render: (current: number) => {
+      if (empty) {
+        const head = el('div', 'strip-head', '');
+        head.append(el('span', 'strip-title', 'Animations'));
+        strip.replaceChildren(head, el('p', 'strip-empty', "Open a presentation to see each slide's animation steps."));
+        return;
+      }
       const slide = presentation.slides[current];
       const source = slide.animationFile ? `custom · ${slide.animationFile}` : 'default entrance';
       const animation = player.entrance();

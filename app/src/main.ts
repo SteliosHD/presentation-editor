@@ -13,7 +13,9 @@ import { createToolbar, slideNumbers } from './toolbar.ts';
 // Loads the presentation and wires the parts together: player, slide list, toolbar, presentation mode,
 // drawing, keyboard, and (outside exports) the nav bar and animation list.
 
-const { presentation, choose, inBrowser } = await loadPresentation();
+const { presentation, choose, inBrowser, empty } = await loadPresentation();
+// Nothing open yet (hosted app): placeholders show and the tools stay off until a presentation is opened.
+document.body.classList.toggle('empty', empty);
 
 // The presentation's own theme.css goes after the default theme, so its tokens win.
 const presentationTheme = document.createElement('style');
@@ -31,7 +33,7 @@ if (authoring) must(document.querySelector('.stage-title'), '.stage-title').text
 else stageHead.remove();
 
 const onKey = (e: KeyboardEvent) => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (empty || e.metaKey || e.ctrlKey || e.altKey) return;
   // Typing in a field, or working the Open modal or File menu, is not slide control.
   if (e.target instanceof Element && e.target.closest('input, dialog, .menu')) return;
   const id = shortcutFor(e.key);
@@ -99,7 +101,7 @@ const toggleNumbers = () => {
 slideNumbers.restore();
 
 const slideList = createSlideList(presentation, player);
-const animationList = authoring ? createAnimationList(presentation, player) : null;
+const animationList = authoring ? createAnimationList(presentation, player, { empty }) : null;
 const toolbar = createToolbar(
   {
     notes: { run: player.toggleNotes, isOn: player.notesOpen },
@@ -118,9 +120,11 @@ const render = () => {
   if (k !== shownSlide) ink.clear();
   shownSlide = k;
   slideList.render(k);
-  stageFile.textContent = presentation.slides[k].file;
+  stageFile.textContent = empty ? '' : presentation.slides[k].file;
   animationList?.render(k);
   toolbar.render(k, player.elements.length);
+  if (empty)
+    for (const b of document.querySelectorAll<HTMLButtonElement>('.bar button, .slide-nav button')) b.disabled = true;
   player.fit();
 };
 
@@ -156,7 +160,7 @@ document.addEventListener('mousedown', (e) => {
 
 if (authoring) {
   void import('./nav.ts').then(({ mountNav }) => {
-    mountNav(presentation, { choose, inBrowser });
+    mountNav(presentation, { choose, inBrowser, empty });
   });
 }
 

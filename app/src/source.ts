@@ -3,13 +3,14 @@ import { presentation as served, type Presentation, type SlideAnimation } from '
 // Where the presentation comes from:
 // - the local app (any mode but "web" and "template"): the server's virtual module, live-reloaded, unless a
 //   folder was dropped on it, which is read in the browser like the hosted app's;
-// - the hosted app ("web"): a folder the viewer opened, kept for the tab's session, else the built-in sample;
+// - the hosted app ("web"): a folder the viewer opened, kept for the tab's session; the built-in sample when
+//   "Try the sample" asked for it; otherwise placeholder shapes until something is opened;
 // - a downloaded file ("template"): JSON embedded in the page by the export.
 // Stored and embedded presentations carry their animations as code, loaded here as modules.
 
 export const isWeb = import.meta.env.MODE === 'web';
 const STORE_KEY = 'presentation-editor:opened';
-// Set once the viewer picks the sample, so the hosted app stops asking for this tab.
+// Set by "Try the sample" for the one reload that loads it.
 const SAMPLE_KEY = 'presentation-editor:sample';
 export const DATA_ID = 'presentation-data';
 
@@ -47,23 +48,42 @@ export const toStored = (presentation: Presentation): Stored => ({
 export const storeOpened = (presentation: Stored) => {
   sessionStorage.setItem(STORE_KEY, JSON.stringify(presentation));
 };
-export const useSample = () => {
+export const requestSample = () => {
   try {
     sessionStorage.removeItem(STORE_KEY);
     sessionStorage.setItem(SAMPLE_KEY, '1');
   } catch {
-    // Storage blocked: the sample still shows; the hosted app will ask again next visit.
+    // Storage blocked: the editor opens empty again.
   }
 };
-const sampleChosen = () => {
+const takeSampleRequest = () => {
   try {
-    return sessionStorage.getItem(SAMPLE_KEY) === '1';
+    const requested = sessionStorage.getItem(SAMPLE_KEY) === '1';
+    sessionStorage.removeItem(SAMPLE_KEY);
+    return requested;
   } catch {
     return false;
   }
 };
 
-export const openedInBrowser = () => readOpened() !== null;
+// What the hosted app shows before anything is opened: grey shapes standing in for three slides.
+const placeholder = (shapes: string) => `<section class="slide placeholder">${shapes}</section>`;
+const PLACEHOLDER: Presentation = {
+  title: 'No presentation open',
+  folder: '',
+  theme: '',
+  slides: [
+    placeholder(
+      '<i class="ph-kicker"></i><i class="ph-title"></i><i class="ph-title short"></i><i class="ph-line"></i>',
+    ),
+    placeholder(
+      '<i class="ph-kicker"></i><i class="ph-title short"></i><div class="ph-row"><i></i><i></i><i></i></div>',
+    ),
+    placeholder(
+      '<i class="ph-kicker"></i><i class="ph-title short"></i><div class="ph-row"><i></i><i></i></div><i class="ph-line"></i>',
+    ),
+  ].map((html, k) => ({ file: `slide ${k + 1}`, html })),
+};
 
 export const forgetOpened = () => {
   try {
@@ -84,15 +104,18 @@ const readOpened = () => {
 
 // `choose` is true when the hosted app should first ask which presentation to open. `inBrowser` is true when the
 // presentation was read by the browser, so it has no folder on the server: no live reload, exports download.
-type Loaded = { presentation: Presentation; choose: boolean; inBrowser: boolean };
+// `empty` is true while the hosted app shows placeholders because nothing is open yet.
+type Loaded = { presentation: Presentation; choose: boolean; inBrowser: boolean; empty: boolean };
 export const loadPresentation = async (): Promise<Loaded> => {
   if (import.meta.env.MODE === 'template') {
     const json = document.getElementById(DATA_ID)?.textContent;
     if (!json) throw new Error('This file has no presentation in it.');
-    return { presentation: await hydrate(JSON.parse(json) as Stored), choose: false, inBrowser: true };
+    return { presentation: await hydrate(JSON.parse(json) as Stored), choose: false, inBrowser: true, empty: false };
   }
   if (!served) throw new Error('No presentation was served.');
   const opened = readOpened();
-  if (opened) return { presentation: await hydrate(opened), choose: false, inBrowser: true };
-  return { presentation: served, choose: isWeb && !sampleChosen(), inBrowser: isWeb };
+  if (opened) return { presentation: await hydrate(opened), choose: false, inBrowser: true, empty: false };
+  if (!isWeb) return { presentation: served, choose: false, inBrowser: false, empty: false };
+  if (takeSampleRequest()) return { presentation: served, choose: false, inBrowser: true, empty: false };
+  return { presentation: PLACEHOLDER, choose: true, inBrowser: true, empty: true };
 };

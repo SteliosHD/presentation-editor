@@ -1,9 +1,10 @@
 import { createElement, FolderOpen, X } from 'lucide';
+import { presentation as served } from 'virtual:presentation';
 import { post } from './api.ts';
 import { must } from './player.ts';
-import { forgetOpened, isWeb, openedInBrowser, storeOpened, useSample } from './source.ts';
+import { forgetOpened, isWeb, requestSample, storeOpened } from './source.ts';
 import { attachCopy, SLIDE_PROMPT } from './prompt-dialog.ts';
-import { queueTour, startQueuedTour } from './tour.ts';
+import { queueTour } from './tour.ts';
 import { filesFromDrop, filesFromInput, readPresentation } from './web.ts';
 
 // The "Open Presentation folder" modal: a drop zone with Choose folder in both versions. Choosing uses the Mac
@@ -27,29 +28,52 @@ export const rememberFolder = (folder: string) => {
   }
 };
 
-// Sections opened from the link row under the drop zone; one at a time, all the same height, so the drop zone
-// stays put and usable while one is open.
-const SECTIONS = `
+// The hosted app serves the sample, so its slides are listed from what is served: "02-flow-and-stats.html" shows as
+// "Flow and stats".
+const sampleSlides = () =>
+  (served?.slides ?? [])
+    .map(({ file, animation }, k) => {
+      const name = file
+        .replace(/^\d+[-_ ]*/, '')
+        .replace(/\.html$/, '')
+        .replaceAll(/[-_]/g, ' ');
+      const badge = animation ? '<span class="od-sample-badge">custom</span>' : '';
+      return `<li><span class="od-sample-n">${k + 1}</span>${name.charAt(0).toUpperCase()}${name.slice(1)}${badge}</li>`;
+    })
+    .join('');
+
+// Sections opened from the tab row under the drop zone; one at a time, all the same height, so the drop zone
+// stays put and usable while one is open. Each has its content on top and its one action at the bottom right.
+const sections = (repo: string) => `
   <section class="od-section" data-section="sample" role="tabpanel" hidden>
-    <p>Five slides that show every built-in layout and a custom animation, followed by a short tour of the
-    editor.</p>
-    <button class="primary od-sample">Open the sample</button>
+    <div class="od-section-body">
+      <p>Every built-in layout and a custom animation, followed by a short tour of the editor.</p>
+      <ol class="od-sample-list">${isWeb ? sampleSlides() : ''}</ol>
+    </div>
+    <div class="modal-foot"><button class="primary od-sample">Open the sample</button></div>
   </section>
-  <section class="od-section od-section-prompt" data-section="create" role="tabpanel" hidden>
-    <p>Give this prompt to an AI agent in an empty folder, then open that folder here.</p>
-    <pre class="od-prompt" tabindex="0" aria-label="Slide creation prompt"></pre>
-    <button class="primary od-copy"></button>
+  <section class="od-section" data-section="create" role="tabpanel" hidden>
+    <div class="od-section-body">
+      <p>Give this prompt to an AI agent in an empty folder, then open that folder here.</p>
+      <pre class="od-prompt" tabindex="0" aria-label="Slide creation prompt"></pre>
+    </div>
+    <div class="modal-foot"><button class="primary od-copy"></button></div>
   </section>
   <section class="od-section" data-section="format" role="tabpanel" hidden>
-    <p>Each slide is an HTML file; the number at the start of its name sets the order. A <code>.ts</code> file with
-    the same name animates that slide.</p>
-    <pre>my-talk/
+    <div class="od-section-body">
+      <p>Each slide is an HTML file; the number at the start of its name sets the order. A <code>.ts</code> file
+      with the same name animates that slide.</p>
+      <pre>my-talk/
   presentation.json   <i>title, optional</i>
   theme.css           <i>colours, optional</i>
   slides/
     01-title.html
     02-agenda.html
     02-agenda.ts      <i>animation, optional</i></pre>
+    </div>
+    <div class="modal-foot">
+      <a class="modal-link-button" href="${repo}#make-a-presentation" target="_blank" rel="noopener">Full guide ↗</a>
+    </div>
   </section>`;
 
 const BODY = `
@@ -62,32 +86,30 @@ const BODY = `
   </div>
   <p class="od-error" role="alert"></p>`;
 
-// Everything besides opening a folder: one quiet row of links, each opening its section below.
+// Everything besides opening a folder: one row of tabs, each opening its section below.
 const tab = (section: string, label: string) =>
   `<button class="od-tab" role="tab" aria-selected="false" data-section="${section}">${label}</button>`;
-const MORE = `
+const more = (repo: string) => `
   <div class="od-more" role="tablist" aria-label="More ways to start">
     ${isWeb ? tab('sample', 'Try the sample') : ''}
     ${tab('create', 'Create one with an AI agent')}
     ${tab('format', 'Folder format')}
   </div>
-  ${SECTIONS}`;
+  ${sections(repo)}`;
 
-const LOCAL_EXTRA = `
+const LOCAL_RECENT = `
   <h3 class="od-recent-title">Recent</h3>
-  <ul class="od-recent"></ul>
-  ${MORE}`;
+  <ul class="od-recent"></ul>`;
 
-const WEB_EXTRA = MORE;
-
-export const createOpenDialog = (currentFolder: string) => {
+export const createOpenDialog = (currentFolder: string, repo: string) => {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal open-dialog';
   dialog.innerHTML = `
     <div class="modal-body">
       <header><h2>Open Presentation folder</h2><button class="modal-close" aria-label="Close"></button></header>
       ${BODY}
-      ${isWeb ? WEB_EXTRA : LOCAL_EXTRA}
+      ${isWeb ? '' : LOCAL_RECENT}
+      ${more(repo)}
     </div>
     <div class="od-busy" aria-live="polite"><span class="spinner"></span><span class="od-busy-text"></span></div>`;
   document.body.append(dialog);
@@ -109,7 +131,7 @@ export const createOpenDialog = (currentFolder: string) => {
   const close = () => {
     if (!busy) dialog.close();
   };
-  // Clicking a link opens its section; clicking the open one again closes it.
+  // Clicking a tab opens its section; clicking the open one again closes it.
   const tabs = [...dialog.querySelectorAll<HTMLElement>('.od-tab')];
   const sections = [...dialog.querySelectorAll<HTMLElement>('.od-section')];
   const openSection = (name: string | null) => {
@@ -214,17 +236,10 @@ export const createOpenDialog = (currentFolder: string) => {
   });
 
   if (isWeb) {
-    // The sample is what shows until a folder is opened: close if it is already showing, else switch to it.
-    // Trying the sample also starts the short tour of the editor, after the reload if one is needed.
+    // The sample loads on a fresh page; the tour follows the first time.
     $('.od-sample').addEventListener('click', () => {
-      const switching = openedInBrowser();
-      useSample();
+      requestSample();
       queueTour();
-      if (!switching) {
-        dialog.close();
-        startQueuedTour();
-        return;
-      }
       setBusy('Opening the sample');
       location.reload();
     });

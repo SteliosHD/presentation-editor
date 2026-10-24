@@ -20,11 +20,11 @@ export const createAboutDialog = ({ repo }: { repo: string }) => {
         step, presents it, and exports it as a single HTML file or a PDF.</p>
         <p>It's free and open source under the MIT license. Change it to suit the way you work.</p>
       </div>
-      <p class="about-links">
-        <a href="${repo}" target="_blank" rel="noopener">Source on GitHub ↗</a>
-        <a href="https://bitzas.dev" target="_blank" rel="noopener">bitzas.dev ↗</a>
-      </p>
       <p class="about-note">Written by an AI agent on Stelios' behalf.</p>
+      <div class="modal-foot">
+        <a class="modal-link-button" href="https://bitzas.dev" target="_blank" rel="noopener">bitzas.dev ↗</a>
+        <a class="modal-link-button" href="${repo}" target="_blank" rel="noopener">Source on GitHub ↗</a>
+      </div>
     </div>`;
   document.body.append(dialog);
   const close = must(dialog.querySelector('.modal-close'), '.modal-close');

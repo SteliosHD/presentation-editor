@@ -82,16 +82,14 @@ export const createPromptDialog = () => {
       <header><h2>Slide Creation Prompt</h2><button class="modal-close" aria-label="Close"></button></header>
       <p class="modal-lead">Give this to an AI agent in an empty folder, then open that folder here.
       Fill in the three lines in brackets first.</p>
-      <div class="pd-prompt">
-        <pre tabindex="0" aria-label="Slide creation prompt"></pre>
-        <button class="primary pd-copy" autofocus></button>
-      </div>
+      <pre class="pd-prompt" tabindex="0" aria-label="Slide creation prompt"></pre>
       <section class="pd-manual">
         <h3>Or guide it yourself</h3>
         <p>Open your agent in the presentation folder, describe the talk in your own words, and ask it to follow the
         authoring guide in Presentation Editor's <code>AGENTS.md</code>. Keep the folder open here while it works:
         every saved slide shows up straight away.</p>
       </section>
+      <div class="modal-foot"><button class="primary pd-copy" autofocus></button></div>
     </div>`;
   document.body.append(dialog);
   const $ = (sel: string) => must(dialog.querySelector<HTMLElement>(sel), sel);

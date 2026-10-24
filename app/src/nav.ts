@@ -133,7 +133,7 @@ const toggleHidden = (part: string) => {
 
 export const mountNav = (
   presentation: Presentation,
-  { choose, inBrowser }: { choose: boolean; inBrowser: boolean },
+  { choose, inBrowser, empty }: { choose: boolean; inBrowser: boolean; empty: boolean },
 ) => {
   if (!inBrowser) rememberFolder(presentation.folder);
   for (const part of readHidden()) document.body.classList.add(`hide-${part}`);
@@ -152,12 +152,14 @@ export const mountNav = (
   const $ = (sel: string) => must(nav.querySelector<HTMLElement>(sel), sel);
   // Just the folder's own name; the full path shows on hover.
   $('.nav-folder').textContent = presentation.folder.split('/').at(-1) ?? presentation.folder;
-  $('.nav-folder').title = inBrowser
-    ? `Opened in this browser tab${isWeb ? '' : ': edits on disk need opening it again'}`
-    : presentation.folder;
+  $('.nav-folder').title = empty
+    ? ''
+    : inBrowser
+      ? `Opened in this browser tab${isWeb ? '' : ': edits on disk need opening it again'}`
+      : presentation.folder;
 
   const prompt = createPromptDialog();
-  const dialog = createOpenDialog(presentation.folder);
+  const dialog = createOpenDialog(presentation.folder, REPO);
   if (choose) dialog.show();
 
   const status = $('.nav-status');
@@ -200,6 +202,7 @@ export const mountNav = (
     { label: 'Export HTML', icon: FileCode, run: exporting('html') },
     { label: 'Export PDF', icon: FileDown, run: exporting('pdf') },
   ]);
+  if (empty) file.items.slice(1).forEach((b) => (b.disabled = true));
   const editMenu = createMenu('Edit', [{ label: 'Slide Creation Prompt', icon: Sparkles, run: prompt.show }]);
   const view = createMenu(
     'View',

@@ -6,8 +6,8 @@ it as a single HTML file or a PDF.
 
 ![The editor showing a custom slide and its animation steps](docs/editor.png)
 
-**Try it:** [presentation-editor-five.vercel.app](https://presentation-editor-five.vercel.app) opens with a sample
-presentation. Drop your own presentation folder on it; the folder is read in your browser and never uploaded.
+**Try it:** [presentation-editor-five.vercel.app](https://presentation-editor-five.vercel.app) asks which presentation
+to open: drop your own folder on it, which is read in your browser and never uploaded, or try the sample.
 
 ## What it does
 
