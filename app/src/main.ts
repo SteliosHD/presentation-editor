@@ -153,7 +153,8 @@ if (animationList)
     edge: 'top',
     property: '--strip-user',
     key: 'presentation-viewer:animations-height',
-    min: 70,
+    // Room for the head and two steps.
+    min: 110,
     max: () => Math.min(480, innerHeight * 0.45),
     label: 'Resize the animation list',
   });

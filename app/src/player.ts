@@ -27,7 +27,7 @@ export const toSlide = (html: string) => {
 const GROUPS = '.flow, .stats, .cols, .steps, .bottom';
 const partsOf = (slide: HTMLElement) =>
   [...slide.children].flatMap((el) =>
-    el.matches('.notes, .slide-number') ? [] : el.matches(GROUPS) ? [...el.children] : [el],
+    el.matches('style, script, .notes, .slide-number') ? [] : el.matches(GROUPS) ? [...el.children] : [el],
   );
 const defaultAnimation: SlideAnimation = (slide, g) =>
   g.from(partsOf(slide), {

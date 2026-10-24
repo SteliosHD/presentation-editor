@@ -1,0 +1,40 @@
+<section class="slide">
+  <!-- The dense-grid extreme: a two-line title and nine cards. -->
+  <style>
+    .dense-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .dense-card {
+      padding: 14px 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    .dense-card b {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 17px;
+    }
+    .dense-card span {
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+  </style>
+  <p class="kicker">Dense slide</p>
+  <h2>Nine things the team shipped this quarter, in the order customers noticed them</h2>
+  <div class="dense-grid">
+    <div class="dense-card"><b>Faster search</b><span>Results in under 200 ms for nine in ten queries.</span></div>
+    <div class="dense-card"><b>Shared folders</b><span>Teams keep one copy instead of emailing files.</span></div>
+    <div class="dense-card"><b>Offline mode</b><span>Work keeps going on a train or a plane.</span></div>
+    <div class="dense-card"><b>New billing page</b><span>Plans, invoices and seats on one screen.</span></div>
+    <div class="dense-card"><b>Dark theme</b><span>Follows the computer's own setting.</span></div>
+    <div class="dense-card"><b>Audit log</b><span>Who changed what, kept for a year.</span></div>
+    <div class="dense-card"><b>Single sign-on</b><span>Sign in with the company's own account.</span></div>
+    <div class="dense-card"><b>Mobile app</b><span>Read and comment from a phone.</span></div>
+    <div class="dense-card"><b>Public API</b><span>Other tools can read and write data.</span></div>
+  </div>
+  <aside class="notes">A crowded slide, to check text sizes and the entrance with many parts.</aside>
+</section>

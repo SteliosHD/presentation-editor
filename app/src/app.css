@@ -156,6 +156,11 @@ kbd {
 .nav-folder-chip[hidden] {
   display: none;
 }
+.nav-folder-icon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--ui-ink-faint);
+}
 /* Short enough to stay clear of the tools in the middle of the slide area. */
 .nav-folder {
   max-width: max(60px, (100vw - var(--sidebar-w)) / 2 - 230px);
@@ -750,10 +755,10 @@ button.primary {
 
 /* The menu's Why use the Presentation Viewer: what it's for and how it compares, scrolling if the window is short. */
 .about-dialog {
-  width: min(580px, calc(100vw - 32px));
+  width: min(760px, calc(100vw - 32px));
 }
 .about-copy {
-  max-height: min(70vh, 640px);
+  max-height: min(76vh, 760px);
   margin-right: -10px;
   padding-right: 10px;
   overflow-y: auto;
@@ -813,6 +818,16 @@ button.primary {
 .about-steps b {
   font-weight: 650;
   color: var(--ui-ink);
+}
+/* Wide windows: the three steps side by side, so the whole modal fits without scrolling. */
+@media (min-width: 820px) {
+  .about-steps {
+    flex-direction: row;
+    gap: 18px;
+  }
+  .about-steps li {
+    flex: 1;
+  }
 }
 /* The comparison: one row per question, an icon per answer, the viewer's column in soft blue. */
 .about-row {
@@ -997,10 +1012,16 @@ button.primary {
   font-size: 12px;
 }
 .strip-head {
+  /* Stays in view as the steps scroll beneath it. */
+  position: sticky;
+  top: -10px;
+  z-index: 1;
   display: flex;
   align-items: baseline;
   gap: 10px;
-  margin-bottom: 8px;
+  margin: -10px 0 8px;
+  padding: 10px 0 6px;
+  background: var(--ui-panel);
 }
 .strip-title {
   font-family: var(--ui-mono);
@@ -1238,6 +1259,8 @@ body.resizing-y * {
 }
 body.hide-sidebar .resize-right,
 body.hide-animations .resize-top,
+body.folding-sidebar .resize-right,
+body.folding-animations .resize-top,
 body.presenting .resize-handle {
   display: none;
 }
@@ -1599,12 +1622,13 @@ body.presenting .pane-toggle {
 }
 
 /* View menu: parts the viewer can hide. */
-body.hide-sidebar {
+/* A pane stays drawn while it folds away (.folding-*), then goes. */
+body.hide-sidebar:not(.folding-sidebar) {
   --sidebar-w: 0px;
 }
-body.hide-sidebar .sidebar,
+body.hide-sidebar:not(.folding-sidebar) .sidebar,
 body.hide-toolbar .bar,
-body.hide-animations .anim-strip {
+body.hide-animations:not(.folding-animations) .anim-strip {
   display: none;
 }
 

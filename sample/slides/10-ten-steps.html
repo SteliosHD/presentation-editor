@@ -1,0 +1,105 @@
+<section class="slide">
+  <!-- This slide's own styles; its animation is 10-ten-steps.ts, ten steps long. -->
+  <style>
+    .dash {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 24px;
+      flex: 1;
+      min-height: 0;
+    }
+    .dash-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .dash-metric {
+      padding: 16px 18px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .dash-value {
+      display: block;
+      font-size: 34px;
+      font-weight: 700;
+    }
+    .dash-name {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .dash-chart {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 18px;
+      padding: 20px 24px 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .dash-bar {
+      flex: 1;
+      border-radius: 6px 6px 0 0;
+      background: rgb(from var(--accent) r g b / 0.35);
+      transform-origin: bottom;
+    }
+    .dash-bar.dash-peak {
+      background: var(--accent);
+    }
+    .dash-chart svg {
+      position: absolute;
+      inset: 20px 24px 16px;
+      width: calc(100% - 48px);
+      height: calc(100% - 36px);
+      overflow: visible;
+    }
+    .dash-trend {
+      fill: none;
+      stroke: var(--good);
+      stroke-width: 3;
+    }
+    .dash-badge {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgb(from var(--good) r g b / 0.15);
+      color: var(--good);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .dash-caption {
+      margin: 18px 0 0;
+      font-size: 18px;
+      color: var(--soft);
+    }
+  </style>
+  <p class="kicker">Ten animation steps</p>
+  <h2>A busy dashboard, built step by step</h2>
+  <div class="dash">
+    <div class="dash-metrics">
+      <div class="dash-metric"><span class="dash-value">42</span><span class="dash-name">talks given</span></div>
+      <div class="dash-metric"><span class="dash-value">1.2k</span><span class="dash-name">slides written</span></div>
+      <div class="dash-metric"><span class="dash-value">96%</span><span class="dash-name">on time</span></div>
+      <div class="dash-metric">
+        <span class="dash-value">3 min</span><span class="dash-name">to a first draft</span>
+      </div>
+    </div>
+    <div class="dash-chart">
+      <div class="dash-bar" style="height: 30%"></div>
+      <div class="dash-bar" style="height: 45%"></div>
+      <div class="dash-bar" style="height: 40%"></div>
+      <div class="dash-bar" style="height: 62%"></div>
+      <div class="dash-bar" style="height: 58%"></div>
+      <div class="dash-bar dash-peak" style="height: 85%"></div>
+      <svg viewBox="0 0 480 330" preserveAspectRatio="none">
+        <polyline class="dash-trend" points="38,238 120,191 202,205 278,132 360,145 442,46" />
+      </svg>
+      <span class="dash-badge">+31% this quarter</span>
+    </div>
+  </div>
+  <p class="dash-caption">Every part arrives on its own, so the animation list has ten rows to read.</p>
+  <aside class="notes">An extreme case for the animation list: ten steps, one of them looping.</aside>
+</section>

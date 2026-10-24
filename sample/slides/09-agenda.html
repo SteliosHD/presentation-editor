@@ -1,0 +1,46 @@
+<section class="slide">
+  <style>
+    .agenda {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 48px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: agenda;
+    }
+    .agenda-item {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 22px;
+      counter-increment: agenda;
+    }
+    .agenda-item::before {
+      content: counter(agenda, decimal-leading-zero);
+      font-family: var(--mono);
+      font-size: 16px;
+      color: var(--accent);
+    }
+    .agenda-item span {
+      margin-left: auto;
+      font-size: 16px;
+      color: var(--muted);
+    }
+  </style>
+  <p class="kicker">Agenda</p>
+  <h2>Eight parts, about an hour</h2>
+  <ol class="agenda">
+    <li class="agenda-item">Where we started<span>5 min</span></li>
+    <li class="agenda-item">What we tried<span>10 min</span></li>
+    <li class="agenda-item">What broke<span>8 min</span></li>
+    <li class="agenda-item">What we changed<span>8 min</span></li>
+    <li class="agenda-item">Results<span>6 min</span></li>
+    <li class="agenda-item">Costs<span>5 min</span></li>
+    <li class="agenda-item">What's next<span>6 min</span></li>
+    <li class="agenda-item">Questions<span>12 min</span></li>
+  </ol>
+  <aside class="notes">A long list in two columns.</aside>
+</section>

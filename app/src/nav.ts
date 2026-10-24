@@ -5,6 +5,7 @@ import {
   createElement,
   FileCode,
   FileDown,
+  Folder,
   FolderOpen,
   Info,
   LifeBuoy,
@@ -20,6 +21,7 @@ import {
 } from 'lucide';
 import type { Presentation } from 'virtual:presentation';
 import { createAboutDialog } from './about-dialog.ts';
+import { fold } from './fold.ts';
 import { animationPrefs } from './animation-prefs.ts';
 import { post } from './api.ts';
 import iconUrl from '../favicon.svg';
@@ -245,6 +247,7 @@ export const mountNav = (
       </div>
       <div class="nav-folder-chip">
         <span class="nav-live" title="Updates when files in the folder change" hidden></span>
+        <span class="nav-folder-icon"></span>
         <span class="nav-folder"></span>
       </div>
       <a class="nav-github" href="${REPO}" target="_blank" rel="noopener" title="Presentation Viewer on GitHub"
@@ -258,6 +261,7 @@ export const mountNav = (
     ? `Opened in this browser tab${isWeb ? '' : ': edits on disk need opening it again'}`
     : presentation.folder;
   $('.nav-folder-chip').hidden = empty;
+  $('.nav-folder-icon').append(icon(Folder));
 
   // Each pane's switch sits in its pane's head, top right; with the pane folded away, it waits where the pane was.
   const TOGGLES = {
@@ -287,6 +291,21 @@ export const mountNav = (
       button.replaceChildren(icon(shown ? TOGGLES[part].close : TOGGLES[part].open));
     }
   };
+  // The slide list and the animation list fold away into their switches; the toolbar just goes.
+  const PANES = {
+    sidebar: { part: 'sidebar', el: must(document.querySelector<HTMLElement>('.sidebar'), '.sidebar'), axis: 'width' },
+    animations: {
+      part: 'animations',
+      el: must(document.querySelector<HTMLElement>('.anim-strip'), '.anim-strip'),
+      axis: 'height',
+    },
+  } as const;
+  const flip = (part: (typeof PARTS)[number]) => {
+    const show = isHidden(part);
+    toggleHidden(part);
+    refreshToggles();
+    if (part !== 'toolbar') fold(PANES[part], show);
+  };
   for (const button of toggles) {
     const part = button.dataset.part as keyof typeof TOGGLES;
     // A click must not leave the button focused, or Space would press it again instead of changing slide.
@@ -294,8 +313,7 @@ export const mountNav = (
       e.preventDefault();
     });
     button.addEventListener('click', () => {
-      toggleHidden(part);
-      refreshToggles();
+      flip(part);
     });
   }
   refreshToggles();
@@ -362,8 +380,7 @@ export const mountNav = (
     className: 'menu-view-item',
     checked: () => !isHidden(part),
     run: () => {
-      toggleHidden(part);
-      refreshToggles();
+      flip(part);
     },
   });
   const menu = createMenu('main', 'Menu', [
