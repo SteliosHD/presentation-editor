@@ -172,6 +172,17 @@ kbd {
   font-weight: 480;
   color: var(--ui-ink);
 }
+/* Narrow windows: just the folder icon, so the chip keeps clear of the tools; the name stays in its tooltip. */
+@media (max-width: 900px) {
+  .nav-folder {
+    display: none;
+  }
+  .nav-folder-chip {
+    justify-content: center;
+    width: 46px;
+    padding: 0;
+  }
+}
 .nav-github {
   display: grid;
   place-items: center;

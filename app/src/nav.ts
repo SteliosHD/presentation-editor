@@ -256,10 +256,11 @@ export const mountNav = (
   document.body.prepend(nav);
   const $ = (sel: string) => must(nav.querySelector<HTMLElement>(sel), sel);
   // Just the folder's own name; the full path, or where it was opened, shows on hover.
-  $('.nav-folder').textContent = presentation.folder.split('/').at(-1) ?? presentation.folder;
+  const name = presentation.folder.split('/').at(-1) ?? presentation.folder;
   $('.nav-folder-chip').title = inBrowser
-    ? `Opened in this browser tab${isWeb ? '' : ': edits on disk need opening it again'}`
+    ? `${name}: opened in this browser tab${isWeb ? '' : ', so edits on disk need opening it again'}`
     : presentation.folder;
+  $('.nav-folder').textContent = name;
   $('.nav-folder-chip').hidden = empty;
   $('.nav-folder-icon').append(icon(Folder));
 
