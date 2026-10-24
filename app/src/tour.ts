@@ -127,13 +127,20 @@ export const startTour = () => {
   const place = () => {
     const r = target.getBoundingClientRect();
     const large = r.width > innerWidth * 0.4 && r.height > innerHeight * 0.4;
-    // The ring sits just inside large parts, which reach the window's edges, and just outside small ones.
+    // The ring sits just inside large parts and just outside small ones, but never past the window's edges.
     const pad = large ? 6 : -6;
+    const edge = 3;
+    const ring = {
+      left: Math.max(edge, r.left + pad),
+      top: Math.max(edge, r.top + pad),
+      right: Math.min(innerWidth - edge, r.right - pad),
+      bottom: Math.min(innerHeight - edge, r.bottom - pad),
+    };
     Object.assign(spot.style, {
-      left: `${r.left + pad}px`,
-      top: `${r.top + pad}px`,
-      width: `${r.width - pad * 2}px`,
-      height: `${r.height - pad * 2}px`,
+      left: `${ring.left}px`,
+      top: `${ring.top}px`,
+      width: `${ring.right - ring.left}px`,
+      height: `${ring.bottom - ring.top}px`,
     });
     const gap = 14;
     const right = r.right + gap + card.offsetWidth < innerWidth - 8;

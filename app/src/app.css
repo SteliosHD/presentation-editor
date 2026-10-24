@@ -362,6 +362,23 @@ button.primary {
   font-size: 13px;
   color: var(--muted);
 }
+/* On a phone the three tabs are wider than the modal, so the row scrolls sideways, starting from the first tab. */
+@media (max-width: 640px) {
+  .od-more {
+    justify-content: safe center;
+    gap: 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .od-more::-webkit-scrollbar {
+    display: none;
+  }
+  .od-tab {
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+}
 .od-tab:hover {
   color: var(--text);
   text-decoration: none;

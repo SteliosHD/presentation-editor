@@ -78,6 +78,12 @@ const createMenu = (title: string, entries: Entry[]) => {
     list.hidden = !open;
     button.setAttribute('aria-expanded', String(open));
     button.classList.toggle('on', open);
+    // A menu near the right edge of a narrow window shifts left so all of it stays on screen.
+    list.style.translate = '';
+    if (open) {
+      const over = list.getBoundingClientRect().right - (innerWidth - 8);
+      if (over > 0) list.style.translate = `${-over}px 0`;
+    }
     if (open) items.find(({ item }) => !item.disabled)?.item.focus();
   };
   button.addEventListener('click', () => {
