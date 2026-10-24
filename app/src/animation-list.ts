@@ -3,11 +3,11 @@ import type { Presentation } from 'virtual:presentation';
 import { describeAnimation } from './animations.ts';
 import { must, reduceMotion, type Player } from './player.ts';
 
-// Above the slide: every step of the current slide's animation, one per row, read from GSAP itself.
+// At the bottom of the slide area: every step of the current slide's animation, one per row, read from GSAP.
 export const createAnimationList = (presentation: Presentation, player: Player) => {
   const strip = document.createElement('div');
   strip.className = 'anim-strip';
-  must(document.querySelector('.viewport'), '.viewport').before(strip);
+  must(document.querySelector('.stage'), '.stage').append(strip);
 
   const el = (tag: string, className: string, text: string) => {
     const node = document.createElement(tag);

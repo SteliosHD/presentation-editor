@@ -156,7 +156,7 @@ export const mountNav = (
     : presentation.folder;
 
   const prompt = createPromptDialog();
-  const dialog = createOpenDialog(presentation.folder, { onCreate: prompt.show });
+  const dialog = createOpenDialog(presentation.folder);
   if (choose) dialog.show();
 
   const status = $('.nav-status');

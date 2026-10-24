@@ -25,7 +25,7 @@ my-presentation/
 4. Put speaker notes in `<aside class="notes">` inside the slide. They show only in the notes window (N).
 5. For a custom animation, add `slides/NN-name.ts` with the same base name (see "Slide animations").
 
-Done when the slide appears in the app's slide list, its content fits inside the 1200×675 frame (print and PDF clip anything outside), every step in the animation list above the slide reads as intended, and it looks right in presentation mode (F).
+Done when the slide appears in the app's slide list, its content fits inside the 1200×675 frame (print and PDF clip anything outside), every step in the animation list under the slide reads as intended, and it looks right in presentation mode (F).
 
 ## Slide animations
 
@@ -47,7 +47,7 @@ export default (slide: HTMLElement, gsap: typeof import('gsap').gsap) =>
 
 ## Annotating animations
 
-The animation list above the slide shows one row per tween: timing, targets, what changes, easing, and icons. It names targets by their first class, so give animated elements a meaningful first class.
+The animation list under the slide shows one row per tween: timing, targets, what changes, easing, and icons. It names targets by their first class, so give animated elements a meaningful first class.
 
 Annotate every tween in a custom animation through GSAP's `data` field:
 

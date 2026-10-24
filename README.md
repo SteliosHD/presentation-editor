@@ -12,7 +12,7 @@ presentation. Drop your own presentation folder on it; the folder is read in you
 ## What it does
 
 - **Slide list** with a live preview of every slide.
-- **Animation list** above the slide: each step of the slide's animation with its timing, targets and icons.
+- **Animation list** under the slide: each step of the slide's animation with its timing, targets and icons.
 - **Present** in the browser window, with speaker notes in a separate window, a laser pointer, slide numbers, and a
   pen, highlighter and eraser for drawing on the slide.
 - **Export** to one self-contained HTML file that plays anywhere, or to a PDF with one slide per page.

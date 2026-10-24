@@ -2,6 +2,7 @@ import { createElement, FolderOpen, X } from 'lucide';
 import { post } from './api.ts';
 import { must } from './player.ts';
 import { forgetOpened, isWeb, openedInBrowser, storeOpened, useSample } from './source.ts';
+import { attachCopy, SLIDE_PROMPT } from './prompt-dialog.ts';
 import { queueTour, startQueuedTour } from './tour.ts';
 import { filesFromDrop, filesFromInput, readPresentation } from './web.ts';
 
@@ -26,9 +27,20 @@ export const rememberFolder = (folder: string) => {
   }
 };
 
-// The folder format, opened from the "Folder format" link: most visits only need the drop zone.
-const FORMAT = `
-  <div class="od-format" hidden>
+// Sections opened from the link row under the drop zone; one at a time, all the same height, so the drop zone
+// stays put and usable while one is open.
+const SECTIONS = `
+  <section class="od-section" data-section="sample" role="tabpanel" hidden>
+    <p>Five slides that show every built-in layout and a custom animation, followed by a short tour of the
+    editor.</p>
+    <button class="primary od-sample">Open the sample</button>
+  </section>
+  <section class="od-section od-section-prompt" data-section="create" role="tabpanel" hidden>
+    <p>Give this prompt to an AI agent in an empty folder, then open that folder here.</p>
+    <pre class="od-prompt" tabindex="0" aria-label="Slide creation prompt"></pre>
+    <button class="primary od-copy"></button>
+  </section>
+  <section class="od-section" data-section="format" role="tabpanel" hidden>
     <p>Each slide is an HTML file; the number at the start of its name sets the order. A <code>.ts</code> file with
     the same name animates that slide.</p>
     <pre>my-talk/
@@ -38,7 +50,7 @@ const FORMAT = `
     01-title.html
     02-agenda.html
     02-agenda.ts      <i>animation, optional</i></pre>
-  </div>`;
+  </section>`;
 
 const BODY = `
   <div class="od-drop">
@@ -50,14 +62,16 @@ const BODY = `
   </div>
   <p class="od-error" role="alert"></p>`;
 
-// Everything besides opening a folder: one quiet row of links.
+// Everything besides opening a folder: one quiet row of links, each opening its section below.
+const tab = (section: string, label: string) =>
+  `<button class="od-link od-tab" role="tab" aria-selected="false" data-section="${section}">${label}</button>`;
 const MORE = `
-  <p class="od-more">
-    ${isWeb ? '<button class="od-link od-sample">Try the sample</button>' : ''}
-    <button class="od-link od-create">Create one with an AI agent</button>
-    <button class="od-link od-format-toggle" aria-expanded="false">Folder format</button>
-  </p>
-  ${FORMAT}`;
+  <div class="od-more" role="tablist" aria-label="More ways to start">
+    ${isWeb ? tab('sample', 'Try the sample') : ''}
+    ${tab('create', 'Create one with an AI agent')}
+    ${tab('format', 'Folder format')}
+  </div>
+  ${SECTIONS}`;
 
 const LOCAL_EXTRA = `
   <h3 class="od-recent-title">Recent</h3>
@@ -66,7 +80,7 @@ const LOCAL_EXTRA = `
 
 const WEB_EXTRA = MORE;
 
-export const createOpenDialog = (currentFolder: string, { onCreate }: { onCreate: () => void }) => {
+export const createOpenDialog = (currentFolder: string) => {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal open-dialog';
   dialog.innerHTML = `
@@ -95,16 +109,20 @@ export const createOpenDialog = (currentFolder: string, { onCreate }: { onCreate
   const close = () => {
     if (!busy) dialog.close();
   };
-  const formatToggle = $('.od-format-toggle');
-  formatToggle.addEventListener('click', () => {
-    const format = $('.od-format');
-    format.hidden = !format.hidden;
-    formatToggle.setAttribute('aria-expanded', String(!format.hidden));
-  });
-  $('.od-create').addEventListener('click', () => {
-    dialog.close();
-    onCreate();
-  });
+  // Clicking a link opens its section; clicking the open one again closes it.
+  const tabs = [...dialog.querySelectorAll<HTMLElement>('.od-tab')];
+  const sections = [...dialog.querySelectorAll<HTMLElement>('.od-section')];
+  const openSection = (name: string | null) => {
+    for (const t of tabs) t.setAttribute('aria-selected', String(t.dataset.section === name));
+    for (const section of sections) section.hidden = section.dataset.section !== name;
+  };
+  for (const t of tabs) {
+    t.addEventListener('click', () => {
+      openSection(t.getAttribute('aria-selected') === 'true' ? null : (t.dataset.section ?? null));
+    });
+  }
+  $('.od-prompt').textContent = SLIDE_PROMPT;
+  const copy = attachCopy($('.od-copy'), SLIDE_PROMPT, $('.od-prompt'));
   $('.modal-close').addEventListener('click', close);
   dialog.addEventListener('cancel', (e) => {
     if (busy) e.preventDefault();
@@ -232,6 +250,8 @@ export const createOpenDialog = (currentFolder: string, { onCreate }: { onCreate
     show: () => {
       error.textContent = '';
       setBusy(null);
+      openSection(null);
+      copy.reset();
       dialog.showModal();
     },
   };

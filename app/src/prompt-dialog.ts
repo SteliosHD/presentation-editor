@@ -34,6 +34,46 @@ Animations (optional; slides without one fade their blocks up in turn)
 
 When done, list each slide file with a one-line summary.`;
 
+// A "Copy prompt" button: copies `text`, or, when the clipboard is refused (insecure origin or permissions),
+// selects `source` so Cmd+C works and says so.
+export const attachCopy = (button: HTMLElement, text: string, source: HTMLElement) => {
+  const label = (state: 'ready' | 'copied' | 'manual') => {
+    button.replaceChildren(
+      createElement(state === 'copied' ? Check : Copy, { width: 16, height: 16, 'aria-hidden': 'true' }),
+      { ready: 'Copy prompt', copied: 'Copied', manual: 'Press ⌘C to copy' }[state],
+    );
+    button.classList.toggle('done', state === 'copied');
+  };
+  let timer = 0;
+  const settle = (state: 'copied' | 'manual') => {
+    label(state);
+    clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      label('ready');
+    }, 2500);
+  };
+  button.addEventListener('click', () => {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        settle('copied');
+      })
+      .catch(() => {
+        const range = document.createRange();
+        range.selectNodeContents(source);
+        getSelection()?.removeAllRanges();
+        getSelection()?.addRange(range);
+        settle('manual');
+      });
+  });
+  label('ready');
+  return {
+    reset: () => {
+      label('ready');
+    },
+  };
+};
+
 export const createPromptDialog = () => {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal prompt-dialog';
@@ -58,39 +98,7 @@ export const createPromptDialog = () => {
   $('.modal-close').append(createElement(X, { width: 18, height: 18 }));
   $('pre').textContent = SLIDE_PROMPT;
 
-  const copy = $('.pd-copy');
-  const label = (state: 'ready' | 'copied' | 'manual') => {
-    const text = { ready: 'Copy prompt', copied: 'Copied', manual: 'Press ⌘C to copy' }[state];
-    copy.replaceChildren(
-      createElement(state === 'copied' ? Check : Copy, { width: 16, height: 16, 'aria-hidden': 'true' }),
-      text,
-    );
-    copy.classList.toggle('done', state === 'copied');
-  };
-  label('ready');
-  let reset = 0;
-  const settle = (state: 'copied' | 'manual') => {
-    label(state);
-    clearTimeout(reset);
-    reset = window.setTimeout(() => {
-      label('ready');
-    }, 2500);
-  };
-  copy.addEventListener('click', () => {
-    navigator.clipboard
-      .writeText(SLIDE_PROMPT)
-      .then(() => {
-        settle('copied');
-      })
-      .catch(() => {
-        // Clipboard refused (insecure origin or permissions): select the text so Cmd+C works.
-        const range = document.createRange();
-        range.selectNodeContents($('pre'));
-        getSelection()?.removeAllRanges();
-        getSelection()?.addRange(range);
-        settle('manual');
-      });
-  });
+  const copy = attachCopy($('.pd-copy'), SLIDE_PROMPT, $('pre'));
   $('.modal-close').addEventListener('click', () => {
     dialog.close();
   });
@@ -100,7 +108,7 @@ export const createPromptDialog = () => {
 
   return {
     show: () => {
-      label('ready');
+      copy.reset();
       dialog.showModal();
     },
   };

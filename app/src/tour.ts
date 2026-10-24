@@ -72,7 +72,8 @@ export const startTour = () => {
   const card = $('.tour-card');
   let at = 0;
 
-  // The card goes beside the lit part: to its right if there is room, else below it, kept inside the window.
+  // The card goes beside the lit part: to its right if there is room, else below it, else above it, and always
+  // inside the window.
   const place = () => {
     const r = steps[at].el.getBoundingClientRect();
     const pad = 6;
@@ -84,8 +85,9 @@ export const startTour = () => {
     });
     const gap = 14;
     const right = r.right + gap + card.offsetWidth < innerWidth - 8;
+    const below = r.bottom + gap + card.offsetHeight < innerHeight - 8;
     const left = right ? r.right + gap : r.left + 16;
-    const top = right ? r.top + 24 : r.bottom + gap;
+    const top = right ? r.top + 24 : below ? r.bottom + gap : r.top - gap - card.offsetHeight;
     card.style.left = `${Math.max(8, Math.min(left, innerWidth - card.offsetWidth - 8))}px`;
     card.style.top = `${Math.max(8, Math.min(top, innerHeight - card.offsetHeight - 8))}px`;
   };
