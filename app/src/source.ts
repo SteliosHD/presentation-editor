@@ -3,16 +3,14 @@ import { presentation as served, type Presentation, type SlideAnimation } from '
 // Where the presentation comes from:
 // - the local app (any mode but "web" and "template"): the server's virtual module, live-reloaded, unless a
 //   folder was dropped on it, which is read in the browser like the hosted app's;
-// - the hosted app ("web"): a folder the viewer opened, kept only across the viewer's own reloads (opening it,
-//   or a file in it changing), so refreshing the page closes it; the built-in sample once "Try the sample" asked
-//   for it, until a folder is opened or the tab closes; otherwise placeholder shapes until something is opened;
+// - the hosted app ("web"): a folder the viewer opened, kept for the tab's session (refreshing keeps it); the
+//   built-in sample once "Try the sample" asked for it, until a folder is opened or the tab closes; otherwise
+//   placeholder shapes until something is opened;
 // - a downloaded file ("template"): JSON embedded in the page by the export.
 // Stored and embedded presentations carry their animations as code, loaded here as modules.
 
 export const isWeb = import.meta.env.MODE === 'web';
 const STORE_KEY = 'presentation-viewer:opened';
-// Set just before the viewer reloads itself with an opened folder; a reload without it is the user refreshing.
-const KEEP_KEY = 'presentation-viewer:keep';
 // Set by "Try the sample" (or a ?sample link); the sample then stays open across refreshes until a folder is opened.
 const SAMPLE_KEY = 'presentation-viewer:sample';
 export const DATA_ID = 'presentation-data';
@@ -48,10 +46,8 @@ export const toStored = (presentation: Presentation): Stored => ({
   })),
 });
 
-// Always followed by the viewer reloading itself, which keeps the folder open.
 export const storeOpened = (presentation: Stored) => {
   sessionStorage.setItem(STORE_KEY, JSON.stringify(presentation));
-  sessionStorage.setItem(KEEP_KEY, '1');
   sessionStorage.removeItem(SAMPLE_KEY);
 };
 export const requestSample = () => {
@@ -105,9 +101,6 @@ export const forgetOpened = () => {
 
 const readOpened = () => {
   try {
-    const kept = sessionStorage.getItem(KEEP_KEY) === '1';
-    sessionStorage.removeItem(KEEP_KEY);
-    if (!kept) sessionStorage.removeItem(STORE_KEY);
     const json = sessionStorage.getItem(STORE_KEY);
     return json ? (JSON.parse(json) as Stored) : null;
   } catch {

@@ -55,10 +55,35 @@ const handles = <T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => ID
     };
   });
 
+// What the folder looked like when it was last read, so changes made while the page was away (a refresh, say)
+// still count once watching starts again.
+const STAMPS_KEY = 'presentation-viewer:stamps';
+const saveStamps = (now: Map<string, string> | null) => {
+  try {
+    if (now) sessionStorage.setItem(STAMPS_KEY, JSON.stringify([...now]));
+    else sessionStorage.removeItem(STAMPS_KEY);
+  } catch {
+    // Storage blocked: watching starts from what the folder looks like then.
+  }
+};
+const savedStamps = () => {
+  try {
+    const json = sessionStorage.getItem(STAMPS_KEY);
+    return json ? new Map(JSON.parse(json) as [string, string][]) : null;
+  } catch {
+    return null;
+  }
+};
+
 // Failing to keep or forget a handle only costs live updates, so these never throw.
-export const rememberWatched = (dir: FileSystemDirectoryHandle) =>
-  handles('readwrite', (store) => store.put(dir, tabId())).catch(() => undefined);
-export const forgetWatched = () => handles('readwrite', (store) => store.delete(tabId())).catch(() => undefined);
+export const rememberWatched = async (dir: FileSystemDirectoryHandle) => {
+  saveStamps(await stamps(dir).catch(() => null));
+  await handles('readwrite', (store) => store.put(dir, tabId())).catch(() => undefined);
+};
+export const forgetWatched = () => {
+  saveStamps(null);
+  return handles('readwrite', (store) => store.delete(tabId())).catch(() => undefined);
+};
 const savedFolder = () =>
   handles<FileSystemDirectoryHandle | undefined>(
     'readonly',
@@ -112,7 +137,7 @@ const sleep = (ms: number) =>
   });
 
 const watch = async (dir: FileSystemDirectoryHandle) => {
-  let seen = await stamps(dir);
+  let seen = savedStamps() ?? (await stamps(dir));
   let busy = false;
   setInterval(() => {
     if (busy) return;
@@ -124,6 +149,7 @@ const watch = async (dir: FileSystemDirectoryHandle) => {
       if (!same(await stamps(dir), now)) return;
       storeOpened(await readPresentation(await filesFromHandle(dir)));
       noteChanges(differences(seen, now));
+      saveStamps(now);
       seen = now;
       location.reload();
     })()
