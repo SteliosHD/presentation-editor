@@ -2,12 +2,12 @@ import { Check, createElement, Minus, X } from 'lucide';
 import { must } from './player.ts';
 import type { Site } from './site.ts';
 
-// Help → Why use the Presentation Viewer: three steps on how it works and a compact comparison with asking a chat
+// The menu's Why use the Presentation Viewer: three steps on how it works and a compact comparison with asking a chat
 // for slides and with a slide app, plus any sections and links the site adds. The copy was written by an AI agent,
 // and the modal says so.
 
 const STEPS: [string, string][] = [
-  ['Ask an agent', 'Give it the prompt from Edit → Slide Creation Prompt and your topic.'],
+  ['Ask an agent', 'Give it the Slide Creation Prompt from the menu and your topic.'],
   ['Open its folder here', 'Each slide appears as it is saved; live in Chrome and Edge.'],
   ['Present or export', 'Press F to present, or export one HTML file or a PDF.'],
 ];

@@ -1,6 +1,7 @@
 import {
   Check,
   ChevronRight,
+  Clapperboard,
   createElement,
   FileCode,
   FileDown,
@@ -8,6 +9,9 @@ import {
   Info,
   LifeBuoy,
   Map as MapIcon,
+  Menu,
+  PanelBottom,
+  PanelLeft,
   Scale,
   Sparkles,
   type IconNode,
@@ -26,29 +30,33 @@ import { isWeb, linkedToSample } from './source.ts';
 import { watchOpened } from './watch.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
-// The nav bar: app icon with the File, Edit, View and Help menus on the left, the folder's name in the centre,
-// export status and a link to the source on the right. Locally, exports go through the server (Mac save dialog, Chrome-made PDF); hosted,
-// they are built in the browser and downloaded.
+// Buttons floating over the top corners, after Excalidraw. Top left: the menu (open, export, the slide prompt, view
+// settings and help) and switches for the slide list and the animation list. Top right: the folder's name, whether
+// it's live, export status and a link to the source. Locally, exports go through the server (Mac save dialog,
+// Chrome-made PDF); hosted, they are built in the browser and downloaded.
 
 const REPO = 'https://github.com/SteliosHD/presentation-viewer';
 // GitHub's mark (Octicons mark-github, MIT); Lucide no longer ships brand icons.
 const GITHUB_MARK = `<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>`;
 
-type Item =
+type Item = (
   | { label: string; icon: IconNode; run: () => void }
-  | { label: string; checked: () => boolean; run: () => void };
-type Entry = Item | { label: string; icon: IconNode; sub: Item[] } | 'separator';
+  | { label: string; checked: () => boolean; run: () => void }
+) & { className?: string };
+type Entry = Item | { label: string; icon: IconNode; sub: Item[]; className?: string } | 'separator';
 
 const icon = (node: IconNode) => createElement(node, { width: 16, height: 16, 'aria-hidden': 'true' });
 
 // A dropdown menu: click or arrow keys to move, Esc or a click elsewhere to close. An entry with a submenu opens it
 // on hover, click or the right arrow.
-const createMenu = (title: string, entries: Entry[]) => {
+const createMenu = (name: string, label: string, entries: Entry[]) => {
   const root = document.createElement('div');
-  root.className = `menu menu-${title.toLowerCase()}`;
+  root.className = `menu menu-${name}`;
   const button = document.createElement('button');
   button.className = 'menu-button';
-  button.textContent = title;
+  button.title = label;
+  button.setAttribute('aria-label', label);
+  button.append(icon(Menu));
   button.setAttribute('aria-haspopup', 'menu');
   button.setAttribute('aria-expanded', 'false');
   const list = document.createElement('div');
@@ -57,8 +65,9 @@ const createMenu = (title: string, entries: Entry[]) => {
   list.hidden = true;
   root.append(button, list);
 
-  const makeItem = (entry: Item | { label: string; icon: IconNode }) => {
+  const makeItem = (entry: Item | { label: string; icon: IconNode; className?: string }) => {
     const item = document.createElement('button');
+    if (entry.className) item.className = entry.className;
     const checkable = 'checked' in entry;
     item.setAttribute('role', checkable ? 'menuitemcheckbox' : 'menuitem');
     const mark = document.createElement('span');
@@ -97,7 +106,7 @@ const createMenu = (title: string, entries: Entry[]) => {
       leaves.push({ item: childItem, entry: child });
     }
     const wrap = document.createElement('div');
-    wrap.className = 'menu-sub-wrap';
+    wrap.className = `menu-sub-wrap ${entry.className ?? ''}`;
     wrap.append(item, sub);
     list.append(wrap);
     subs.push({ item, wrap, sub });
@@ -190,7 +199,7 @@ const createMenu = (title: string, entries: Entry[]) => {
       entry.run();
     });
   }
-  return { root, items };
+  return { root, list, items };
 };
 
 // View: parts of the viewer that can be hidden, remembered between visits.
@@ -224,33 +233,61 @@ export const mountNav = (
   nav.className = 'nav';
   nav.innerHTML = `
     <div class="nav-left">
-      ${
-        site?.home
-          ? `<button class="nav-home" title="What Presentation Viewer does" aria-label="What Presentation Viewer does">
-              <img class="nav-icon" src="${iconUrl}" alt="" />
-            </button>`
-          : `<img class="nav-icon" src="${iconUrl}" alt="Presentation Viewer" />`
-      }
+      <span class="nav-sep"></span>
+      <button class="nav-toggle" data-part="sidebar"></button>
+      <button class="nav-toggle" data-part="animations"></button>
     </div>
-    <span class="nav-folder"></span>
     <div class="nav-right">
-      <span class="nav-live" title="Updates when files in the folder change" hidden>Live</span>
-      <button class="nav-reconnect" title="The browser needs your permission again to watch the folder" hidden>
-        Reconnect folder
-      </button>
-      <span class="nav-status"><span class="spinner"></span><span class="nav-status-text"></span></span>
+      <div class="nav-notes">
+        <span class="nav-status"><span class="spinner"></span><span class="nav-status-text"></span></span>
+        <button class="nav-reconnect" title="The browser needs your permission again to watch the folder" hidden>
+          Reconnect folder
+        </button>
+      </div>
+      <div class="nav-folder-chip">
+        <span class="nav-live" title="Updates when files in the folder change" hidden></span>
+        <span class="nav-folder"></span>
+      </div>
       <a class="nav-github" href="${REPO}" target="_blank" rel="noopener" title="Presentation Viewer on GitHub"
         aria-label="Presentation Viewer on GitHub">${GITHUB_MARK}</a>
     </div>`;
   document.body.prepend(nav);
   const $ = (sel: string) => must(nav.querySelector<HTMLElement>(sel), sel);
-  // Just the folder's own name; the full path shows on hover.
+  // Just the folder's own name; the full path, or where it was opened, shows on hover.
   $('.nav-folder').textContent = presentation.folder.split('/').at(-1) ?? presentation.folder;
-  $('.nav-folder').title = empty
-    ? ''
-    : inBrowser
-      ? `Opened in this browser tab${isWeb ? '' : ': edits on disk need opening it again'}`
-      : presentation.folder;
+  $('.nav-folder-chip').title = inBrowser
+    ? `Opened in this browser tab${isWeb ? '' : ': edits on disk need opening it again'}`
+    : presentation.folder;
+  $('.nav-folder-chip').hidden = empty;
+
+  // The two switches beside the menu show or hide the slide list and the animation list.
+  const TOGGLES = {
+    sidebar: { icon: PanelLeft, label: 'slide list' },
+    animations: { icon: PanelBottom, label: 'animation list' },
+  } as const;
+  const toggles = [...nav.querySelectorAll<HTMLButtonElement>('.nav-toggle')];
+  const refreshToggles = () => {
+    for (const button of toggles) {
+      const part = button.dataset.part as keyof typeof TOGGLES;
+      const shown = !isHidden(part);
+      button.setAttribute('aria-pressed', String(shown));
+      button.title = `${shown ? 'Hide' : 'Show'} the ${TOGGLES[part].label}`;
+    }
+  };
+  for (const button of toggles) {
+    const part = button.dataset.part as keyof typeof TOGGLES;
+    button.setAttribute('aria-label', `Show the ${TOGGLES[part].label}`);
+    button.append(icon(TOGGLES[part].icon));
+    // A click must not leave the button focused, or Space would press it again instead of changing slide.
+    button.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+    button.addEventListener('click', () => {
+      toggleHidden(part);
+      refreshToggles();
+    });
+  }
+  refreshToggles();
 
   const prompt = createPromptDialog();
   const dialog = createOpenDialog(presentation.folder, REPO);
@@ -259,11 +296,9 @@ export const mountNav = (
     if (site?.start) site.start(ctx);
     else ctx.openFolder();
   }
-  nav.querySelector('.nav-home')?.addEventListener('click', () => {
-    site?.home?.({ ...ctx, back: () => undefined });
-  });
 
-  // A folder opened in Chrome or Edge is watched for changes; the badge says so, or offers to reconnect.
+  // A folder opened in Chrome or Edge is watched for changes; a green dot by its name says so, or a button offers
+  // to reconnect.
   if (inBrowser && !empty) {
     void watchOpened((state) => {
       $('.nav-live').hidden = state !== 'live';
@@ -298,38 +333,41 @@ export const mountNav = (
     }
     say(`Downloaded ${presentation.folder}.${format}`);
   };
+  let exportItems: HTMLButtonElement[] = [];
   const exporting = (format: 'html' | 'pdf') => () => {
-    file.items.slice(1).forEach((b) => (b.disabled = true));
+    exportItems.forEach((b) => (b.disabled = true));
     run(format)
       .catch((err: unknown) => {
         say(`Export failed: ${err instanceof Error ? err.message : String(err)}`, { error: true });
       })
       .finally(() => {
-        file.items.slice(1).forEach((b) => (b.disabled = false));
+        exportItems.forEach((b) => (b.disabled = false));
       });
   };
 
-  const file = createMenu('File', [
-    { label: 'Open Presentation folder', icon: FolderOpen, run: dialog.show },
-    'separator',
-    { label: 'Export HTML', icon: FileCode, run: exporting('html') },
-    { label: 'Export PDF', icon: FileDown, run: exporting('pdf') },
-  ]);
-  if (empty) file.items.slice(1).forEach((b) => (b.disabled = true));
-  const editMenu = createMenu('Edit', [{ label: 'Slide Creation Prompt', icon: Sparkles, run: prompt.show }]);
+  const about = createAboutDialog({ repo: REPO, extra: site?.about });
   const showPart = (part: (typeof PARTS)[number], label: string) => ({
     label,
+    className: 'menu-view-item',
     checked: () => !isHidden(part),
     run: () => {
       toggleHidden(part);
+      refreshToggles();
     },
   });
-  const view = createMenu('View', [
+  const menu = createMenu('main', 'Menu', [
+    { label: 'Open Presentation folder', icon: FolderOpen, run: dialog.show },
+    { label: 'Export HTML', icon: FileCode, run: exporting('html') },
+    { label: 'Export PDF', icon: FileDown, run: exporting('pdf') },
+    'separator',
+    { label: 'Slide Creation Prompt', icon: Sparkles, run: prompt.show },
+    'separator',
     showPart('sidebar', 'Slide list'),
     showPart('toolbar', 'Toolbar'),
     {
       label: 'Animations',
-      icon: Sparkles,
+      icon: Clapperboard,
+      className: 'menu-view-item',
       sub: [
         {
           label: 'Play animations on slide change',
@@ -348,9 +386,8 @@ export const mountNav = (
         },
       ],
     },
-  ]);
-  const about = createAboutDialog({ repo: REPO, extra: site?.about });
-  const help = createMenu('Help', [
+    'separator',
+    { label: 'Take the tour', icon: MapIcon, run: startTour },
     {
       label: 'Personalize your viewer',
       icon: LifeBuoy,
@@ -358,11 +395,24 @@ export const mountNav = (
         window.open(`${REPO}#personalize-your-viewer`, '_blank', 'noopener');
       },
     },
-    { label: 'Take the tour', icon: MapIcon, run: startTour },
-    'separator',
     { label: 'Why use the Presentation Viewer', icon: Info, run: about.show },
   ]);
-  $('.nav-left').append(file.root, editMenu.root, view.root, help.root);
+  exportItems = menu.items.slice(1, 3);
+  if (empty) exportItems.forEach((b) => (b.disabled = true));
+
+  // The menu opens with the app's name, which leads to the site's home page when it has one.
+  const brand = document.createElement(site?.home ? 'button' : 'div');
+  brand.className = 'menu-brand';
+  brand.innerHTML = `<img src="${iconUrl}" alt="" /><span>Presentation <em>Viewer</em></span>`;
+  if (site?.home) {
+    brand.title = 'What Presentation Viewer does';
+    brand.addEventListener('click', () => {
+      site?.home?.({ ...ctx, back: () => undefined });
+    });
+  }
+  menu.list.prepend(brand, document.createElement('hr'));
+  $('.nav-left').prepend(menu.root);
+
   // Arriving by a ?sample link counts as trying the sample: the tour follows, and the address loses the request.
   if (linkedToSample()) {
     queueTour();

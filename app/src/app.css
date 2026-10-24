@@ -1,4 +1,4 @@
-/* The app around the slides: nav bar (dev only), slide list, stage, toolbar. Its colours, fonts and corners come
+/* The app around the slides: floating menu (dev only), slide list, stage, toolbar. Its colours, fonts and corners come
    from ui-theme.css; only what draws like a slide (thumbnail text, placeholders, print) uses the slide theme. */
 * {
   box-sizing: border-box;
@@ -88,100 +88,137 @@ kbd {
   margin-left: 4px;
 }
 
-/* Nav bar: icon and File menu, the folder name centred, export status on the right. */
+/* Floating over the top corners, after Excalidraw: the menu and the panel switches on the left, the folder's name
+   and the source on the right. Each group is an island like the tools'; the space between them stays clickable. */
 .nav {
-  display: grid;
-  position: relative;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-  height: 48px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--ui-border-soft);
+  position: fixed;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  z-index: 25;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  pointer-events: none;
   font-size: 14px;
+}
+.nav > * {
+  pointer-events: auto;
+}
+.nav-left,
+.nav-folder-chip,
+.nav-github {
+  height: 46px;
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-panel);
+  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
 }
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
+  padding: 4px;
 }
-.nav-home {
-  display: flex;
-  margin-right: 4px;
-  padding: 3px;
-  border-color: transparent;
+.nav-left button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
   background: none;
+  color: var(--ui-ink-soft);
 }
-.nav-home:hover {
-  border-color: transparent;
+.nav-left button:hover,
+.nav-left .menu-button.on {
   background: var(--ui-surface-raised);
+  border-color: transparent;
+  color: var(--ui-ink);
 }
-.nav-icon {
-  width: 22px;
+.nav-left .nav-toggle[aria-pressed='true'] {
+  background: var(--ui-accent-soft);
+  border-color: var(--ui-accent-border);
+  color: var(--ui-accent);
+}
+.nav-sep {
+  width: 1px;
   height: 22px;
+  margin: 0 4px;
+  background: var(--ui-border);
 }
+.nav-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.nav-folder-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 0 16px;
+  cursor: default;
+}
+.nav-folder-chip[hidden] {
+  display: none;
+}
+/* Short enough to stay clear of the tools in the middle of the slide area. */
 .nav-folder {
-  /* Centred over the slide area rather than the window, in line with the tools and the slide title below, and
-     narrow enough to stay clear of the menus and the status. */
-  position: absolute;
-  left: calc((100% + var(--sidebar-w)) / 2);
-  translate: -50% 0;
-  max-width: calc(100% - var(--sidebar-w) - 340px);
+  max-width: max(60px, (100vw - var(--sidebar-w)) / 2 - 230px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--ui-display);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 480;
   color: var(--ui-ink);
-  cursor: default;
-}
-.nav-right {
-  justify-self: end;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  max-width: 100%;
-  min-width: 0;
 }
 .nav-github {
-  display: flex;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
-  padding: 6px;
-  border-radius: var(--ui-pill);
+  width: 46px;
   color: var(--ui-ink-soft);
 }
 .nav-github:hover {
   background: var(--ui-surface-raised);
   color: var(--ui-ink);
 }
+/* The folder is live: a green dot before its name. */
 .nav-live {
-  display: flex;
   flex-shrink: 0;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--ui-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ui-good);
-  cursor: default;
-}
-.nav-live::before {
-  content: '';
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--ui-good);
   box-shadow: 0 0 10px -1px var(--ui-good);
 }
-.nav-reconnect {
-  flex-shrink: 0;
-  padding: 4px 12px;
-  font-size: 12px;
-}
 .nav-live[hidden],
 .nav-reconnect[hidden] {
+  display: none;
+}
+/* Export status and the reconnect button hang below the right-hand group, so they never push it around. */
+.nav-notes {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: min(420px, 60vw);
+}
+.nav-reconnect {
+  padding: 5px 14px;
+  border-radius: var(--ui-pill);
+  font-size: 12px;
+}
+.nav-status:not(:has(.nav-status-text:not(:empty))) {
   display: none;
 }
 .nav-status {
@@ -191,6 +228,11 @@ kbd {
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
+  padding: 6px 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-pill);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
   color: var(--ui-ink-soft);
   font-size: 13px;
   white-space: nowrap;
@@ -209,22 +251,10 @@ kbd {
 .menu {
   position: relative;
 }
-.menu-button {
-  padding: 5px 12px;
-  background: none;
-  border-color: transparent;
-  color: var(--ui-ink-soft);
-}
-.menu-button:hover,
-.menu-button.on {
-  background: var(--ui-surface-raised);
-  border-color: transparent;
-  color: var(--ui-ink);
-}
 .menu-list {
   position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
+  top: calc(100% + 10px);
+  left: -5px;
   z-index: 30;
   display: flex;
   flex-direction: column;
@@ -290,6 +320,27 @@ kbd {
   bottom: 0;
   left: -12px;
   width: 12px;
+}
+/* The menu's first row: the app's name, a link home when the site has one. */
+.menu-list .menu-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 6px;
+  border: none;
+  background: none;
+  font-family: var(--ui-display);
+  font-size: 16px;
+  font-weight: 480;
+  color: var(--ui-ink);
+}
+.menu-brand img {
+  width: 22px;
+  height: 22px;
+}
+.menu-brand em {
+  font-style: italic;
+  color: var(--ui-accent);
 }
 .menu-list hr {
   width: 100%;
@@ -660,7 +711,7 @@ button.primary {
   height: 20px;
 }
 
-/* Edit → Slide Creation Prompt: the prompt, the manual route, and the copy action. */
+/* The menu's Slide Creation Prompt: the prompt, the manual route, and the copy action. */
 .prompt-dialog {
   width: min(660px, calc(100vw - 32px));
 }
@@ -701,7 +752,7 @@ button.primary {
   color: var(--ui-ink-soft);
 }
 
-/* Help → Why use the Presentation Viewer: what it's for and how it compares, scrolling if the window is short. */
+/* The menu's Why use the Presentation Viewer: what it's for and how it compares, scrolling if the window is short. */
 .about-dialog {
   width: min(580px, calc(100vw - 32px));
 }
@@ -1109,6 +1160,10 @@ body.empty .stage-title {
   border-right: 1px solid var(--ui-border-soft);
   padding: 12px 8px;
 }
+/* Room for the menu's island floating over the list's top (exported files have no menu). */
+body:has(.nav) .sidebar {
+  padding-top: 66px;
+}
 /* Drag handles on the slide list's right edge and the animation list's top edge: a thin line that lights on hover
    and while dragging. */
 .resize-handle {
@@ -1259,7 +1314,7 @@ body.presenting .resize-handle {
 }
 
 /* Toolbar at the top of the slide area: square icon tools in one floating island centred over the slides, like
-   Excalidraw's, each with its shortcut key in the corner. The slide list beside it runs from the nav bar down. */
+   Excalidraw's, each with its shortcut key in the corner. The slide list beside it runs the full height. */
 .bar {
   display: flex;
   flex-shrink: 0;
@@ -1465,18 +1520,6 @@ body.presenting .resize-handle {
   .tip {
     transition: none;
     transform: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .nav-folder {
-    left: 50%;
-    max-width: calc(100% - 340px);
-  }
-}
-@media (max-width: 560px) {
-  .nav-folder {
-    display: none;
   }
 }
 
@@ -1744,7 +1787,10 @@ body.presenting.inking .slide-stack {
   .bar,
   .stage,
   .resize-handle,
-  .menu-view {
+  .nav-left .nav-sep,
+  .nav-left .nav-toggle,
+  .nav-folder-chip,
+  .menu-list .menu-view-item {
     display: none;
   }
   .app {
@@ -1778,7 +1824,7 @@ body.presenting.inking .slide-stack {
 /* After a file change reloads the page: a short notice at the top saying what changed. */
 .change-note {
   position: fixed;
-  top: 56px;
+  top: 66px;
   left: 50%;
   z-index: 40;
   display: flex;

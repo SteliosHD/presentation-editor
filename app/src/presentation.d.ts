@@ -12,11 +12,11 @@ declare module 'virtual:site' {
     init?: () => void;
     // The hosted app opened with nothing loaded. Without it, the Open modal shows.
     start?: (ctx: SiteContext) => void;
-    // The nav bar's icon was clicked; `back` returns to the app. Without it, the icon is not a button.
+    // The app's name at the top of the menu was clicked; `back` returns to the app. Without it, the icon is not a button.
     home?: (ctx: SiteContext & { back: () => void }) => void;
     // The footer's HTML. Without it, the footer links the license and the source.
     footer?: string;
-    // Extra HTML for Help → Why use the Presentation Viewer: sections after the built-in ones, and links in its foot.
+    // Extra HTML for the menu's Why use the Presentation Viewer: sections after the built-in ones, and links in its foot.
     about?: { sections?: string; links?: string };
   };
 

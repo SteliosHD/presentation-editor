@@ -2,7 +2,7 @@ import { must, reduceMotion } from './player.ts';
 
 // A short tour of the viewer: each step lights up one part of the viewer with a card beside it. The last steps open
 // a menu and light up one of its items. Skip, Esc or Done ends it, and it is then remembered so "Try the sample"
-// doesn't start it again; Help → Take the tour always does. Parts hidden at the current size are left out.
+// doesn't start it again; Take the tour in the menu always does. Parts hidden at the current size are left out.
 
 const STEPS: Step[] = [
   {
@@ -26,16 +26,21 @@ const STEPS: Step[] = [
     text: 'Speaker notes, laser pointer, slide numbers and Present. Hover a tool to see its name and shortcut.',
   },
   {
-    target: '.menu-edit',
-    item: 'Slide Creation Prompt',
-    title: 'Write slides with an AI agent',
-    text: 'Edit → Slide Creation Prompt gives you a prompt that has an AI agent write a whole presentation in this format. Copy it, fill in the topic, then open the folder the agent writes.',
+    target: '.nav-left',
+    title: 'Menu and panels',
+    text: 'The menu opens folders, exports and settings. The two buttons beside it show or hide the slide list and the animation list.',
   },
   {
-    target: '.menu-help',
+    target: '.menu-main',
+    item: 'Slide Creation Prompt',
+    title: 'Write slides with an AI agent',
+    text: 'Slide Creation Prompt, in the menu, gives you a prompt that has an AI agent write a whole presentation in this format. Copy it, fill in the topic, then open the folder the agent writes.',
+  },
+  {
+    target: '.menu-main',
     item: 'Personalize your viewer',
     title: 'Make the viewer yours',
-    text: 'Help → Personalize your viewer shows how to change its colours, fonts, slide layouts and shortcuts, yourself or with an AI agent.',
+    text: 'Personalize your viewer, in the menu, shows how to change its colours, fonts, slide layouts and shortcuts, yourself or with an AI agent.',
   },
 ];
 

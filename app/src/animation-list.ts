@@ -7,7 +7,7 @@ import { must, reduceMotion, type Player } from './player.ts';
 
 // At the bottom of the slide area: every step of the current slide's animation, one per row, read from GSAP. The
 // step that is running lights up; Replay plays the whole animation again, and clicking a step plays just that one.
-// Rows read as plain sentences unless View → Animations → Show technical details is on.
+// Rows read as plain sentences unless Show technical details is on in the menu's Animations settings.
 export const createAnimationList = (presentation: Presentation, player: Player, { empty = false } = {}) => {
   const strip = document.createElement('div');
   strip.className = 'anim-strip';

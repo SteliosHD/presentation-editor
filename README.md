@@ -16,7 +16,7 @@ to open: drop your own folder on it, which is read in your browser and never upl
 - **Present** in the browser window, with speaker notes in a separate window, a laser pointer, slide numbers, and a
   pen, highlighter and eraser for drawing on the slide.
 - **Export** to one self-contained HTML file that plays anywhere, or to a PDF with one slide per page.
-- **Slide Creation Prompt** (Edit menu): a ready-made prompt that has an AI agent write a whole presentation in this
+- **Slide Creation Prompt** (in the menu): a ready-made prompt that has an AI agent write a whole presentation in this
   format.
 - Works on desktops and tablets; on a phone it shows the slides as a scrolling list.
 
@@ -53,22 +53,22 @@ my-talk/
 ```
 
 Each slide is one `<section class="slide">` designed for a 1200×675 canvas. Copy `sample/` to start, or use
-**Edit → Slide Creation Prompt** to have an AI agent write one for you.
+**Slide Creation Prompt** in the menu to have an AI agent write one for you.
 
 ## Personalize your viewer
 
 Everything visual lives in a few plain files, so you can change it yourself or ask an AI agent to.
 
-| To change                                                    | Edit                                                                                                                                     |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Colours and fonts of slides                                  | `app/src/theme.css`. The brief at the top explains each token. A presentation's own `theme.css` overrides it for that presentation only. |
-| Colours, fonts and corners of the viewer itself              | `app/src/ui-theme.css`. Slides never use these, so any slide reads as it will on the projector.                                          |
-| Slide layouts (boxes, columns, steps, callouts)              | `app/src/slides.css`                                                                                                                     |
-| The viewer's own look (nav bar, slide list, toolbar, modals) | `app/src/app.css`                                                                                                                        |
-| Keyboard shortcuts                                           | `app/src/shortcuts.ts`. The key handler, tooltips and notes window all read this one list.                                               |
-| Icons that describe animation steps                          | `ICONS` in `app/src/animations.ts`                                                                                                       |
-| The sample presentation                                      | `sample/`                                                                                                                                |
-| The prompt for AI agents                                     | `app/src/prompt-dialog.ts`                                                                                                               |
+| To change                                                          | Edit                                                                                                                                     |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Colours and fonts of slides                                        | `app/src/theme.css`. The brief at the top explains each token. A presentation's own `theme.css` overrides it for that presentation only. |
+| Colours, fonts and corners of the viewer itself                    | `app/src/ui-theme.css`. Slides never use these, so any slide reads as it will on the projector.                                          |
+| Slide layouts (boxes, columns, steps, callouts)                    | `app/src/slides.css`                                                                                                                     |
+| The viewer's own look (floating menu, slide list, toolbar, modals) | `app/src/app.css`                                                                                                                        |
+| Keyboard shortcuts                                                 | `app/src/shortcuts.ts`. The key handler, tooltips and notes window all read this one list.                                               |
+| Icons that describe animation steps                                | `ICONS` in `app/src/animations.ts`                                                                                                       |
+| The sample presentation                                            | `sample/`                                                                                                                                |
+| The prompt for AI agents                                           | `app/src/prompt-dialog.ts`                                                                                                               |
 
 **With an AI agent:** open this folder in Claude Code, Codex or a similar agent and describe the change you want,
 such as "make the accent colour green" or "add a two-column layout with an image on the left". Agents find their

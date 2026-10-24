@@ -16,7 +16,7 @@ import { shortcutFor, type ShortcutId } from './shortcuts.ts';
 import { createToolbar, slideNumbers } from './toolbar.ts';
 
 // Loads the presentation and wires the parts together: player, slide list, toolbar, presentation mode,
-// drawing, keyboard, and (outside exports) the nav bar and animation list.
+// drawing, keyboard, and (outside exports) the floating menu and the animation list.
 
 site?.init?.();
 if (import.meta.env.MODE !== 'export' && import.meta.env.MODE !== 'template') void import('./fonts.ts');
@@ -52,7 +52,7 @@ const presentationTheme = document.createElement('style');
 presentationTheme.textContent = presentation.theme;
 document.head.append(presentationTheme);
 
-// Authoring aids (nav bar, animation list) need the running app, so exported files leave them out.
+// Authoring aids (the floating menu, the animation list) need the running app, so exported files leave them out.
 const authoring = import.meta.env.MODE !== 'export' && import.meta.env.MODE !== 'template';
 document.title = authoring ? `${presentation.title} · Presentation Viewer` : presentation.title;
 
@@ -64,7 +64,7 @@ else stageHead.remove();
 
 const onKey = (e: KeyboardEvent) => {
   if (empty || e.metaKey || e.ctrlKey || e.altKey) return;
-  // Typing in a field, or working the Open modal or File menu, is not slide control.
+  // Typing in a field, or working the Open modal or the menu, is not slide control.
   if (e.target instanceof Element && e.target.closest('input, dialog, .menu')) return;
   const id = shortcutFor(e.key);
   // Esc and D only mean something while presenting; elsewhere Esc stays with the browser.
@@ -111,7 +111,7 @@ const player = createPlayer(presentation.slides, must(document.querySelector('.v
     render();
   },
   onKey,
-  // While editing, a slide plays its animation on arrival only if View → Animations says so; presenting and
+  // While editing, a slide plays its animation on arrival only if the menu's Animations settings say so; presenting and
   // exported files always play it.
   autoplay: () => !authoring || present.active() || animationPrefs.get().autoplay,
 });

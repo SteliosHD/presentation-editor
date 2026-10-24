@@ -1,4 +1,4 @@
-// View → Animations: whether slides play their animation when you switch to them while editing (presenting always
+// The menu's Animations settings: whether slides play their animation when you switch to them while editing (presenting always
 // plays it), and whether the animation list shows technical details or plain sentences. Remembered between visits;
 // the list's own visibility is the View menu's usual hide-animations switch.
 

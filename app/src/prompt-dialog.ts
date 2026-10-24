@@ -2,7 +2,7 @@ import { Check, Copy, createElement, X } from 'lucide';
 import { ICONS } from './animations.ts';
 import { must } from './player.ts';
 
-// Edit → Slide Creation Prompt: a ready-made prompt that has an AI agent create a whole presentation in the
+// The menu's Slide Creation Prompt: a ready-made prompt that has an AI agent create a whole presentation in the
 // format this viewer opens, plus a short note on doing it with an agent without the fixed prompt.
 // The prompt is built from the same lists the code uses, so it cannot drift from what the viewer supports.
 
