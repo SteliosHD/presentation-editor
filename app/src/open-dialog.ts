@@ -48,7 +48,8 @@ const sampleSlides = () =>
 const sections = (repo: string) => `
   <section class="od-section" data-section="sample" role="tabpanel" hidden>
     <div class="od-section-body">
-      <p>Every built-in layout and a custom animation, followed by a short tour of the viewer.</p>
+      <p>Every built-in layout, custom animations and a few extreme cases, followed by a short tour of the viewer.</p>
+      <p class="od-sample-label">${String(served?.slides.length ?? 0)} slides</p>
       <ol class="od-sample-list">${isWeb ? sampleSlides() : ''}</ol>
     </div>
     <div class="modal-foot"><button class="primary od-sample">Open the sample</button></div>

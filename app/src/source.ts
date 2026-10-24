@@ -4,8 +4,8 @@ import { presentation as served, type Presentation, type SlideAnimation } from '
 // - the local app (any mode but "web" and "template"): the server's virtual module, live-reloaded, unless a
 //   folder was dropped on it, which is read in the browser like the hosted app's;
 // - the hosted app ("web"): a folder the viewer opened, kept only across the viewer's own reloads (opening it,
-//   or a file in it changing), so refreshing the page closes it; the built-in sample for the one load that
-//   "Try the sample" asked for; otherwise placeholder shapes until something is opened;
+//   or a file in it changing), so refreshing the page closes it; the built-in sample once "Try the sample" asked
+//   for it, until a folder is opened or the tab closes; otherwise placeholder shapes until something is opened;
 // - a downloaded file ("template"): JSON embedded in the page by the export.
 // Stored and embedded presentations carry their animations as code, loaded here as modules.
 
@@ -13,7 +13,7 @@ export const isWeb = import.meta.env.MODE === 'web';
 const STORE_KEY = 'presentation-viewer:opened';
 // Set just before the viewer reloads itself with an opened folder; a reload without it is the user refreshing.
 const KEEP_KEY = 'presentation-viewer:keep';
-// Set by "Try the sample" for the one reload that loads it.
+// Set by "Try the sample" (or a ?sample link); the sample then stays open across refreshes until a folder is opened.
 const SAMPLE_KEY = 'presentation-viewer:sample';
 export const DATA_ID = 'presentation-data';
 
@@ -52,6 +52,7 @@ export const toStored = (presentation: Presentation): Stored => ({
 export const storeOpened = (presentation: Stored) => {
   sessionStorage.setItem(STORE_KEY, JSON.stringify(presentation));
   sessionStorage.setItem(KEEP_KEY, '1');
+  sessionStorage.removeItem(SAMPLE_KEY);
 };
 export const requestSample = () => {
   try {
@@ -63,14 +64,12 @@ export const requestSample = () => {
 };
 // A link can ask for the sample too, with ?sample in the address (nav.ts then clears it and starts the tour).
 export const linkedToSample = () => new URLSearchParams(location.search).has('sample');
-const takeSampleRequest = () => {
-  if (linkedToSample()) return true;
+const sampleRequested = () => {
   try {
-    const requested = sessionStorage.getItem(SAMPLE_KEY) === '1';
-    sessionStorage.removeItem(SAMPLE_KEY);
-    return requested;
+    if (linkedToSample()) sessionStorage.setItem(SAMPLE_KEY, '1');
+    return sessionStorage.getItem(SAMPLE_KEY) === '1';
   } catch {
-    return false;
+    return linkedToSample();
   }
 };
 
@@ -127,6 +126,6 @@ export const loadPresentation = async (): Promise<Loaded> => {
   const opened = readOpened();
   if (opened) return { presentation: await hydrate(opened), choose: false, inBrowser: true, empty: false };
   if (!isWeb) return { presentation: served, choose: false, inBrowser: false, empty: false };
-  if (takeSampleRequest()) return { presentation: served, choose: false, inBrowser: true, empty: false };
+  if (sampleRequested()) return { presentation: served, choose: false, inBrowser: true, empty: false };
   return { presentation: PLACEHOLDER, choose: true, inBrowser: true, empty: true };
 };
