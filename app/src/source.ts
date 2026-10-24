@@ -64,11 +64,11 @@ export const requestSample = () => {
 };
 // A link can ask for the sample too, with ?sample in the address (nav.ts then clears it and starts the tour).
 export const linkedToSample = () => new URLSearchParams(location.search).has('sample');
-// ?picked: another page on the site picked a folder for the viewer to open (see takePicked in watch.ts).
-export const linkedToPicked = () => new URLSearchParams(location.search).has('picked');
+// ?open: a link to the viewer ready to open a presentation, such as a landing page's; the sample gives way to it.
+export const linkedToOpen = () => new URLSearchParams(location.search).has('open');
 const sampleRequested = () => {
   try {
-    if (linkedToPicked()) sessionStorage.removeItem(SAMPLE_KEY);
+    if (linkedToOpen()) sessionStorage.removeItem(SAMPLE_KEY);
     if (linkedToSample()) sessionStorage.setItem(SAMPLE_KEY, '1');
     return sessionStorage.getItem(SAMPLE_KEY) === '1';
   } catch {

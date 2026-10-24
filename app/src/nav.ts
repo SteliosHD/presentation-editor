@@ -30,7 +30,7 @@ import { must } from './player.ts';
 import { createPromptDialog } from './prompt-dialog.ts';
 import { queueTour, startQueuedTour, startTour } from './tour.ts';
 import site from './site.ts';
-import { isWeb, linkedToPicked, linkedToSample } from './source.ts';
+import { isWeb, linkedToOpen, linkedToSample } from './source.ts';
 import { watchOpened } from './watch.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
@@ -323,11 +323,12 @@ export const mountNav = (
   const prompt = createPromptDialog();
   const dialog = createOpenDialog(presentation.folder, REPO, { required: empty });
   const ctx = { openFolder: dialog.show, trySample: isWeb ? dialog.trySample : undefined };
-  if (linkedToPicked()) {
+  // Arriving by an ?open link opens the dialog straight away; the address loses the request.
+  if (linkedToOpen()) {
     const params = new URLSearchParams(location.search);
-    params.delete('picked');
+    params.delete('open');
     history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : '') + location.hash);
-    void dialog.openPicked();
+    ctx.openFolder();
   } else if (choose) {
     if (site?.start) site.start(ctx);
     else ctx.openFolder();

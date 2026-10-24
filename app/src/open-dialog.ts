@@ -5,7 +5,7 @@ import { must } from './player.ts';
 import { forgetOpened, isWeb, requestSample, storeOpened } from './source.ts';
 import { attachCopy, SLIDE_PROMPT } from './prompt-dialog.ts';
 import { queueTour } from './tour.ts';
-import { canWatch, filesFromHandle, forgetWatched, rememberWatched, takePicked } from './watch.ts';
+import { canWatch, filesFromHandle, forgetWatched, rememberWatched } from './watch.ts';
 import { filesFromDrop, filesFromInput, readPresentation, type FolderFile } from './web.ts';
 
 // The "Open Presentation folder" modal: a drop zone with Choose folder in both versions. Choosing uses the Mac
@@ -308,12 +308,5 @@ export const createOpenDialog = (currentFolder: string, repo: string, { required
     copy.reset();
     dialog.showModal();
   };
-  // A folder another page picked (?picked): opened here, or this dialog if it is gone.
-  const openPicked = async () => {
-    show();
-    const picked = await takePicked();
-    if (Array.isArray(picked)) await openInBrowser(() => Promise.resolve(picked));
-    else if (picked) await openInBrowser(() => filesFromHandle(picked), picked);
-  };
-  return { show, trySample, openPicked };
+  return { show, trySample };
 };
