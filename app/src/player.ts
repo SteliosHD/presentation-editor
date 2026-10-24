@@ -1,4 +1,5 @@
 import { gsap } from 'gsap';
+import { finish } from './animations.ts';
 import type { PresentationSlide, SlideAnimation } from 'virtual:presentation';
 import { keyName, SHORTCUTS } from './shortcuts.ts';
 
@@ -45,7 +46,11 @@ export const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').match
 export const createPlayer = (
   slides: PresentationSlide[],
   viewport: HTMLElement,
-  { onChange, onKey }: { onChange: () => void; onKey: (e: KeyboardEvent) => void },
+  {
+    onChange,
+    onKey,
+    autoplay = () => true,
+  }: { onChange: () => void; onKey: (e: KeyboardEvent) => void; autoplay?: () => boolean },
 ) => {
   const elements = slides.map((s) => toSlide(s.html));
   const stack = must(viewport.querySelector<HTMLElement>('.slide-stack'), '.slide-stack');
@@ -70,11 +75,13 @@ export const createPlayer = (
   };
   new ResizeObserver(fit).observe(stack);
 
-  // The animation is reverted when the slide is left, so endless loops are fine.
+  // The animation is reverted when the slide is left, so endless loops are fine. Unless it should play (presenting,
+  // or the editor's choice), the slide shows finished.
   const animateIn = (k: number) => {
     entrance?.revert();
     if (reduceMotion) return;
     entrance = (slides[k].animation ?? defaultAnimation)(elements[k], gsap);
+    if (!autoplay()) finish(entrance);
   };
 
   const show = (n: number) => {

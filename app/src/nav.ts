@@ -1,5 +1,6 @@
 import {
   Check,
+  ChevronRight,
   createElement,
   FileCode,
   FileDown,
@@ -13,6 +14,7 @@ import {
 } from 'lucide';
 import type { Presentation } from 'virtual:presentation';
 import { createAboutDialog } from './about-dialog.ts';
+import { animationPrefs } from './animation-prefs.ts';
 import { post } from './api.ts';
 import iconUrl from '../favicon.svg';
 import { createOpenDialog, rememberFolder } from './open-dialog.ts';
@@ -32,12 +34,15 @@ const REPO = 'https://github.com/SteliosHD/presentation-viewer';
 // GitHub's mark (Octicons mark-github, MIT); Lucide no longer ships brand icons.
 const GITHUB_MARK = `<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>`;
 
-type Entry =
+type Item =
   | { label: string; icon: IconNode; run: () => void }
-  | { label: string; checked: () => boolean; run: () => void }
-  | 'separator';
+  | { label: string; checked: () => boolean; run: () => void };
+type Entry = Item | { label: string; icon: IconNode; sub: Item[] } | 'separator';
 
-// A dropdown menu: click or arrow keys to move, Esc or a click elsewhere to close.
+const icon = (node: IconNode) => createElement(node, { width: 16, height: 16, 'aria-hidden': 'true' });
+
+// A dropdown menu: click or arrow keys to move, Esc or a click elsewhere to close. An entry with a submenu opens it
+// on hover, click or the right arrow.
 const createMenu = (title: string, entries: Entry[]) => {
   const root = document.createElement('div');
   root.className = `menu menu-${title.toLowerCase()}`;
@@ -52,30 +57,101 @@ const createMenu = (title: string, entries: Entry[]) => {
   list.hidden = true;
   root.append(button, list);
 
-  const items = entries.flatMap((entry) => {
-    if (entry === 'separator') {
-      list.append(document.createElement('hr'));
-      return [];
-    }
+  const makeItem = (entry: Item | { label: string; icon: IconNode }) => {
     const item = document.createElement('button');
     const checkable = 'checked' in entry;
     item.setAttribute('role', checkable ? 'menuitemcheckbox' : 'menuitem');
     const mark = document.createElement('span');
     mark.className = 'menu-mark';
-    mark.append(createElement(checkable ? Check : entry.icon, { width: 16, height: 16, 'aria-hidden': 'true' }));
+    mark.append(icon(checkable ? Check : entry.icon));
     item.append(mark, entry.label);
-    list.append(item);
-    return [{ item, entry }];
+    return item;
+  };
+  // Every clickable entry, submenus' included; `items` are only the top level, which the arrow keys walk.
+  const leaves: { item: HTMLButtonElement; entry: Item }[] = [];
+  const subs: { item: HTMLButtonElement; wrap: HTMLElement; sub: HTMLElement }[] = [];
+  const items = entries.flatMap((entry) => {
+    if (entry === 'separator') {
+      list.append(document.createElement('hr'));
+      return [];
+    }
+    const item = makeItem(entry);
+    if (!('sub' in entry)) {
+      list.append(item);
+      leaves.push({ item, entry });
+      return [item];
+    }
+    item.setAttribute('aria-haspopup', 'menu');
+    item.setAttribute('aria-expanded', 'false');
+    item.classList.add('menu-has-sub');
+    const arrow = icon(ChevronRight);
+    arrow.classList.add('menu-arrow');
+    item.append(arrow);
+    const sub = document.createElement('div');
+    sub.className = 'menu-list menu-sub';
+    sub.setAttribute('role', 'menu');
+    sub.hidden = true;
+    for (const child of entry.sub) {
+      const childItem = makeItem(child);
+      sub.append(childItem);
+      leaves.push({ item: childItem, entry: child });
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'menu-sub-wrap';
+    wrap.append(item, sub);
+    list.append(wrap);
+    subs.push({ item, wrap, sub });
+    return [item];
   });
 
   const isOpen = () => button.getAttribute('aria-expanded') === 'true';
   const refresh = () => {
-    for (const { item, entry } of items) {
+    for (const { item, entry } of leaves) {
       if ('checked' in entry) item.setAttribute('aria-checked', String(entry.checked()));
     }
   };
+  const showSub = (s: (typeof subs)[number], open: boolean) => {
+    s.sub.hidden = !open;
+    s.item.setAttribute('aria-expanded', String(open));
+    s.item.classList.toggle('on', open);
+  };
+  for (const s of subs) {
+    s.wrap.addEventListener('pointerenter', () => {
+      showSub(s, true);
+    });
+    s.wrap.addEventListener('pointerleave', () => {
+      showSub(s, false);
+    });
+    const focusFirst = () => {
+      showSub(s, true);
+      s.sub.querySelector('button')?.focus();
+    };
+    s.item.addEventListener('click', focusFirst);
+    s.item.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        focusFirst();
+      }
+    });
+    s.sub.addEventListener('keydown', (e) => {
+      const buttons = [...s.sub.querySelectorAll('button')];
+      const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
+        buttons.at((at + (e.key === 'ArrowDown' ? 1 : -1)) % buttons.length)?.focus();
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        showSub(s, false);
+        s.item.focus();
+      }
+    });
+  }
   const setOpen = (open: boolean) => {
     refresh();
+    for (const s of subs) showSub(s, false);
     list.hidden = !open;
     button.setAttribute('aria-expanded', String(open));
     button.classList.toggle('on', open);
@@ -85,7 +161,7 @@ const createMenu = (title: string, entries: Entry[]) => {
       const over = list.getBoundingClientRect().right - (innerWidth - 8);
       if (over > 0) list.style.translate = `${-over}px 0`;
     }
-    if (open) items.find(({ item }) => !item.disabled)?.item.focus();
+    if (open) items.find((item) => !item.disabled)?.focus();
   };
   button.addEventListener('click', () => {
     setOpen(!isOpen());
@@ -96,7 +172,7 @@ const createMenu = (title: string, entries: Entry[]) => {
     setOpen(false);
   });
   list.addEventListener('keydown', (e) => {
-    const enabled = items.map(({ item }) => item).filter((item) => !item.disabled);
+    const enabled = items.filter((item) => !item.disabled);
     const at = enabled.indexOf(document.activeElement as HTMLButtonElement);
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
@@ -108,22 +184,18 @@ const createMenu = (title: string, entries: Entry[]) => {
       button.focus();
     }
   });
-  for (const { item, entry } of items) {
+  for (const { item, entry } of leaves) {
     item.addEventListener('click', () => {
       setOpen(false);
       entry.run();
     });
   }
-  return { root, items: items.map(({ item }) => item) };
+  return { root, items };
 };
 
 // View: parts of the viewer that can be hidden, remembered between visits.
 const VIEW_KEY = 'presentation-viewer:hidden';
-const PARTS = [
-  ['sidebar', 'Slide list'],
-  ['toolbar', 'Toolbar'],
-  ['animations', 'Animations'],
-] as const;
+const PARTS = ['sidebar', 'toolbar', 'animations'] as const;
 const readHidden = (): string[] => {
   try {
     return JSON.parse(localStorage.getItem(VIEW_KEY) ?? '[]') as string[];
@@ -135,7 +207,7 @@ const isHidden = (part: string) => document.body.classList.contains(`hide-${part
 const toggleHidden = (part: string) => {
   document.body.classList.toggle(`hide-${part}`);
   try {
-    localStorage.setItem(VIEW_KEY, JSON.stringify(PARTS.map(([p]) => p).filter(isHidden)));
+    localStorage.setItem(VIEW_KEY, JSON.stringify(PARTS.filter(isHidden)));
   } catch {
     // Storage blocked: the view still changes for this visit.
   }
@@ -245,16 +317,38 @@ export const mountNav = (
   ]);
   if (empty) file.items.slice(1).forEach((b) => (b.disabled = true));
   const editMenu = createMenu('Edit', [{ label: 'Slide Creation Prompt', icon: Sparkles, run: prompt.show }]);
-  const view = createMenu(
-    'View',
-    PARTS.map(([part, label]) => ({
-      label,
-      checked: () => !isHidden(part),
-      run: () => {
-        toggleHidden(part);
-      },
-    })),
-  );
+  const showPart = (part: (typeof PARTS)[number], label: string) => ({
+    label,
+    checked: () => !isHidden(part),
+    run: () => {
+      toggleHidden(part);
+    },
+  });
+  const view = createMenu('View', [
+    showPart('sidebar', 'Slide list'),
+    showPart('toolbar', 'Toolbar'),
+    {
+      label: 'Animations',
+      icon: Sparkles,
+      sub: [
+        {
+          label: 'Play animations on slide change',
+          checked: () => animationPrefs.get().autoplay,
+          run: () => {
+            animationPrefs.set({ autoplay: !animationPrefs.get().autoplay });
+          },
+        },
+        showPart('animations', 'Show animations list'),
+        {
+          label: 'Show technical details',
+          checked: () => animationPrefs.get().details,
+          run: () => {
+            animationPrefs.set({ details: !animationPrefs.get().details });
+          },
+        },
+      ],
+    },
+  ]);
   const about = createAboutDialog({ repo: REPO, extra: site?.about });
   const help = createMenu('Help', [
     {

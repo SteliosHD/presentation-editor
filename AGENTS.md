@@ -75,7 +75,7 @@ The same app runs in four Vite modes; `app/src/source.ts` decides where the pres
 | `template`    | `pnpm build:web` → `dist/export-template.html` | JSON the hosted Export HTML embeds in the page                                        | none                                                                     |
 
 - `pnpm typecheck`, `pnpm lint` and `pnpm format:check` pass before a change is finished.
-- `app/src/main.ts` only wires the parts; each feature has its own module (`player`, `slide-list`, `animation-list`, `toolbar`, `presentation-mode`, `ink`, `nav` with the File, Edit and View menus, `open-dialog`, `prompt-dialog`, `about-dialog`, `tour`).
+- `app/src/main.ts` only wires the parts; each feature has its own module (`player`, `slide-list`, `animation-list`, `toolbar`, `presentation-mode`, `ink`, `nav` with the File, Edit and View menus, `animation-prefs` for View → Animations, `resizer` for the slide list's and animation list's drag handles, `open-dialog`, `prompt-dialog`, `about-dialog`, `tour`).
 - Layouts cover desktop, tablet (touch: tools stay visible, swipe changes slide) and phone (the slide list only). Nothing may overlap at any size; while presentation tools are on show, the slide fits beside them.
 - The tour (Help → Take the tour, or Try the sample the first time) remembers in localStorage that it was seen.
 - The hosted app opens its built-in sample from a `?sample` link too (`app/src/source.ts`), so a site can link straight

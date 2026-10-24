@@ -15,7 +15,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 body {
-  --sidebar-w: 230px;
+  --sidebar-w: var(--sidebar-user, 230px);
   --thumb-w: calc(var(--sidebar-w) - 50px);
   display: flex;
   flex-direction: column;
@@ -91,7 +91,8 @@ kbd {
 /* Nav bar: icon and File menu, the folder name centred, export status on the right. */
 .nav {
   display: grid;
-  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(0, 1fr);
+  position: relative;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 16px;
   align-items: center;
   height: 48px;
@@ -120,6 +121,12 @@ kbd {
   height: 22px;
 }
 .nav-folder {
+  /* Centred over the slide area rather than the window, in line with the tools and the slide title below, and
+     narrow enough to stay clear of the menus and the status. */
+  position: absolute;
+  left: calc((100% + var(--sidebar-w)) / 2);
+  translate: -50% 0;
+  max-width: calc(100% - var(--sidebar-w) - 340px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -256,6 +263,33 @@ kbd {
 .menu-list button:focus-visible {
   background: var(--ui-surface-raised);
   outline: none;
+}
+/* A submenu opens beside its entry, on hover or with the right arrow. */
+.menu-sub-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.menu-list .menu-has-sub.on {
+  background: var(--ui-surface-raised);
+}
+.menu-arrow {
+  margin-left: auto;
+  color: var(--ui-ink-faint);
+}
+.menu-sub {
+  top: -6px;
+  left: calc(100% + 6px);
+  min-width: 290px;
+}
+/* A bridge across the gap, so moving the pointer into the submenu doesn't close it. */
+.menu-sub::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -12px;
+  width: 12px;
 }
 .menu-list hr {
   width: 100%;
@@ -905,7 +939,7 @@ button.primary {
    slide, and its own scrollbar for longer animations. */
 .anim-strip {
   flex-shrink: 0;
-  height: 150px;
+  height: var(--strip-user, 150px);
   overflow-y: auto;
   padding: 10px 16px;
   border-top: 1px solid var(--ui-border-soft);
@@ -1049,6 +1083,17 @@ body.empty .stage-title {
   color: var(--ui-ink);
   font-weight: 600;
 }
+/* Without technical details: number, icons, a plain sentence and when it happens. */
+.anim-step.plain {
+  grid-template-columns: 18px 56px 1fr auto;
+}
+.anim-step-plain {
+  color: var(--ui-ink);
+}
+.anim-step-plain-when {
+  font-size: 11px;
+  color: var(--ui-ink-faint);
+}
 
 /* Slide list and stage */
 .app {
@@ -1059,9 +1104,63 @@ body.empty .stage-title {
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
+  position: relative;
   overflow-y: auto;
   border-right: 1px solid var(--ui-border-soft);
   padding: 12px 8px;
+}
+/* Drag handles on the slide list's right edge and the animation list's top edge: a thin line that lights on hover
+   and while dragging. */
+.resize-handle {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+  touch-action: none;
+}
+.resize-right {
+  width: 9px;
+  margin: 0 -5px 0 -4px;
+  cursor: col-resize;
+}
+.resize-top {
+  height: 9px;
+  margin: -4px 0 -5px;
+  cursor: row-resize;
+}
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  transition: background 0.15s;
+}
+.resize-right::after {
+  inset: 0 4px;
+}
+.resize-top::after {
+  inset: 4px 0;
+}
+.resize-handle:hover::after,
+.resize-handle:focus-visible::after,
+body.resizing-x .resize-right::after,
+body.resizing-y .resize-top::after {
+  background: var(--ui-accent);
+}
+.resize-handle:focus-visible {
+  outline: none;
+}
+body.resizing-x,
+body.resizing-x * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+body.resizing-y,
+body.resizing-y * {
+  cursor: row-resize !important;
+  user-select: none;
+}
+body.hide-sidebar .resize-right,
+body.hide-animations .resize-top,
+body.presenting .resize-handle {
+  display: none;
 }
 .slide-list {
   list-style: none;
@@ -1369,10 +1468,13 @@ body.empty .stage-title {
   }
 }
 
-@media (max-width: 560px) {
-  .nav {
-    grid-template-columns: 1fr auto;
+@media (max-width: 640px) {
+  .nav-folder {
+    left: 50%;
+    max-width: calc(100% - 340px);
   }
+}
+@media (max-width: 560px) {
   .nav-folder {
     display: none;
   }
@@ -1576,7 +1678,7 @@ body.inking .ink-tools {
 /* Tablets and small laptops: a narrower slide list; the animation list sheds its easing column. */
 @media (max-width: 1100px) {
   body {
-    --sidebar-w: 190px;
+    --sidebar-w: var(--sidebar-user, 190px);
   }
   .anim-step {
     grid-template-columns: 18px 84px 150px 120px 1fr;
@@ -1588,7 +1690,7 @@ body.inking .ink-tools {
 /* Tablets held upright: the slide list narrows again and the animation list keeps what each step does. */
 @media (max-width: 860px) {
   body {
-    --sidebar-w: 160px;
+    --sidebar-w: var(--sidebar-user, 160px);
   }
   .anim-step {
     grid-template-columns: 18px 70px 110px 1fr;
@@ -1600,7 +1702,7 @@ body.inking .ink-tools {
 /* Short screens, such as tablets held sideways: a shorter animation list keeps the slide large. */
 @media (max-height: 820px) {
   .anim-strip {
-    height: 118px;
+    height: var(--strip-user, 118px);
   }
 }
 
@@ -1641,6 +1743,7 @@ body.presenting.inking .slide-stack {
 @media (max-width: 640px) {
   .bar,
   .stage,
+  .resize-handle,
   .menu-view {
     display: none;
   }
@@ -1739,6 +1842,7 @@ body.presenting .change-note {
   .stage-head,
   .stage-foot,
   .anim-strip,
+  .resize-handle,
   .ink,
   .ink-zone,
   .present-hint,

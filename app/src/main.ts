@@ -3,11 +3,13 @@ import './ui-theme.css';
 import './slides.css';
 import './app.css';
 import { createAnimationList } from './animation-list.ts';
+import { animationPrefs } from './animation-prefs.ts';
 import { noteChanges, showChanges, type Change } from './changes.ts';
 import { createInk } from './ink.ts';
 import { createPlayer, must } from './player.ts';
 import { createPresentationMode } from './presentation-mode.ts';
 import { createSlideList } from './slide-list.ts';
+import { makeResizable } from './resizer.ts';
 import site from './site.ts';
 import { loadPresentation } from './source.ts';
 import { shortcutFor, type ShortcutId } from './shortcuts.ts';
@@ -109,6 +111,9 @@ const player = createPlayer(presentation.slides, must(document.querySelector('.v
     render();
   },
   onKey,
+  // While editing, a slide plays its animation on arrival only if View → Animations says so; presenting and
+  // exported files always play it.
+  autoplay: () => !authoring || present.active() || animationPrefs.get().autoplay,
 });
 // Picking or putting away a drawing tool can change the room around the slide, so refit it.
 const ink = createInk(must(document.querySelector<HTMLElement>('.slide-stack'), '.slide-stack'), {
@@ -119,6 +124,8 @@ const ink = createInk(must(document.querySelector<HTMLElement>('.slide-stack'), 
 const present = createPresentationMode({
   onChange: (on) => {
     if (!on) ink.stop();
+    // Entering presentation mode plays the current slide's animation.
+    if (on) player.entrance()?.restart();
     render();
   },
 });
@@ -129,7 +136,27 @@ const toggleNumbers = () => {
 slideNumbers.restore();
 
 const slideList = createSlideList(presentation, player);
+// The slide area always keeps at least half the window's width, and the slide most of the stage's height.
+makeResizable({
+  target: must(document.querySelector<HTMLElement>('.sidebar'), '.sidebar'),
+  edge: 'right',
+  property: '--sidebar-user',
+  key: 'presentation-viewer:sidebar-width',
+  min: 150,
+  max: () => Math.min(420, innerWidth / 2),
+  label: 'Resize the slide list',
+});
 const animationList = authoring ? createAnimationList(presentation, player, { empty }) : null;
+if (animationList)
+  makeResizable({
+    target: animationList.strip,
+    edge: 'top',
+    property: '--strip-user',
+    key: 'presentation-viewer:animations-height',
+    min: 70,
+    max: () => Math.min(480, innerHeight * 0.45),
+    label: 'Resize the animation list',
+  });
 const toolbar = createToolbar(
   {
     notes: { run: player.toggleNotes, isOn: player.notesOpen },

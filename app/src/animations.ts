@@ -31,6 +31,9 @@ export type Step = {
   label: string;
   ease: string;
   tween: gsap.core.Tween;
+  // The same step for someone who doesn't know GSAP: "The title fades in and rises", "After 0.4 seconds".
+  plain: string;
+  plainWhen: string;
 };
 
 // The icon names a tween's data.icons may use; AGENTS.md points authors here.
@@ -109,6 +112,73 @@ const describeTargets = (targets: unknown[]) => {
 
 const seconds = (s: number) => `${(Math.round(s * 100) / 100).toString()}s`;
 
+// Plain words for the elements a step moves, by their first class or tag; anything else is its class with spaces.
+const WORDS: Record<string, [string, string]> = {
+  h1: ['the title', 'titles'],
+  h2: ['the title', 'titles'],
+  h3: ['the heading', 'headings'],
+  kicker: ['the label', 'labels'],
+  lead: ['the intro text', 'intro texts'],
+  p: ['the text', 'paragraphs'],
+  li: ['the item', 'items'],
+  img: ['the image', 'images'],
+  box: ['the box', 'boxes'],
+  stat: ['the figure', 'figures'],
+  col: ['the column', 'columns'],
+  item: ['the item', 'items'],
+  step: ['the step', 'steps'],
+  line: ['the line', 'lines'],
+  arrow: ['the arrow', 'arrows'],
+  node: ['the shape', 'shapes'],
+};
+const NUMBERS = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const plainTargets = (targets: unknown[]) => {
+  const counts = new Map<string, number>();
+  for (const target of targets) {
+    const name = target instanceof Element ? (target.classList.item(0) ?? target.tagName.toLowerCase()) : 'part';
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  const parts = [...counts].map(([name, n]) => {
+    const words = WORDS[name] ?? [`the ${name.replaceAll(/[-_]/g, ' ')}`, `${name.replaceAll(/[-_]/g, ' ')}s`];
+    return n > 1 ? `${NUMBERS[n] ?? String(n)} ${words[1]}` : words[0];
+  });
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1) ?? ''}` : (parts[0] ?? 'this slide');
+};
+
+// What a step does, from the properties it animates and which way it goes.
+const plainVerbs = (vars: gsap.TweenVars, names: string[]) => {
+  const into = Boolean(vars.runBackwards) || vars.startAt !== undefined;
+  const value = (name: string) => Number(vars[name] ?? 0);
+  const verbs = new Set<string>();
+  for (const name of names) {
+    if (name === 'opacity' || name === 'autoAlpha') verbs.add(into || value(name) > 0 ? 'fades in' : 'fades out');
+    else if (name === 'y' || name === 'yPercent') verbs.add(into ? (value(name) > 0 ? 'rises' : 'drops in') : 'moves');
+    else if (name === 'x' || name === 'xPercent') verbs.add(into ? 'slides in' : 'slides across');
+    else if (/^scale/.test(name)) verbs.add(into ? 'grows in' : value(name) >= 1 ? 'grows' : 'shrinks');
+    else if (/^rotat/.test(name)) verbs.add('turns');
+    else if (/^stroke(Dashoffset|Dasharray)$/.test(name)) verbs.add('draws');
+    else if (/(color|Color|background|fill|stroke)/.test(name)) verbs.add('changes colour');
+    else if (/^(--|boxShadow|filter)/.test(name)) verbs.add(vars.repeat === -1 ? 'pulses' : 'glows');
+    else verbs.add('changes');
+  }
+  return [...verbs];
+};
+
+const plainSentence = (vars: gsap.TweenVars, names: string[], targets: unknown[]) => {
+  const verbs = plainVerbs(vars, names);
+  const subject = plainTargets(targets);
+  const action =
+    verbs.length > 1 ? `${verbs.slice(0, -1).join(', ')} and ${verbs.at(-1) ?? ''}` : (verbs[0] ?? 'moves');
+  const order = vars.stagger !== undefined && targets.length > 1 ? ', one after another' : '';
+  const loop = vars.repeat === -1 ? ', again and again' : '';
+  return `${subject.charAt(0).toUpperCase()}${subject.slice(1)} ${action}${order}${loop}`;
+};
+
+const plainTime = (start: number, loops: boolean) => {
+  const at = start < 0.05 ? 'At the start' : `After ${(Math.round(start * 10) / 10).toString()} seconds`;
+  return loops ? `${at}, then keeps going` : at;
+};
+
 const describeTween = (tween: gsap.core.Tween): Step => {
   const vars = tween.vars;
   const startAt = vars.startAt as object | undefined;
@@ -127,15 +197,35 @@ const describeTween = (tween: gsap.core.Tween): Step => {
       ? `${seconds(start)} → loops every ${seconds(tween.duration())}`
       : `${seconds(start)}–${seconds(start + tween.totalDuration())}`;
   const stagger = typeof vars.stagger === 'number' ? ` · stagger ${seconds(vars.stagger)}` : '';
+  const targets = tween.targets();
   return {
     icons,
     when,
-    targets: describeTargets(tween.targets()),
+    targets: describeTargets(targets),
     change: change + stagger,
     label: note.label ?? '',
     ease: typeof vars.ease === 'string' ? vars.ease : '',
     tween,
+    // An author's label is already plain language; otherwise one is written from what the step does.
+    plain: note.label ?? plainSentence(vars, names, targets),
+    plainWhen: plainTime(start, vars.repeat === -1),
   };
+};
+
+// Shows a slide in its finished state without playing it: every step that ends is done, and repeating ones wait at
+// their start. Replay or presenting plays it.
+export const finish = (root: gsap.core.Animation) => {
+  if (!(root instanceof gsap.core.Timeline)) {
+    if ((root as gsap.core.Tween).vars.repeat === -1) root.pause(0);
+    else root.progress(1).pause();
+    return;
+  }
+  let end = 0;
+  for (const child of root.getChildren(true, true, false)) {
+    const start = startOn(root, child);
+    end = Math.max(end, child.vars.repeat === -1 ? start : start + child.totalDuration());
+  }
+  root.pause(end);
 };
 
 // Where a step starts on the slide's whole animation, adding up the start times of any timelines it sits in.
