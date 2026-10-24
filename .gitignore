@@ -2,3 +2,5 @@ node_modules/
 export/
 .DS_Store
 dist/
+.vercel
+.env*
