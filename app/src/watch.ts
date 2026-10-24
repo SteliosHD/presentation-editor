@@ -55,6 +55,17 @@ const handles = <T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => ID
     };
   });
 
+// A page on the same site (such as a landing page) can pick a folder itself, keep it here under "picked" (a handle,
+// or the files from a file input) and send the viewer to ?picked, which opens it. Taken once.
+export const takePicked = async () => {
+  const picked = await handles<FileSystemDirectoryHandle | FolderFile[] | undefined>(
+    'readonly',
+    (store) => store.get('picked') as IDBRequest<FileSystemDirectoryHandle | FolderFile[] | undefined>,
+  ).catch(() => undefined);
+  await handles('readwrite', (store) => store.delete('picked')).catch(() => undefined);
+  return picked;
+};
+
 // Failing to keep or forget a handle only costs live updates, so these never throw.
 export const rememberWatched = (dir: FileSystemDirectoryHandle) =>
   handles('readwrite', (store) => store.put(dir, tabId())).catch(() => undefined);

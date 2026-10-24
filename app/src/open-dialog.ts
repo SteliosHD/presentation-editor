@@ -5,7 +5,7 @@ import { must } from './player.ts';
 import { forgetOpened, isWeb, requestSample, storeOpened } from './source.ts';
 import { attachCopy, SLIDE_PROMPT } from './prompt-dialog.ts';
 import { queueTour } from './tour.ts';
-import { canWatch, filesFromHandle, forgetWatched, rememberWatched } from './watch.ts';
+import { canWatch, filesFromHandle, forgetWatched, rememberWatched, takePicked } from './watch.ts';
 import { filesFromDrop, filesFromInput, readPresentation, type FolderFile } from './web.ts';
 
 // The "Open Presentation folder" modal: a drop zone with Choose folder in both versions. Choosing uses the Mac
@@ -109,7 +109,8 @@ const reopen = () => {
   location.reload();
 };
 
-export const createOpenDialog = (currentFolder: string, repo: string) => {
+// `required`: nothing is open yet, so the dialog has no close button and stays until a folder or the sample opens.
+export const createOpenDialog = (currentFolder: string, repo: string, { required = false } = {}) => {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal open-dialog';
   dialog.innerHTML = `
@@ -124,6 +125,7 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
   const $ = (sel: string) => must(dialog.querySelector<HTMLElement>(sel), sel);
   const inputAt = (sel: string) => must(dialog.querySelector<HTMLInputElement>(sel), sel);
   $('.modal-close').append(createElement(X, { width: 18, height: 18 }));
+  $('.modal-close').hidden = required;
   const error = $('.od-error');
 
   let busy = false;
@@ -137,7 +139,7 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
     error.textContent = err instanceof Error ? err.message : String(err);
   };
   const close = () => {
-    if (!busy) dialog.close();
+    if (!busy && !required) dialog.close();
   };
   // Clicking a tab opens its section; clicking the open one again closes it.
   const tabs = [...dialog.querySelectorAll<HTMLElement>('.od-tab')];
@@ -163,7 +165,7 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
   const copy = attachCopy($('.od-copy'), SLIDE_PROMPT, $('.od-prompt'));
   $('.modal-close').addEventListener('click', close);
   dialog.addEventListener('cancel', (e) => {
-    if (busy) e.preventDefault();
+    if (busy || required) e.preventDefault();
   });
   dialog.addEventListener('click', (e) => {
     if (e.target === dialog) close();
@@ -298,15 +300,20 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
     );
   }
 
-  return {
-    show: () => {
-      if (dialog.open) return;
-      error.textContent = '';
-      setBusy(null);
-      openSection(null);
-      copy.reset();
-      dialog.showModal();
-    },
-    trySample,
+  const show = () => {
+    if (dialog.open) return;
+    error.textContent = '';
+    setBusy(null);
+    openSection(null);
+    copy.reset();
+    dialog.showModal();
   };
+  // A folder another page picked (?picked): opened here, or this dialog if it is gone.
+  const openPicked = async () => {
+    show();
+    const picked = await takePicked();
+    if (Array.isArray(picked)) await openInBrowser(() => Promise.resolve(picked));
+    else if (picked) await openInBrowser(() => filesFromHandle(picked), picked);
+  };
+  return { show, trySample, openPicked };
 };
