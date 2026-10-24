@@ -35,7 +35,7 @@ import { watchOpened } from './watch.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
 // Buttons floating over the top corners, after Excalidraw. Top left: the menu (open, export, the slide prompt, view
-// settings and help). Top right: the folder's name, whether it's live, export status and a link to the source.
+// settings and help) and a quick way to open a folder. Top right: the folder's name, whether it's live, export status and a link to the source.
 // Locally, exports go through the server (Mac save dialog, Chrome-made PDF); hosted, they are built in the browser
 // and downloaded.
 
@@ -441,7 +441,17 @@ export const mountNav = (
     });
   }
   menu.list.prepend(brand, document.createElement('hr'));
-  $('.nav-left').prepend(menu.root);
+  // Beside the menu, one click to open a folder.
+  const open = document.createElement('button');
+  open.className = 'nav-open';
+  open.title = 'Open Presentation folder';
+  open.setAttribute('aria-label', 'Open Presentation folder');
+  open.append(icon(FolderOpen));
+  open.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+  });
+  open.addEventListener('click', dialog.show);
+  $('.nav-left').prepend(menu.root, open);
 
   // Arriving by a ?sample link counts as trying the sample: the tour follows, and the address loses the request.
   if (linkedToSample()) {

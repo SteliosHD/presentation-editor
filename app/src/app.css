@@ -121,7 +121,8 @@ kbd {
   gap: 2px;
   padding: 4px;
 }
-.nav-left .menu-button {
+.nav-left .menu-button,
+.nav-open {
   display: grid;
   place-items: center;
   width: 38px;
@@ -133,7 +134,8 @@ kbd {
   color: var(--ui-ink-soft);
 }
 .nav-left .menu-button:hover,
-.nav-left .menu-button.on {
+.nav-left .menu-button.on,
+.nav-open:hover {
   background: var(--ui-surface-raised);
   border-color: transparent;
   color: var(--ui-ink);
@@ -299,10 +301,16 @@ kbd {
   background: var(--ui-surface-raised);
   outline: none;
 }
-/* The main menu opens to the right of the burger, its top level with the island's. */
+/* The main menu opens to the right of the island, its top level with the island's. */
+.nav-left {
+  position: relative;
+}
+.nav-left .menu {
+  position: static;
+}
 .menu-main > .menu-list {
-  top: -5px;
-  left: calc(100% + 14px);
+  top: -1px;
+  left: calc(100% + 9px);
 }
 /* A submenu opens beside its entry, on hover or with the right arrow. */
 .menu-sub-wrap {
