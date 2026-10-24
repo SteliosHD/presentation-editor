@@ -101,6 +101,8 @@ export const forgetOpened = () => {
 
 const readOpened = () => {
   try {
+    // A ?sample link asks for the sample, so it takes the place of a folder kept in this tab.
+    if (linkedToSample()) sessionStorage.removeItem(STORE_KEY);
     const json = sessionStorage.getItem(STORE_KEY);
     return json ? (JSON.parse(json) as Stored) : null;
   } catch {
