@@ -24,7 +24,7 @@ const asked = positionals.at(0);
 let folder = resolve(cwd, asked ?? '.');
 if (!isPresentation(folder)) {
   if (asked !== undefined) {
-    console.error(`${folder} is not a presentation: it needs a slides/ folder.`);
+    console.error(`${folder} is not a presentation: it needs HTML slides, in a slides/ folder or on their own.`);
     process.exit(1);
   }
   folder = resolve(APP, '../sample');

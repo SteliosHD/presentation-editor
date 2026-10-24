@@ -6,8 +6,12 @@ import { transformWithOxc, type Plugin, type ViteDevServer } from 'vite';
 import { chooseFolder, chooseSaveFile } from './dialogs.ts';
 import { buildTemplate, exportHtml, exportPdf } from './export.ts';
 
-// A presentation is any folder with a slides/ folder. presentation.json (title) and theme.css are optional.
-export const isPresentation = (folder: string) => existsSync(join(folder, 'slides'));
+// A presentation is any folder with a slides/ folder. presentation.json (title) and theme.css are optional. A folder
+// of HTML slides on its own (the slides/ folder itself, say) opens too, titled after the folder, in the default theme.
+const hasSlides = (folder: string) => existsSync(join(folder, 'slides'));
+const slidesDirOf = (folder: string) => (hasSlides(folder) ? join(folder, 'slides') : folder);
+export const isPresentation = (folder: string) =>
+  hasSlides(folder) || (existsSync(folder) && readdirSync(folder).some((f) => f.endsWith('.html')));
 
 export type PresentationState = { folder: string; cwd: string };
 
@@ -25,7 +29,7 @@ const readTitle = (folder: string) => {
 // animation file (same name, .ts) is imported, so Vite compiles it and allows serving it from outside the app.
 // The animation is also inlined as plain JavaScript (animationCode), which the hosted app's HTML export embeds.
 const presentationModule = async (folder: string) => {
-  const slidesDir = join(folder, 'slides');
+  const slidesDir = slidesDirOf(folder);
   const themeFile = join(folder, 'theme.css');
   const files = readdirSync(slidesDir)
     .filter((f) => f.endsWith('.html'))
@@ -85,13 +89,11 @@ const api = (server: ViteDevServer, state: PresentationState, reload: () => void
         return;
       }
       const body = await readJson(req);
-      const open = (picked: string) => {
-        // Picking the slides/ folder itself opens the presentation around it.
-        const folder = !isPresentation(picked) && isPresentation(dirname(picked)) ? dirname(picked) : picked;
+      const open = (folder: string) => {
         if (!isPresentation(folder)) {
           const name = `“${basename(folder)}”`;
           const error = existsSync(folder)
-            ? `${name} has no slides/ folder. Choose the folder that contains it.`
+            ? `${name} has no HTML slides, in a slides/ folder or on their own.`
             : `${name} isn't there any more. It may have been moved or deleted.`;
           send(res, 400, { error });
           return;
@@ -165,7 +167,9 @@ export const presentationPlugin = (state: PresentationState): Plugin => ({
         join(state.folder, 'theme.css'),
         join(state.folder, 'presentation.json'),
       ];
-      if (!watched.some((path) => file.startsWith(path))) return;
+      // A folder of slides on its own: its slides and their animations sit at the top.
+      const flat = !hasSlides(state.folder) && dirname(file) === state.folder && /\.(html|ts)$/.test(file);
+      if (!flat && !watched.some((path) => file.startsWith(path))) return;
       if (event in kinds) {
         const kind = kinds[event as keyof typeof kinds];
         server.ws.send({ type: 'custom', event: 'presentation:changed', data: { kind, file: basename(file) } });
