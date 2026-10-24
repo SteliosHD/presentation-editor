@@ -617,12 +617,24 @@ button.primary {
   box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.6);
   pointer-events: none;
   transition:
-    left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    left 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    top 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.tour.still .tour-spot {
+/* Between steps the card fades out, waits for the ring to reach the next part, then fades in beside it. */
+.tour-card {
+  transition:
+    opacity 0.25s ease-out,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tour-card.moving {
+  opacity: 0;
+  transform: translateY(6px);
+  transition-duration: 0.15s;
+}
+.tour.still .tour-spot,
+.tour.still .tour-card {
   transition: none;
 }
 .tour-card {

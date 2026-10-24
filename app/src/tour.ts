@@ -179,7 +179,7 @@ const run = ({ label, steps: all, seenKey, skip, finish, onEnd }: Walkthrough) =
     card.style.top = `${Math.max(8, Math.min(top, innerHeight - card.offsetHeight - 8))}px`;
   };
   const last = () => at === steps.length - 1;
-  const show = () => {
+  const fill = () => {
     const step = steps[at];
     $('.tour-count').textContent = `${at + 1} of ${steps.length}`;
     $('.tour-title').textContent = step.title;
@@ -191,6 +191,23 @@ const run = ({ label, steps: all, seenKey, skip, finish, onEnd }: Walkthrough) =
     place();
     $('.tour-next').focus();
   };
+  // Times match the card's fade and the ring's glide in app.css.
+  let moving = false;
+  const next = () => {
+    if (reduceMotion) {
+      fill();
+      return;
+    }
+    moving = true;
+    card.classList.add('moving');
+    setTimeout(() => {
+      fill();
+      setTimeout(() => {
+        card.classList.remove('moving');
+        moving = false;
+      }, 350);
+    }, 150);
+  };
   const end = () => {
     closeMenus();
     markSeen(seenKey);
@@ -201,9 +218,10 @@ const run = ({ label, steps: all, seenKey, skip, finish, onEnd }: Walkthrough) =
   };
 
   $('.tour-next').addEventListener('click', () => {
+    if (moving) return;
     if (!last()) {
       at += 1;
-      show();
+      next();
       return;
     }
     end();
@@ -216,7 +234,7 @@ const run = ({ label, steps: all, seenKey, skip, finish, onEnd }: Walkthrough) =
   });
   addEventListener('resize', place);
   dialog.showModal();
-  show();
+  fill();
 };
 
 export const startTour = () => {
