@@ -5,7 +5,7 @@ import { DATA_ID, toStored } from './source.ts';
 // The hosted app's file handling, all in the browser: reading a presentation folder the viewer picks or drops,
 // and exports as downloads.
 
-type FolderFile = { path: string; file: File };
+export type FolderFile = { path: string; file: File };
 
 // From <input webkitdirectory>: each file's path starts with the picked folder's name.
 export const filesFromInput = (list: FileList): FolderFile[] =>

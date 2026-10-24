@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-// presentation-viewer [folder] [--port 4747] [--no-open]: opens a presentation folder in the viewer.
+// presentation-viewer [folder] [--port 4747] [--no-open] [--site <file>]: opens a presentation folder in the viewer.
+// --site adds a site add-on (see app/src/site.ts).
 // With no folder it uses the current one, or the bundled sample if the current one isn't a presentation.
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { createServer } from 'vite';
 import { presentationPlugin, isPresentation } from '../server/presentation.ts';
 import { APP } from '../server/export.ts';
+import { SHARED, sitePlugin } from '../server/site.ts';
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -13,6 +15,7 @@ const { values, positionals } = parseArgs({
   options: {
     port: { type: 'string', default: '4747' },
     open: { type: 'boolean', default: true },
+    site: { type: 'string' },
   },
 });
 
@@ -28,11 +31,19 @@ if (!isPresentation(folder)) {
   console.log('No slides/ folder here, opening the sample presentation.');
 }
 
+const site = values.site === undefined ? undefined : resolve(cwd, values.site);
 const server = await createServer({
   configFile: false,
   root: APP,
-  plugins: [presentationPlugin({ folder, cwd })],
-  server: { host: '127.0.0.1', port: Number(values.port), open: values.open },
+  plugins: [presentationPlugin({ folder, cwd }), sitePlugin(site)],
+  resolve: { dedupe: SHARED },
+  server: {
+    host: '127.0.0.1',
+    port: Number(values.port),
+    open: values.open,
+    // An add-on outside this folder is served too.
+    fs: site ? { allow: [resolve(APP, '..'), dirname(site)] } : undefined,
+  },
 });
 await server.listen();
 server.printUrls();

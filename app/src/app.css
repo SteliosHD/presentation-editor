@@ -97,10 +97,20 @@ kbd {
   align-items: center;
   gap: 6px;
 }
+.nav-home {
+  display: flex;
+  margin-right: 4px;
+  padding: 3px;
+  border-color: transparent;
+  background: none;
+}
+.nav-home:hover {
+  border-color: transparent;
+  background: var(--card);
+}
 .nav-icon {
   width: 22px;
   height: 22px;
-  margin-right: 4px;
 }
 .nav-folder {
   overflow: hidden;
@@ -128,6 +138,32 @@ kbd {
 .nav-github:hover {
   background: var(--card);
   color: var(--text);
+}
+.nav-live {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--good);
+  cursor: default;
+}
+.nav-live::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent);
+}
+.nav-reconnect {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  font-size: 12px;
+}
+.nav-live[hidden],
+.nav-reconnect[hidden] {
+  display: none;
 }
 .nav-status {
   display: flex;
@@ -586,102 +622,24 @@ button.primary {
   color: var(--soft);
 }
 
-/* The first visit's welcome: a folder's files turning into a slide, above one paragraph about the app. */
-.welcome-dialog {
-  width: min(540px, calc(100vw - 32px));
-}
-.welcome-art {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  align-items: center;
-  gap: 18px;
-  padding: 22px 24px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--bg);
-}
-.welcome-files {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--soft);
-}
-.welcome-files li {
-  padding: 4px 9px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--panel);
-}
-.welcome-files .welcome-anim {
-  color: var(--accent);
-}
-.welcome-arrow {
-  display: flex;
-  color: var(--muted);
-}
-.welcome-slide {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  aspect-ratio: 16 / 9;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-}
-.welcome-slide i {
-  display: block;
-  border-radius: 3px;
-  background: var(--soft);
-  opacity: 0.85;
-}
-.welcome-slide .welcome-kicker {
-  width: 34%;
-  height: 5px;
-  background: var(--accent);
-  opacity: 1;
-}
-.welcome-slide .welcome-title {
-  width: 80%;
-  height: 9px;
-}
-.welcome-slide .welcome-title.short {
-  width: 55%;
-}
-.welcome-row {
-  display: flex;
-  flex: 1;
-  gap: 8px;
-  margin-top: 4px;
-}
-.welcome-slide .welcome-row i {
-  flex: 1;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: var(--card);
-  opacity: 1;
-}
-@media (max-width: 640px) {
-  .welcome-art {
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
-  .welcome-arrow {
-    transform: rotate(90deg);
-  }
-  .welcome-slide {
-    width: min(240px, 100%);
-  }
-}
-
-/* Help → About: the story, the note on who wrote the copy, and links. */
+/* Help → Why use the Presentation Viewer: what it's for and how it compares, scrolling if the window is short. */
 .about-dialog {
-  width: min(540px, calc(100vw - 32px));
+  width: min(580px, calc(100vw - 32px));
+}
+.about-copy {
+  max-height: min(56vh, 520px);
+  margin-right: -10px;
+  padding-right: 10px;
+  overflow-y: auto;
+}
+.about-copy h3 {
+  margin: 18px 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.about-copy h3:first-child {
+  margin-top: 0;
 }
 .about-copy p {
   margin: 0 0 12px;
@@ -1461,6 +1419,50 @@ body.presenting.inking .slide-stack {
   }
   .slide-list button.active .thumb {
     outline: none;
+  }
+}
+
+/* After a file change reloads the page: a short notice at the top saying what changed. */
+.change-note {
+  position: fixed;
+  top: 52px;
+  left: 50%;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+  translate: -50% 0;
+  animation: change-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s;
+}
+.change-note svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.change-note.leaving {
+  opacity: 0;
+}
+body.presenting .change-note {
+  top: 12px;
+}
+@keyframes change-in {
+  from {
+    opacity: 0;
+    translate: -50% -6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .change-note {
+    animation: none;
   }
 }
 

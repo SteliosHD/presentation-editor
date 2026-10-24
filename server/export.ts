@@ -6,6 +6,7 @@ import { chromium } from 'playwright-core';
 import { build } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { emptyPresentationPlugin, presentationPlugin } from './presentation.ts';
+import { sitePlugin } from './site.ts';
 
 export const APP = fileURLToPath(new URL('../app', import.meta.url));
 
@@ -19,7 +20,7 @@ export const exportHtml = async (folder: string, file: string) => {
       root: APP,
       mode: 'export',
       logLevel: 'warn',
-      plugins: [presentationPlugin({ folder, cwd: folder }), viteSingleFile()],
+      plugins: [presentationPlugin({ folder, cwd: folder }), sitePlugin(), viteSingleFile()],
       build: { outDir, emptyOutDir: true },
     });
     await copyFile(join(outDir, 'index.html'), file);
@@ -37,7 +38,7 @@ export const buildTemplate = async () => {
       root: APP,
       mode: 'template',
       logLevel: 'warn',
-      plugins: [emptyPresentationPlugin(), viteSingleFile()],
+      plugins: [emptyPresentationPlugin(), sitePlugin(), viteSingleFile()],
       build: { outDir, emptyOutDir: true },
     });
     return await readFile(join(outDir, 'index.html'), 'utf8');

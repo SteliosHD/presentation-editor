@@ -1,3 +1,29 @@
+// The site add-on passed with --site, or null; app/src/site.ts explains it.
+declare module 'virtual:site' {
+  export type SiteContext = {
+    // Shows the Open Presentation folder modal.
+    openFolder: () => void;
+    // Loads the built-in sample; only in the hosted app.
+    trySample?: () => void;
+  };
+
+  export type Site = {
+    // Runs once when the app starts, before anything renders.
+    init?: () => void;
+    // The hosted app opened with nothing loaded. Without it, the Open modal shows.
+    start?: (ctx: SiteContext) => void;
+    // The nav bar's icon was clicked; `back` returns to the app. Without it, the icon is not a button.
+    home?: (ctx: SiteContext & { back: () => void }) => void;
+    // The footer's HTML. Without it, the footer links the license and the source.
+    footer?: string;
+    // Extra HTML for Help → Why use the Presentation Viewer: sections after the built-in ones, and links in its foot.
+    about?: { sections?: string; links?: string };
+  };
+
+  const site: Site | null;
+  export default site;
+}
+
 declare module 'virtual:presentation' {
   import type { gsap } from 'gsap';
 

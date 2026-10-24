@@ -5,7 +5,8 @@ import { must } from './player.ts';
 import { forgetOpened, isWeb, requestSample, storeOpened } from './source.ts';
 import { attachCopy, SLIDE_PROMPT } from './prompt-dialog.ts';
 import { queueTour } from './tour.ts';
-import { filesFromDrop, filesFromInput, readPresentation } from './web.ts';
+import { canWatch, filesFromHandle, forgetWatched, rememberWatched } from './watch.ts';
+import { filesFromDrop, filesFromInput, readPresentation, type FolderFile } from './web.ts';
 
 // The "Open Presentation folder" modal: a drop zone with Choose folder in both versions. Choosing uses the Mac
 // folder picker locally (the server opens the folder, with live reload) and the browser's picker when hosted.
@@ -172,13 +173,15 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
   $('.od-drop-icon').append(createElement(FolderOpen, { width: 32, height: 32 }));
 
   // Reads a folder in the browser and keeps it for this tab (hosted, or a folder dropped on the local app).
-  const openInBrowser = async (read: () => Promise<Parameters<typeof readPresentation>[0]>) => {
+  // With a folder handle (Chrome and Edge) the folder is also watched for changes after it opens.
+  const openInBrowser = async (read: () => Promise<FolderFile[]>, dir?: FileSystemDirectoryHandle) => {
     error.textContent = '';
     setBusy('Reading the folder');
     try {
       const files = await read();
       setBusy(`Reading ${files.length} files`);
       storeOpened(await readPresentation(files));
+      await (dir ? rememberWatched(dir) : forgetWatched());
       setBusy('Opening');
       reopen();
     } catch (err) {
@@ -196,13 +199,32 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
       }
       if (folder) rememberFolder(folder);
       forgetOpened();
+      await forgetWatched();
       setBusy('Opening');
       reopen();
     } catch (err) {
       fail(err);
     }
   };
+  // The sample loads on a fresh page; the tour follows the first time.
+  const trySample = () => {
+    setBusy('Opening the sample');
+    void forgetWatched().then(() => {
+      requestSample();
+      queueTour();
+      reopen();
+    });
+  };
   const choose = () => {
+    if (isWeb && window.showDirectoryPicker) {
+      window
+        .showDirectoryPicker({ mode: 'read' })
+        .then((dir) => openInBrowser(() => filesFromHandle(dir), dir))
+        .catch((err: unknown) => {
+          if (!(err instanceof DOMException && err.name === 'AbortError')) fail(err);
+        });
+      return;
+    }
     if (isWeb) {
       input.click();
       return;
@@ -230,25 +252,25 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
   drop.addEventListener('drop', (e) => {
     e.preventDefault();
     drop.classList.remove('over');
-    // Entries must be taken during the event; the browser drops access afterwards.
-    const entry = [...(e.dataTransfer?.items ?? [])]
-      .map((item) => item.webkitGetAsEntry())
-      .find((en) => en?.isDirectory);
+    // Entries and handles must be asked for during the event; the browser drops access afterwards.
+    const items = [...(e.dataTransfer?.items ?? [])];
+    const handles = canWatch ? items.map((item) => item.getAsFileSystemHandle?.()) : [];
+    const entry = items.map((item) => item.webkitGetAsEntry()).find((en) => en?.isDirectory);
     if (!entry) {
       error.textContent = 'Drop a folder, not separate files.';
       return;
     }
-    void openInBrowser(() => filesFromDrop(entry as FileSystemDirectoryEntry));
+    void (async () => {
+      const found = await Promise.all(handles.map((h) => (h ? h.catch(() => null) : Promise.resolve(null))));
+      const dir = found.find((h): h is FileSystemDirectoryHandle => h?.kind === 'directory');
+      await (dir
+        ? openInBrowser(() => filesFromHandle(dir), dir)
+        : openInBrowser(() => filesFromDrop(entry as FileSystemDirectoryEntry)));
+    })();
   });
 
   if (isWeb) {
-    // The sample loads on a fresh page; the tour follows the first time.
-    $('.od-sample').addEventListener('click', () => {
-      requestSample();
-      queueTour();
-      setBusy('Opening the sample');
-      reopen();
-    });
+    $('.od-sample').addEventListener('click', trySample);
   } else {
     const recent = readRecent().filter((f) => f !== currentFolder);
     $('.od-recent-title').hidden = recent.length === 0;
@@ -284,5 +306,6 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
       copy.reset();
       dialog.showModal();
     },
+    trySample,
   };
 };

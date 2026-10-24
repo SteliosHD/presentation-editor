@@ -155,13 +155,20 @@ export const presentationPlugin = (state: PresentationState): Plugin => ({
     server.watcher.add(state.folder);
     // Editing the open presentation's slides, theme or title reloads the page; anything else in the folder,
     // such as exports, does not.
-    server.watcher.on('all', (_event, file) => {
+    // The page is told which file changed first, so it can say so after reloading.
+    const kinds = { add: 'added', change: 'updated', unlink: 'removed' } as const;
+    server.watcher.on('all', (event, file) => {
       const watched = [
         join(state.folder, 'slides') + sep,
         join(state.folder, 'theme.css'),
         join(state.folder, 'presentation.json'),
       ];
-      if (watched.some((path) => file.startsWith(path))) reload();
+      if (!watched.some((path) => file.startsWith(path))) return;
+      if (event in kinds) {
+        const kind = kinds[event as keyof typeof kinds];
+        server.ws.send({ type: 'custom', event: 'presentation:changed', data: { kind, file: basename(file) } });
+      }
+      reload();
     });
     api(server, state, reload);
     // The player template for Export HTML of a folder dropped on the local app, built on first request.

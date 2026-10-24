@@ -2,16 +2,20 @@ import './theme.css';
 import './slides.css';
 import './app.css';
 import { createAnimationList } from './animation-list.ts';
+import { noteChanges, showChanges, type Change } from './changes.ts';
 import { createInk } from './ink.ts';
 import { createPlayer, must } from './player.ts';
 import { createPresentationMode } from './presentation-mode.ts';
 import { createSlideList } from './slide-list.ts';
-import { isWeb, loadPresentation } from './source.ts';
+import site from './site.ts';
+import { loadPresentation } from './source.ts';
 import { shortcutFor, type ShortcutId } from './shortcuts.ts';
 import { createToolbar, slideNumbers } from './toolbar.ts';
 
 // Loads the presentation and wires the parts together: player, slide list, toolbar, presentation mode,
 // drawing, keyboard, and (outside exports) the nav bar and animation list.
+
+site?.init?.();
 
 // Settings saved before the app was renamed from Presentation Editor carry over once.
 for (const store of [localStorage, sessionStorage]) {
@@ -25,6 +29,12 @@ for (const store of [localStorage, sessionStorage]) {
     // Storage blocked: nothing to carry over.
   }
 }
+
+// A file change reloads the page (the local server's live reload, or a watched folder); the notice says which.
+import.meta.hot?.on('presentation:changed', (change: Change) => {
+  noteChanges([change]);
+});
+showChanges();
 
 // The page address holds the current slide (#3), so a reload after a file changes stays on it. Read before
 // anything renders, since rendering writes the address.
@@ -174,13 +184,6 @@ document.addEventListener('mousedown', (e) => {
     e.preventDefault();
   }
 });
-
-// Vercel Web Analytics, in the hosted app only: page views, no cookies.
-if (isWeb) {
-  void import('@vercel/analytics').then(({ inject }) => {
-    inject({ mode: 'production' });
-  });
-}
 
 if (authoring) {
   void import('./nav.ts').then(({ mountNav }) => {

@@ -19,8 +19,9 @@ import { createOpenDialog, rememberFolder } from './open-dialog.ts';
 import { must } from './player.ts';
 import { createPromptDialog } from './prompt-dialog.ts';
 import { startQueuedTour, startTour } from './tour.ts';
-import { showWelcome } from './welcome.ts';
+import site from './site.ts';
 import { isWeb } from './source.ts';
+import { watchOpened } from './watch.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
 // The nav bar: app icon with the File, Edit, View and Help menus on the left, the folder's name in the centre,
@@ -150,9 +151,21 @@ export const mountNav = (
   const nav = document.createElement('header');
   nav.className = 'nav';
   nav.innerHTML = `
-    <div class="nav-left"><img class="nav-icon" src="${iconUrl}" alt="Presentation Viewer" /></div>
+    <div class="nav-left">
+      ${
+        site?.home
+          ? `<button class="nav-home" title="What Presentation Viewer does" aria-label="What Presentation Viewer does">
+              <img class="nav-icon" src="${iconUrl}" alt="" />
+            </button>`
+          : `<img class="nav-icon" src="${iconUrl}" alt="Presentation Viewer" />`
+      }
+    </div>
     <span class="nav-folder"></span>
     <div class="nav-right">
+      <span class="nav-live" title="Updates when files in the folder change" hidden>Live</span>
+      <button class="nav-reconnect" title="The browser needs your permission again to watch the folder" hidden>
+        Reconnect folder
+      </button>
       <span class="nav-status"><span class="spinner"></span><span class="nav-status-text"></span></span>
       <a class="nav-github" href="${REPO}" target="_blank" rel="noopener" title="Presentation Viewer on GitHub"
         aria-label="Presentation Viewer on GitHub">${GITHUB_MARK}</a>
@@ -169,7 +182,26 @@ export const mountNav = (
 
   const prompt = createPromptDialog();
   const dialog = createOpenDialog(presentation.folder, REPO);
-  if (choose) showWelcome(dialog.show);
+  const ctx = { openFolder: dialog.show, trySample: isWeb ? dialog.trySample : undefined };
+  if (choose) {
+    if (site?.start) site.start(ctx);
+    else ctx.openFolder();
+  }
+  nav.querySelector('.nav-home')?.addEventListener('click', () => {
+    site?.home?.({ ...ctx, back: () => undefined });
+  });
+
+  // A folder opened in Chrome or Edge is watched for changes; the badge says so, or offers to reconnect.
+  if (inBrowser && !empty) {
+    void watchOpened((state) => {
+      $('.nav-live').hidden = state !== 'live';
+      $('.nav-reconnect').hidden = state !== 'paused';
+    }).then((watcher) => {
+      $('.nav-reconnect').addEventListener('click', () => {
+        void watcher?.reconnect();
+      });
+    });
+  }
 
   const status = $('.nav-status');
   const say = (text: string, { error = false, busy = false } = {}) => {
@@ -223,7 +255,7 @@ export const mountNav = (
       },
     })),
   );
-  const about = createAboutDialog({ repo: REPO });
+  const about = createAboutDialog({ repo: REPO, extra: site?.about });
   const help = createMenu('Help', [
     {
       label: 'Personalize your viewer',
@@ -234,21 +266,21 @@ export const mountNav = (
     },
     { label: 'Take the tour', icon: MapIcon, run: startTour },
     'separator',
-    { label: 'About Presentation Viewer', icon: Info, run: about.show },
+    { label: 'Why use the Presentation Viewer', icon: Info, run: about.show },
   ]);
   $('.nav-left').append(file.root, editMenu.root, view.root, help.root);
   startQueuedTour();
 
-  // Footer: who made the viewer and when, its license, and a link to the author's site.
+  // Footer: the site's own, or the license and the source.
   const footer = document.createElement('footer');
   footer.className = 'app-foot';
-  footer.innerHTML = `
-    <span class="app-foot-text">Made by Stelios Bitzas · 2026</span>
-    <a class="app-foot-license" href="${REPO}/blob/main/LICENSE" target="_blank" rel="noopener"
+  footer.innerHTML =
+    site?.footer ??
+    `<a class="app-foot-license" href="${REPO}/blob/main/LICENSE" target="_blank" rel="noopener"
       title="MIT license: free to use, change and share, provided as is, without warranty">MIT</a>
-    <a href="https://bitzas.dev" target="_blank" rel="noopener">bitzas.dev ↗</a>`;
-  must(footer.querySelector('.app-foot-license'), '.app-foot-license').prepend(
-    createElement(Scale, { width: 13, height: 13, 'aria-hidden': 'true' }),
-  );
+    <a href="${REPO}" target="_blank" rel="noopener">Source on GitHub ↗</a>`;
+  footer
+    .querySelector('.app-foot-license')
+    ?.prepend(createElement(Scale, { width: 13, height: 13, 'aria-hidden': 'true' }));
   document.body.append(footer);
 };
