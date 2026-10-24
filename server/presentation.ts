@@ -87,7 +87,11 @@ const api = (server: ViteDevServer, state: PresentationState, reload: () => void
       const body = await readJson(req);
       const open = (folder: string) => {
         if (!isPresentation(folder)) {
-          send(res, 400, { error: `${folder} has no slides folder` });
+          const name = `“${basename(folder)}”`;
+          const error = existsSync(folder)
+            ? `${name} has no slides/ folder. Choose the folder that contains it.`
+            : `${name} isn't there any more. It may have been moved or deleted.`;
+          send(res, 400, { error });
           return;
         }
         state.folder = folder;

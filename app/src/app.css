@@ -83,7 +83,8 @@ kbd {
   right: 0;
   margin: 0 auto;
   width: fit-content;
-  max-width: 40vw;
+  /* Clear of the menus on the left and the status on the right. */
+  max-width: calc(100% - 360px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -247,6 +248,7 @@ button.primary {
   padding: 7px 16px;
 }
 .od-drop {
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -287,6 +289,9 @@ button.primary {
   padding: 0;
 }
 .od-recent button {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   width: 100%;
   text-align: left;
   background: none;
@@ -295,25 +300,19 @@ button.primary {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.od-recent-name {
+  flex-shrink: 0;
+}
+.od-recent-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--muted);
+}
 .od-recent button:hover {
   background: var(--card);
   color: var(--text);
-}
-.od-path {
-  display: flex;
-  gap: 8px;
-}
-.od-path input {
-  flex: 1;
-  font: inherit;
-  color: var(--text);
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 4px 8px;
-}
-.od-path input::placeholder {
-  color: var(--muted);
 }
 .od-help summary {
   width: fit-content;
@@ -347,6 +346,7 @@ button.primary {
   line-height: 1.5;
 }
 .od-help pre {
+  overflow-x: auto;
   margin: 0;
   padding: 10px 12px;
   border-radius: 8px;
@@ -382,7 +382,8 @@ button.primary {
   text-underline-offset: 3px;
 }
 .od-error {
-  margin: 0;
+  margin: -6px 0 0;
+  font-size: 13px;
   color: var(--bad);
 }
 .od-error:empty {
@@ -711,6 +712,12 @@ button.primary {
   .tip {
     transition: none;
     transform: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav-folder {
+    display: none;
   }
 }
 

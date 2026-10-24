@@ -4,7 +4,7 @@ import { must } from './player.ts';
 import { forgetOpened, isWeb, storeOpened } from './source.ts';
 import { filesFromDrop, filesFromInput, readPresentation } from './web.ts';
 
-// The "Open Presentation folder" modal. Locally it offers the Mac folder picker, a path box and recent folders;
+// The "Open Presentation folder" modal. Locally it offers the Mac folder picker and recent folders;
 // hosted, a drop zone and the browser's folder picker, since the browser reads the folder itself.
 // While a folder opens, a spinner covers the modal and says what is happening.
 
@@ -41,12 +41,9 @@ const HELP = `
 
 const LOCAL_BODY = `
   <button class="primary od-choose" autofocus>Choose folder…</button>
+  <p class="od-error" role="alert"></p>
   <h3 class="od-recent-title">Recent</h3>
   <ul class="od-recent"></ul>
-  <form class="od-path">
-    <input name="folder" aria-label="Folder path" placeholder="Or type a path" autocomplete="off" />
-    <button>Open</button>
-  </form>
   ${HELP}`;
 
 const WEB_BODY = `
@@ -56,6 +53,7 @@ const WEB_BODY = `
     <button class="primary od-choose" autofocus>Choose folder…</button>
     <input type="file" webkitdirectory hidden />
   </div>
+  <p class="od-error" role="alert"></p>
   ${HELP}
   <footer class="od-foot">
     <span>Read in your browser, never uploaded.</span>
@@ -70,7 +68,6 @@ export const createOpenDialog = (currentFolder: string) => {
       <header><h2>Open Presentation folder</h2><button class="od-close" aria-label="Close"></button></header>
       <p class="od-lead">A folder with your slides in <code>slides/</code>.</p>
       ${isWeb ? WEB_BODY : LOCAL_BODY}
-      <p class="od-error" role="alert"></p>
     </div>
     <div class="od-busy" aria-live="polite"><span class="spinner"></span><span class="od-busy-text"></span></div>`;
   document.body.append(dialog);
@@ -129,8 +126,11 @@ export const createOpenDialog = (currentFolder: string) => {
       e.preventDefault();
       drop.classList.add('over');
     });
-    drop.addEventListener('dragleave', () => {
-      drop.classList.remove('over');
+    drop.addEventListener('dragleave', (e) => {
+      if (!(e.relatedTarget instanceof Node && drop.contains(e.relatedTarget))) drop.classList.remove('over');
+    });
+    drop.addEventListener('click', (e) => {
+      if (e.target === drop || !(e.target instanceof Element && e.target.closest('button'))) input.click();
     });
     drop.addEventListener('drop', (e) => {
       e.preventDefault();
@@ -170,21 +170,20 @@ export const createOpenDialog = (currentFolder: string) => {
       setBusy('Waiting for the folder picker…');
       void openLocal(() => post('choose-folder'));
     });
-    const input = inputAt('.od-path input');
-    $('.od-path').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const folder = input.value.trim();
-      if (!folder) return;
-      setBusy('Opening…');
-      void openLocal(() => post('open', { folder }));
-    });
     const recent = readRecent().filter((f) => f !== currentFolder);
     $('.od-recent-title').hidden = recent.length === 0;
     $('.od-recent').replaceChildren(
       ...recent.map((folder) => {
         const li = document.createElement('li');
         const button = document.createElement('button');
-        button.textContent = folder.split('/').at(-1) ?? folder;
+        const parts = folder.split('/');
+        const name = document.createElement('span');
+        name.className = 'od-recent-name';
+        name.textContent = parts.at(-1) ?? folder;
+        const where = document.createElement('span');
+        where.className = 'od-recent-path';
+        where.textContent = `…/${parts.slice(-3, -1).join('/')}`;
+        button.append(name, where);
         button.title = folder;
         button.addEventListener('click', () => {
           setBusy('Opening…');

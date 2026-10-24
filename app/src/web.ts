@@ -57,7 +57,8 @@ export const readPresentation = async (files: FolderFile[]) => {
   const slideFiles = files
     .filter((f) => new RegExp(`^${root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/slides/[^/]+\\.html$`).test(f.path))
     .sort((a, b) => a.path.localeCompare(b.path));
-  if (!slideFiles.length) throw new Error(`“${root}” has no slides/ folder with .html files in it.`);
+  if (!slideFiles.length)
+    throw new Error(`“${root}” has no slides/ folder with HTML slides. Choose the folder that contains it.`);
 
   const config = at('presentation.json');
   const { title } = config ? (JSON.parse(await config.text()) as { title?: string }) : {};
