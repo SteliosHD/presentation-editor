@@ -6,6 +6,7 @@ import {
   FolderOpen,
   Info,
   LifeBuoy,
+  Map as MapIcon,
   Scale,
   Sparkles,
   type IconNode,
@@ -17,7 +18,7 @@ import iconUrl from '../favicon.svg';
 import { createOpenDialog, rememberFolder } from './open-dialog.ts';
 import { must } from './player.ts';
 import { createPromptDialog } from './prompt-dialog.ts';
-import { startQueuedTour } from './tour.ts';
+import { startQueuedTour, startTour } from './tour.ts';
 import { isWeb } from './source.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
@@ -219,6 +220,7 @@ export const mountNav = (
         window.open(`${REPO}#personalize-your-editor`, '_blank', 'noopener');
       },
     },
+    { label: 'Take the tour', icon: MapIcon, run: startTour },
     'separator',
     { label: 'About Presentation Editor', icon: Info, run: about.show },
   ]);

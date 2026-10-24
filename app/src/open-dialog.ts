@@ -64,7 +64,7 @@ const BODY = `
 
 // Everything besides opening a folder: one quiet row of links, each opening its section below.
 const tab = (section: string, label: string) =>
-  `<button class="od-link od-tab" role="tab" aria-selected="false" data-section="${section}">${label}</button>`;
+  `<button class="od-tab" role="tab" aria-selected="false" data-section="${section}">${label}</button>`;
 const MORE = `
   <div class="od-more" role="tablist" aria-label="More ways to start">
     ${isWeb ? tab('sample', 'Try the sample') : ''}
@@ -116,9 +116,17 @@ export const createOpenDialog = (currentFolder: string) => {
     for (const t of tabs) t.setAttribute('aria-selected', String(t.dataset.section === name));
     for (const section of sections) section.hidden = section.dataset.section !== name;
   };
-  for (const t of tabs) {
+  for (const [k, t] of tabs.entries()) {
     t.addEventListener('click', () => {
       openSection(t.getAttribute('aria-selected') === 'true' ? null : (t.dataset.section ?? null));
+    });
+    // ← → move between tabs and open the one reached, as tab bars do.
+    t.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const next = tabs[(k + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      next.focus();
+      openSection(next.dataset.section ?? null);
     });
   }
   $('.od-prompt').textContent = SLIDE_PROMPT;

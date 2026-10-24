@@ -321,29 +321,41 @@ button.primary {
 }
 .od-more {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  gap: 6px 22px;
+  gap: 24px;
   margin: 0;
+  border-bottom: 1px solid var(--line);
 }
-.od-more .od-link {
-  color: var(--soft);
+/* Tabs: quiet until chosen; the open one is marked by an accent line sitting on the row's rule. */
+.od-tab {
+  margin-bottom: -1px;
+  padding: 4px 2px 9px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  font-size: 13px;
+  color: var(--muted);
 }
-.od-more .od-link:hover,
-.od-more .od-link[aria-selected='true'] {
-  color: var(--accent);
+.od-tab:hover {
+  color: var(--text);
+  text-decoration: none;
 }
-.od-more .od-link[aria-selected='true'] {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.od-tab[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
 }
 /* Every section is the same height; longer content scrolls inside it. */
 .od-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   height: 220px;
+  margin-top: -4px;
   overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--soft);
 }
 .od-section[hidden] {
   display: none;
@@ -412,8 +424,6 @@ button.primary {
 }
 .od-section p {
   margin: 0;
-  color: var(--soft);
-  line-height: 1.5;
 }
 .od-section pre {
   overflow-x: auto;
@@ -846,6 +856,33 @@ button.primary {
   margin: 0 6px;
   background: var(--line);
 }
+/* Above the slide: the presentation's title and the current slide's file, kept small. */
+.stage-head {
+  display: flex;
+  flex-shrink: 0;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  height: 36px;
+  padding: 12px 16px 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.stage-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--soft);
+}
+.stage-file {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
 /* Under the slide: ← → centred and the counter on the right, in their own row so they never cover the slide. */
 .stage-foot {
   display: grid;
@@ -986,6 +1023,7 @@ body.hide-animations .anim-strip {
 
 /* Presentation mode (F): only the slide. */
 body.presenting .nav,
+body.presenting .stage-head,
 body.presenting .app-foot,
 body.presenting .tip,
 body.presenting .stage-foot,
@@ -1250,6 +1288,7 @@ body.presenting.inking .slide-stack {
     overflow: visible;
   }
   .nav,
+  .stage-head,
   .app-foot,
   .stage-foot,
   .anim-strip,

@@ -1,7 +1,8 @@
 import { must, reduceMotion } from './player.ts';
 
-// A short tour of the editor, started by "Try the sample": three steps, each lighting up one part of the editor
-// with a card beside it. Skip, Esc or Done ends it. Parts hidden at the current size are left out.
+// A short tour of the editor: three steps, each lighting up one part of the editor with a card beside it. Skip,
+// Esc or Done ends it, and it is then remembered so "Try the sample" doesn't start it again; Help → Take the tour
+// always does. Parts hidden at the current size are left out.
 
 const STEPS = [
   {
@@ -23,6 +24,22 @@ const STEPS = [
 
 // Survives the reload that switching back to the sample needs.
 const TOUR_KEY = 'presentation-editor:tour';
+// Set once the tour has been finished or skipped in this browser.
+const SEEN_KEY = 'presentation-editor:tour-seen';
+const seen = () => {
+  try {
+    return localStorage.getItem(SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+const markSeen = () => {
+  try {
+    localStorage.setItem(SEEN_KEY, '1');
+  } catch {
+    // Storage blocked: the tour may show again next time.
+  }
+};
 export const queueTour = () => {
   try {
     sessionStorage.setItem(TOUR_KEY, '1');
@@ -101,6 +118,7 @@ export const startTour = () => {
     $('.tour-next').focus();
   };
   const end = () => {
+    markSeen();
     removeEventListener('resize', place);
     dialog.close();
     dialog.remove();
@@ -124,7 +142,7 @@ export const startTour = () => {
   show();
 };
 
-// Starts the tour if "Try the sample" queued it before a reload.
+// Starts the tour if "Try the sample" queued it (before a reload, if one was needed) and it hasn't been seen.
 export const startQueuedTour = () => {
-  if (takeQueued()) requestAnimationFrame(startTour);
+  if (takeQueued() && !seen()) requestAnimationFrame(startTour);
 };

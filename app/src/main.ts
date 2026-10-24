@@ -24,6 +24,12 @@ document.head.append(presentationTheme);
 const authoring = import.meta.env.MODE !== 'export' && import.meta.env.MODE !== 'template';
 document.title = authoring ? `${presentation.title} · Presentation Editor` : presentation.title;
 
+// Above the slide, while editing: the presentation's title and the current slide's file.
+const stageHead = must(document.querySelector('.stage-head'), '.stage-head');
+const stageFile = must(document.querySelector('.stage-file'), '.stage-file');
+if (authoring) must(document.querySelector('.stage-title'), '.stage-title').textContent = presentation.title;
+else stageHead.remove();
+
 const onKey = (e: KeyboardEvent) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   // Typing in a field, or working the Open modal or File menu, is not slide control.
@@ -112,6 +118,7 @@ const render = () => {
   if (k !== shownSlide) ink.clear();
   shownSlide = k;
   slideList.render(k);
+  stageFile.textContent = presentation.slides[k].file;
   animationList?.render(k);
   toolbar.render(k, player.elements.length);
   player.fit();
