@@ -285,7 +285,7 @@ export const mountNav = (
       const shown = !isHidden(part);
       if (part === 'sidebar') (shown ? sidebarHead : must(document.querySelector('.stage'), '.stage')).append(button);
       else if (shown) must(document.querySelector('.strip-actions'), '.strip-actions').append(button);
-      else must(document.querySelector('.stage-foot'), '.stage-foot').prepend(button);
+      else must(document.querySelector('.stage-foot'), '.stage-foot').append(button);
       button.setAttribute('aria-pressed', String(shown));
       button.title = `${shown ? 'Hide' : 'Show'} the ${TOGGLES[part].label}`;
       button.replaceChildren(icon(shown ? TOGGLES[part].close : TOGGLES[part].open));
@@ -298,6 +298,7 @@ export const mountNav = (
       part: 'animations',
       el: must(document.querySelector<HTMLElement>('.anim-strip'), '.anim-strip'),
       axis: 'height',
+      rest: 40,
     },
   } as const;
   const flip = (part: (typeof PARTS)[number]) => {
@@ -450,7 +451,7 @@ export const mountNav = (
   }
   startQueuedTour();
 
-  // Footer: the site's own, or the license and the source.
+  // The menu's foot: the site's own credits, or the license and the source.
   const footer = document.createElement('footer');
   footer.className = 'app-foot';
   footer.innerHTML =
@@ -461,5 +462,5 @@ export const mountNav = (
   footer
     .querySelector('.app-foot-license')
     ?.prepend(createElement(Scale, { width: 13, height: 13, 'aria-hidden': 'true' }));
-  document.body.append(footer);
+  menu.list.append(document.createElement('hr'), footer);
 };

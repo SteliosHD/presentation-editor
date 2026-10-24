@@ -1,24 +1,25 @@
 import { gsap } from 'gsap';
 import { reduceMotion } from './player.ts';
 
-// Folding a pane away or back. The box shrinks into the corner where its switch waits once it is folded (top left
-// for the slide list, bottom left for the animation list) while the space it took closes up, so the slide grows
-// smoothly. The hide-* class flips at once; folding-* keeps the pane drawn until it has folded away.
+// Folding a pane away or back. The box shrinks into the corner nearest where its switch waits once it is folded
+// (top left for the slide list, bottom right for the animation list) while the space it took closes up, so the
+// slide grows smoothly. The hide-* class flips at once; folding-* keeps the pane drawn until it has folded away.
 
-type Pane = { part: string; el: HTMLElement; axis: 'width' | 'height' };
+// `rest`: the space the pane leaves once folded (the animation list leaves room for its switch under the counter).
+type Pane = { part: string; el: HTMLElement; axis: 'width' | 'height'; rest?: number };
 type Box = { w: number; h: number; margin: number; pad: number };
 const SWITCH = 34;
 const DURATION = 0.45;
 const running = new Map<string, { tween: gsap.core.Tween; t: { open: number }; box: Box }>();
 
-const draw = ({ el, axis }: Pane, box: Box, open: number) => {
+const draw = ({ el, axis, rest = 0 }: Pane, box: Box, open: number) => {
   const size = (axis === 'width' ? box.w : box.h) * open;
   const w = axis === 'width' ? size : box.w;
   const h = axis === 'height' ? size : box.h;
   // What still shows: a corner square, the size of the switch, that grows into the whole box.
   const cutW = Math.max(0, w - (SWITCH + (box.w - SWITCH) * open));
   const cutH = Math.max(0, h - (SWITCH + (box.h - SWITCH) * open));
-  const edge = `${box.margin * open}px`;
+  const edge = `${box.margin * open + rest * (1 - open)}px`;
   const pad = `${box.pad * open}px`;
   Object.assign(
     el.style,
@@ -26,7 +27,7 @@ const draw = ({ el, axis }: Pane, box: Box, open: number) => {
     axis === 'width'
       ? { clipPath: `inset(0 ${cutW}px ${cutH}px 0 round 12px)`, marginLeft: edge, paddingLeft: pad, paddingRight: pad }
       : {
-          clipPath: `inset(${cutH}px ${cutW}px 0 0 round 12px)`,
+          clipPath: `inset(${cutH}px 0 0 ${cutW}px round 12px)`,
           marginBottom: edge,
           paddingTop: pad,
           paddingBottom: pad,

@@ -757,21 +757,24 @@ button.primary {
 .about-dialog {
   width: min(760px, calc(100vw - 32px));
 }
+.about-dialog .modal-body {
+  gap: 14px;
+}
 .about-copy {
-  max-height: min(76vh, 760px);
+  max-height: min(80vh, 760px);
   margin-right: -10px;
   padding-right: 10px;
   overflow-y: auto;
 }
 .about-copy h3 {
-  margin: 22px 0 8px;
+  margin: 16px 0 8px;
   font-family: var(--ui-display);
   font-size: 17px;
   font-weight: 500;
   color: var(--ui-ink);
 }
 .about-copy p {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-size: 14px;
   line-height: 1.6;
   color: var(--ui-ink-soft);
@@ -1507,8 +1510,8 @@ body.presenting .resize-handle {
   background: var(--ui-surface-raised);
   color: var(--ui-ink);
 }
-/* The panes' switches, top right in each pane's head; once a pane is folded away, its switch waits where it was
-   (the slide list's under the menu, the animation list's at the left of the row above it). Quiet until pointed at. */
+/* The panes' switches, top right in each pane's head; once a pane is folded away, its switch waits nearby (the slide
+   list's under the menu, the animation list's under the slide counter). Quiet until pointed at. */
 .pane-toggle {
   display: grid;
   place-items: center;
@@ -1551,9 +1554,17 @@ body.presenting .resize-handle {
   left: 18px;
   z-index: 3;
 }
-.pane-toggle-animations {
-  grid-column: 1;
-  justify-self: start;
+/* Folded away, the animation list's switch stays on the right, under the slide counter. */
+.stage-foot {
+  position: relative;
+}
+body.hide-animations:not(.folding-animations) .stage-foot {
+  margin-bottom: 40px;
+}
+.stage-foot > .pane-toggle-animations {
+  position: absolute;
+  top: 100%;
+  right: 17px;
 }
 body.presenting .pane-toggle {
   display: none;
@@ -1632,26 +1643,15 @@ body.hide-animations:not(.folding-animations) .anim-strip {
   display: none;
 }
 
-/* Footer: who made the viewer and when, its license, and a link to the author's site. */
-/* A small floating pill under the panes, centred, like the islands up top. */
+/* The menu's foot: who made the viewer, its license and a link to the author's site, quiet and small. */
 .app-foot {
   display: flex;
-  flex-shrink: 0;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  width: fit-content;
-  max-width: calc(100% - 24px);
-  height: 30px;
-  margin: 0 auto 10px;
-  padding: 0 16px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-pill);
-  background: var(--ui-panel);
-  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
+  gap: 4px 14px;
+  padding: 4px 10px 6px;
   font-size: 12px;
   color: var(--ui-ink-faint);
-  white-space: nowrap;
 }
 .app-foot-text {
   min-width: 0;
@@ -1675,7 +1675,6 @@ body.hide-animations:not(.folding-animations) .anim-strip {
 /* Presentation mode (F): only the slide. */
 body.presenting .nav,
 body.presenting .stage-head,
-body.presenting .app-foot,
 body.presenting .tip,
 body.presenting .stage-foot,
 body.presenting .anim-strip,
