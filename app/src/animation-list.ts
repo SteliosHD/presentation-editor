@@ -26,8 +26,23 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
   let solo: { step: Step; driver: gsap.core.Animation } | null = null;
   gsap.ticker.add(() => {
     if (solo && !solo.driver.isActive()) solo = null;
-    steps.forEach((step, k) => rows[k]?.classList.toggle('now', solo ? solo.step === step : step.tween.isActive()));
+    let lit: HTMLElement | undefined;
+    steps.forEach((step, k) => {
+      const row = rows[k];
+      const now = solo ? solo.step === step : step.tween.isActive();
+      if (now && !row.classList.contains('now')) lit = row;
+      row.classList.toggle('now', now);
+    });
+    if (lit) follow(lit);
   });
+  // A step that lights up out of view scrolls into it, below the head that stays at the top.
+  const follow = (row: HTMLElement) => {
+    const box = strip.getBoundingClientRect();
+    const r = row.getBoundingClientRect();
+    const top = box.top + (strip.querySelector('.strip-head')?.getBoundingClientRect().height ?? 0);
+    const by = r.top < top ? r.top - top - 4 : r.bottom > box.bottom - 10 ? r.bottom - box.bottom + 10 : 0;
+    if (by) strip.scrollBy({ top: by, behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
 
   // Rebuilt only when the slide, its animation or the details setting changes, so other redraws (a tool switched
   // on, say) leave a lit row alone.
