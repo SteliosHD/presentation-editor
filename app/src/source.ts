@@ -8,6 +8,8 @@ import { presentation as served, type Presentation, type SlideAnimation } from '
 
 export const isWeb = import.meta.env.MODE === 'web';
 const STORE_KEY = 'presentation-editor:opened';
+// Set once the viewer picks the sample, so the hosted app stops asking for this tab.
+const SAMPLE_KEY = 'presentation-editor:sample';
 export const DATA_ID = 'presentation-data';
 
 type Stored = Omit<Presentation, 'slides'> & { slides: Omit<Presentation['slides'][number], 'animation'>[] };
@@ -44,13 +46,23 @@ export const toStored = (presentation: Presentation): Stored => ({
 export const storeOpened = (presentation: Stored) => {
   sessionStorage.setItem(STORE_KEY, JSON.stringify(presentation));
 };
-export const forgetOpened = () => {
+export const useSample = () => {
   try {
     sessionStorage.removeItem(STORE_KEY);
+    sessionStorage.setItem(SAMPLE_KEY, '1');
   } catch {
-    // Nothing stored, or storage blocked: either way the sample shows.
+    // Storage blocked: the sample still shows; the hosted app will ask again next visit.
   }
 };
+const sampleChosen = () => {
+  try {
+    return sessionStorage.getItem(SAMPLE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+export const openedInBrowser = () => readOpened() !== null;
 
 const readOpened = () => {
   try {
@@ -71,5 +83,6 @@ export const loadPresentation = async (): Promise<{ presentation: Presentation; 
   if (!served) throw new Error('No presentation was served.');
   if (!isWeb) return { presentation: served, choose: false };
   const opened = readOpened();
-  return opened ? { presentation: await hydrate(opened), choose: false } : { presentation: served, choose: true };
+  if (opened) return { presentation: await hydrate(opened), choose: false };
+  return { presentation: served, choose: !sampleChosen() };
 };

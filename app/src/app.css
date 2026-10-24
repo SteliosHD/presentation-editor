@@ -37,6 +37,30 @@ button:hover {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* Scrollbars in the theme's colours: thin, a line-coloured thumb on a clear track. Chrome and Firefox use the
+   standard properties; Safari reads the -webkit- rules, which also brighten the thumb on hover. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--line) padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
 ::selection {
   background: rgb(from var(--accent) r g b / 0.35);
 }
@@ -195,7 +219,7 @@ button.primary {
   color: var(--bg);
   font-weight: 600;
 }
-.open-dialog {
+.modal {
   position: relative;
   width: min(520px, calc(100vw - 32px));
   padding: 0;
@@ -204,41 +228,41 @@ button.primary {
   background: var(--panel);
   color: var(--text);
 }
-.open-dialog::backdrop {
+.modal::backdrop {
   background: rgb(0 0 0 / 0.55);
 }
-.od-body {
+.modal-body {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 20px 22px 18px;
   font-size: 14px;
 }
-.od-body header {
+.modal-body header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: -10px;
 }
-.od-body h2 {
+.modal-body h2 {
   margin: 0;
   font-size: 18px;
 }
-.od-close {
+.modal-close {
   display: flex;
   padding: 4px;
   background: none;
   border-color: transparent;
   color: var(--muted);
 }
-.od-close:hover {
+.modal-close:hover {
   color: var(--text);
 }
-.od-lead {
+.modal-lead {
   margin: 0;
   color: var(--soft);
 }
-.open-dialog code {
+.modal code {
   font-family: var(--mono);
   font-size: 0.92em;
   color: var(--accent);
@@ -407,6 +431,62 @@ button.primary {
   display: inline-block;
   width: 20px;
   height: 20px;
+}
+
+.od-create {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Edit → Slide Creation Prompt: the prompt, its copy action, and the manual route. */
+.prompt-dialog {
+  width: min(660px, calc(100vw - 32px));
+}
+.pd-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pd-prompt pre {
+  max-height: min(340px, 45vh);
+  margin: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: var(--soft);
+}
+.pd-copy {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+}
+.pd-copy.done {
+  border-color: var(--good);
+  background: var(--good);
+}
+.pd-manual {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.pd-manual h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--text);
+}
+.pd-manual p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--soft);
 }
 
 /* Slides rendered off screen for the hosted app's PDF export. */

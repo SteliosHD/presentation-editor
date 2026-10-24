@@ -1,7 +1,7 @@
 import { createElement, FolderOpen, X } from 'lucide';
 import { post } from './api.ts';
 import { must } from './player.ts';
-import { forgetOpened, isWeb, storeOpened } from './source.ts';
+import { isWeb, openedInBrowser, storeOpened, useSample } from './source.ts';
 import { filesFromDrop, filesFromInput, readPresentation } from './web.ts';
 
 // The "Open Presentation folder" modal. Locally it offers the Mac folder picker and recent folders;
@@ -44,7 +44,8 @@ const LOCAL_BODY = `
   <p class="od-error" role="alert"></p>
   <h3 class="od-recent-title">Recent</h3>
   <ul class="od-recent"></ul>
-  ${HELP}`;
+  ${HELP}
+  <p class="od-create">No presentation yet? <button class="od-link">Create one with an AI agent</button></p>`;
 
 const WEB_BODY = `
   <div class="od-drop">
@@ -55,25 +56,26 @@ const WEB_BODY = `
   </div>
   <p class="od-error" role="alert"></p>
   ${HELP}
+  <p class="od-create">No presentation yet? <button class="od-link">Create one with an AI agent</button></p>
   <footer class="od-foot">
     <span>Read in your browser, never uploaded.</span>
     <button class="od-link od-sample">Try the sample</button>
   </footer>`;
 
-export const createOpenDialog = (currentFolder: string) => {
+export const createOpenDialog = (currentFolder: string, { onCreate }: { onCreate: () => void }) => {
   const dialog = document.createElement('dialog');
-  dialog.className = 'open-dialog';
+  dialog.className = 'modal open-dialog';
   dialog.innerHTML = `
-    <div class="od-body">
-      <header><h2>Open Presentation folder</h2><button class="od-close" aria-label="Close"></button></header>
-      <p class="od-lead">A folder with your slides in <code>slides/</code>.</p>
+    <div class="modal-body">
+      <header><h2>Open Presentation folder</h2><button class="modal-close" aria-label="Close"></button></header>
+      <p class="modal-lead">A folder with your slides in <code>slides/</code>.</p>
       ${isWeb ? WEB_BODY : LOCAL_BODY}
     </div>
     <div class="od-busy" aria-live="polite"><span class="spinner"></span><span class="od-busy-text"></span></div>`;
   document.body.append(dialog);
   const $ = (sel: string) => must(dialog.querySelector<HTMLElement>(sel), sel);
   const inputAt = (sel: string) => must(dialog.querySelector<HTMLInputElement>(sel), sel);
-  $('.od-close').append(createElement(X, { width: 18, height: 18 }));
+  $('.modal-close').append(createElement(X, { width: 18, height: 18 }));
   const error = $('.od-error');
 
   let busy = false;
@@ -89,7 +91,11 @@ export const createOpenDialog = (currentFolder: string) => {
   const close = () => {
     if (!busy) dialog.close();
   };
-  $('.od-close').addEventListener('click', close);
+  $('.od-create button').addEventListener('click', () => {
+    dialog.close();
+    onCreate();
+  });
+  $('.modal-close').addEventListener('click', close);
   dialog.addEventListener('cancel', (e) => {
     if (busy) e.preventDefault();
   });
@@ -145,9 +151,15 @@ export const createOpenDialog = (currentFolder: string) => {
       }
       void open(() => filesFromDrop(entry as FileSystemDirectoryEntry));
     });
+    // The sample is what shows until a folder is opened: close if it is already showing, else switch to it.
     $('.od-sample').addEventListener('click', () => {
+      const switching = openedInBrowser();
+      useSample();
+      if (!switching) {
+        dialog.close();
+        return;
+      }
       setBusy('Opening the sample…');
-      forgetOpened();
       location.reload();
     });
   } else {

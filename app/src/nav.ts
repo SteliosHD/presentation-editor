@@ -1,13 +1,14 @@
-import { Check, createElement, FileCode, FileDown, FolderOpen, type IconNode } from 'lucide';
+import { Check, createElement, FileCode, FileDown, FolderOpen, Sparkles, type IconNode } from 'lucide';
 import type { Presentation } from 'virtual:presentation';
 import { post } from './api.ts';
 import iconUrl from '../favicon.svg';
 import { createOpenDialog, rememberFolder } from './open-dialog.ts';
 import { must } from './player.ts';
+import { createPromptDialog } from './prompt-dialog.ts';
 import { isWeb } from './source.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
-// The nav bar: app icon with the File and View menus on the left, the folder's name in the centre, export
+// The nav bar: app icon with the File, Edit and View menus on the left, the folder's name in the centre, export
 // status on the right. Locally, exports go through the server (Mac save dialog, Chrome-made PDF); hosted,
 // they are built in the browser and downloaded.
 
@@ -128,7 +129,8 @@ export const mountNav = (presentation: Presentation, { choose }: { choose: boole
   $('.nav-folder').textContent = presentation.folder.split('/').at(-1) ?? presentation.folder;
   $('.nav-folder').title = isWeb ? 'Opened in this browser tab' : presentation.folder;
 
-  const dialog = createOpenDialog(presentation.folder);
+  const prompt = createPromptDialog();
+  const dialog = createOpenDialog(presentation.folder, { onCreate: prompt.show });
   if (choose) dialog.show();
 
   const status = $('.nav-status');
@@ -171,6 +173,7 @@ export const mountNav = (presentation: Presentation, { choose }: { choose: boole
     { label: 'Export HTML', icon: FileCode, run: exporting('html') },
     { label: 'Export PDF', icon: FileDown, run: exporting('pdf') },
   ]);
+  const editMenu = createMenu('Edit', [{ label: 'Slide Creation Prompt…', icon: Sparkles, run: prompt.show }]);
   const view = createMenu(
     'View',
     PARTS.map(([part, label]) => ({
@@ -181,5 +184,5 @@ export const mountNav = (presentation: Presentation, { choose }: { choose: boole
       },
     })),
   );
-  $('.nav-left').append(file.root, view.root);
+  $('.nav-left').append(file.root, editMenu.root, view.root);
 };
