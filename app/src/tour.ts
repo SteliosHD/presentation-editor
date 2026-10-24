@@ -21,7 +21,7 @@ const STEPS: Step[] = [
     text: "Each step of this slide's animation: when it runs, what moves, and how. Slides with their own animation file label their steps.",
   },
   {
-    target: '.bar',
+    target: '.tools',
     title: 'Tools',
     text: 'Speaker notes, laser pointer, slide numbers and Present. Hover a tool to see its name and shortcut.',
   },

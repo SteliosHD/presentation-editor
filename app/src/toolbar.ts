@@ -11,7 +11,8 @@ import {
 import { must } from './player.ts';
 import { allKeys, mainKey, SHORTCUTS, type ShortcutId } from './shortcuts.ts';
 
-// The toolbar under the nav bar: Notes (N), Pointer (P), Numbers (S), Present (F), as square icon tools.
+// The toolbar under the nav bar: Notes (N), Pointer (P), Numbers (S), Present (F), as square icon tools in a
+// centred island, each showing its key.
 // Each tool reports whether it is on so its button lights up; hovering or focusing one shows its tooltip.
 // The slide area's own controls, the present cue (bottom left), the ← → arrows (bottom centre) and the counter
 // (bottom right), update with it.
@@ -116,6 +117,11 @@ export const createToolbar = (tools: Record<ToolName, Tool>, step: (delta: numbe
     const info = infoFor(name, text);
     const button = must(document.querySelector<HTMLElement>(`[data-tool="${name}"]`), `[data-tool="${name}"]`);
     button.prepend(createElement(icon, { width: 19, height: 19, 'aria-hidden': 'true' }));
+    const key = document.createElement('span');
+    key.className = 'tool-key';
+    key.setAttribute('aria-hidden', 'true');
+    key.textContent = mainKey(name);
+    button.append(key);
     button.setAttribute('aria-keyshortcuts', ariaKeys(name));
     button.addEventListener('click', tool.run);
     tooltip.attach(button, info);
