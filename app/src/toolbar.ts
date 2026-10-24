@@ -11,10 +11,10 @@ import {
 import { must } from './player.ts';
 import { allKeys, mainKey, SHORTCUTS, type ShortcutId } from './shortcuts.ts';
 
-// The toolbar under the nav bar: Notes (N), Pointer (P), Numbers (S), Present (F), as square icon tools in a
-// centred island, each showing its key.
+// The toolbar at the top of the slide area: Notes (N), Pointer (P), Numbers (S), Present (F), as square icon tools
+// in an island centred over the slides, each showing its key.
 // Each tool reports whether it is on so its button lights up; hovering or focusing one shows its tooltip.
-// The slide area's own controls, the present cue (bottom left), the ← → arrows (bottom centre) and the counter
+// The slide area's own controls, the ← → arrows with the present cue between them (bottom centre) and the counter
 // (bottom right), update with it.
 
 type ToolName = 'notes' | 'pointer' | 'numbers' | 'present';

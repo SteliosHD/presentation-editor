@@ -7,25 +7,25 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   </head>
   <body>
-    <div class="bar" role="toolbar" aria-label="Tools">
-      <div class="tools">
-        <button data-tool="notes" aria-label="Speaker notes"></button>
-        <button data-tool="pointer" aria-label="Laser pointer"></button>
-        <span class="tools-sep"></span>
-        <button data-tool="numbers" aria-label="Slide numbers"></button>
-        <span class="tools-sep"></span>
-        <button data-tool="present" aria-label="Present"></button>
-      </div>
-    </div>
     <div class="app">
       <aside class="sidebar"><ol class="slide-list"></ol></aside>
       <main class="stage">
+        <div class="bar" role="toolbar" aria-label="Tools">
+          <div class="tools">
+            <button data-tool="notes" aria-label="Speaker notes"></button>
+            <button data-tool="pointer" aria-label="Laser pointer"></button>
+            <span class="tools-sep"></span>
+            <button data-tool="numbers" aria-label="Slide numbers"></button>
+            <span class="tools-sep"></span>
+            <button data-tool="present" aria-label="Present"></button>
+          </div>
+        </div>
         <div class="stage-head"><span class="stage-title"></span><span class="stage-file"></span></div>
         <div class="viewport"><div class="slide-stack"></div></div>
         <div class="stage-foot">
-          <button class="present-cue">Press <kbd></kbd> to present</button>
           <div class="slide-nav">
             <button class="slide-prev" aria-label="Previous slide"></button>
+            <button class="present-cue">Press <kbd></kbd> to present</button>
             <button class="slide-next" aria-label="Next slide"></button>
           </div>
           <span class="counter"></span>
