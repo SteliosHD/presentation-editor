@@ -569,6 +569,99 @@ button.primary {
   color: var(--soft);
 }
 
+/* The first visit's welcome: a folder's files turning into a slide, above one paragraph about the app. */
+.welcome-dialog {
+  width: min(540px, calc(100vw - 32px));
+}
+.welcome-art {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.welcome-files {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--soft);
+}
+.welcome-files li {
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+.welcome-files .welcome-anim {
+  color: var(--accent);
+}
+.welcome-arrow {
+  display: flex;
+  color: var(--muted);
+}
+.welcome-slide {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  aspect-ratio: 16 / 9;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.welcome-slide i {
+  display: block;
+  border-radius: 3px;
+  background: var(--soft);
+  opacity: 0.85;
+}
+.welcome-slide .welcome-kicker {
+  width: 34%;
+  height: 5px;
+  background: var(--accent);
+  opacity: 1;
+}
+.welcome-slide .welcome-title {
+  width: 80%;
+  height: 9px;
+}
+.welcome-slide .welcome-title.short {
+  width: 55%;
+}
+.welcome-row {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  margin-top: 4px;
+}
+.welcome-slide .welcome-row i {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--card);
+  opacity: 1;
+}
+@media (max-width: 640px) {
+  .welcome-art {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .welcome-arrow {
+    transform: rotate(90deg);
+  }
+  .welcome-slide {
+    width: min(240px, 100%);
+  }
+}
+
 /* Help → About: the story, the note on who wrote the copy, and links. */
 .about-dialog {
   width: min(540px, calc(100vw - 32px));

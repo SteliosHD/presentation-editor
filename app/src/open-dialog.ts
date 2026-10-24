@@ -196,14 +196,6 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
       fail(err);
     }
   };
-  // The sample loads on a fresh page; the tour follows the first time.
-  const trySample = () => {
-    requestSample();
-    queueTour();
-    if (!dialog.open) dialog.showModal();
-    setBusy('Opening the sample');
-    location.reload();
-  };
   const choose = () => {
     if (isWeb) {
       input.click();
@@ -244,7 +236,13 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
   });
 
   if (isWeb) {
-    $('.od-sample').addEventListener('click', trySample);
+    // The sample loads on a fresh page; the tour follows the first time.
+    $('.od-sample').addEventListener('click', () => {
+      requestSample();
+      queueTour();
+      setBusy('Opening the sample');
+      location.reload();
+    });
   } else {
     const recent = readRecent().filter((f) => f !== currentFolder);
     $('.od-recent-title').hidden = recent.length === 0;
@@ -280,8 +278,5 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
       copy.reset();
       dialog.showModal();
     },
-    hide: close,
-    showSection: openSection,
-    trySample,
   };
 };
