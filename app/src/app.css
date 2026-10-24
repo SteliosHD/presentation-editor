@@ -1648,15 +1648,16 @@ body.hide-animations:not(.folding-animations) .anim-strip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 4px 14px;
   padding: 4px 10px 6px;
   font-size: 12px;
   color: var(--ui-ink-faint);
 }
 .app-foot-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* The credit line on its own row; the links share the row below. */
+  flex-basis: 100%;
 }
 .app-foot a {
   display: inline-flex;
