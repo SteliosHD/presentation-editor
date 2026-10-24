@@ -78,9 +78,8 @@ kbd {
   margin-right: 4px;
 }
 .nav-folder {
-  /* Centred over the slide area: it starts where the slide list ends. */
   position: absolute;
-  left: var(--sidebar-w);
+  left: 0;
   right: 0;
   margin: 0 auto;
   width: fit-content;
@@ -590,7 +589,7 @@ button.primary {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 40px;
+  height: 46px;
   padding: 0 10px;
   border-bottom: 1px solid var(--line);
   background: var(--bg);
@@ -603,11 +602,11 @@ button.primary {
 .tools button {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 30px;
+  width: 36px;
+  height: 34px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: 5px;
   background: none;
   color: var(--soft);
 }
@@ -624,7 +623,7 @@ button.primary {
 }
 .tools-sep {
   width: 1px;
-  height: 18px;
+  height: 20px;
   margin: 0 6px;
   background: var(--line);
 }

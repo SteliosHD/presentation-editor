@@ -17,7 +17,9 @@ import { must } from './player.ts';
 type ToolName = 'notes' | 'pointer' | 'numbers' | 'present';
 type Tool = { run: () => void; isOn: () => boolean };
 
-const INFO: Record<ToolName, { icon: IconNode; name: string; text: string; key: string }> = {
+type Info = { name: string; text: string; key: string };
+
+const INFO: Record<ToolName, Info & { icon: IconNode }> = {
   notes: {
     icon: NotebookText,
     name: 'Speaker notes',
@@ -57,61 +59,76 @@ const createTooltip = () => {
   let timer = 0;
   let lastHidden = 0;
 
-  const place = (button: HTMLElement, info: (typeof INFO)[ToolName]) => {
+  // Below the button, or above it when there is no room below (the slide arrows sit at the bottom).
+  const place = (button: HTMLElement, info: Info) => {
     part('.tip-name').textContent = info.name;
     part('kbd').textContent = info.key;
     part('.tip-text').textContent = info.text;
     const r = button.getBoundingClientRect();
-    tip.style.top = `${r.bottom + 8}px`;
-    tip.style.left = `${Math.min(r.left, innerWidth - tip.offsetWidth - 8)}px`;
+    const below = r.bottom + 8 + tip.offsetHeight < innerHeight;
+    tip.style.top = `${below ? r.bottom + 8 : r.top - 8 - tip.offsetHeight}px`;
+    tip.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - tip.offsetWidth / 2, innerWidth - tip.offsetWidth - 8))}px`;
     tip.classList.add('show');
   };
-  return {
-    show: (button: HTMLElement, info: (typeof INFO)[ToolName]) => {
-      clearTimeout(timer);
-      const warm = tip.classList.contains('show') || performance.now() - lastHidden < 400;
-      timer = window.setTimeout(
-        () => {
-          place(button, info);
-        },
-        warm ? 0 : 450,
-      );
-    },
-    hide: () => {
-      clearTimeout(timer);
-      if (tip.classList.contains('show')) lastHidden = performance.now();
-      tip.classList.remove('show');
-    },
+  const show = (button: HTMLElement, info: Info) => {
+    clearTimeout(timer);
+    const warm = tip.classList.contains('show') || performance.now() - lastHidden < 400;
+    timer = window.setTimeout(
+      () => {
+        place(button, info);
+      },
+      warm ? 0 : 450,
+    );
   };
+  const hide = () => {
+    clearTimeout(timer);
+    if (tip.classList.contains('show')) lastHidden = performance.now();
+    tip.classList.remove('show');
+  };
+  // Hover or keyboard focus shows it; leaving, blurring or pressing hides it.
+  const attach = (button: HTMLElement, info: Info) => {
+    button.setAttribute('aria-describedby', 'tool-tip');
+    button.addEventListener('pointerenter', () => {
+      show(button, info);
+    });
+    button.addEventListener('focus', () => {
+      if (button.matches(':focus-visible')) show(button, info);
+    });
+    for (const event of ['pointerleave', 'blur', 'pointerdown']) button.addEventListener(event, hide);
+  };
+  return { attach };
 };
 
 export const createToolbar = (tools: Record<ToolName, Tool>, step: (delta: number) => void) => {
+  const tooltip = createTooltip();
   const counter = must(document.querySelector('.counter'), '.counter');
   const prev = must(document.querySelector<HTMLButtonElement>('.slide-prev'), '.slide-prev');
   const next = must(document.querySelector<HTMLButtonElement>('.slide-next'), '.slide-next');
   prev.append(createElement(ChevronLeft, { width: 18, height: 18, 'aria-hidden': 'true' }));
   next.append(createElement(ChevronRight, { width: 18, height: 18, 'aria-hidden': 'true' }));
+  tooltip.attach(prev, {
+    name: 'Previous slide',
+    key: '←',
+    text: 'Or press ← or Page Up. Home goes to the first slide.',
+  });
+  tooltip.attach(next, {
+    name: 'Next slide',
+    key: '→',
+    text: 'Or press →, Space or Page Down. End goes to the last slide.',
+  });
   prev.addEventListener('click', () => {
     step(-1);
   });
   next.addEventListener('click', () => {
     step(1);
   });
-  const tooltip = createTooltip();
   const buttons = (Object.entries(tools) as [ToolName, Tool][]).map(([name, tool]) => {
     const info = INFO[name];
     const button = must(document.querySelector<HTMLElement>(`[data-tool="${name}"]`), `[data-tool="${name}"]`);
-    button.prepend(createElement(info.icon, { width: 16, height: 16, 'aria-hidden': 'true' }));
-    button.setAttribute('aria-describedby', 'tool-tip');
+    button.prepend(createElement(info.icon, { width: 19, height: 19, 'aria-hidden': 'true' }));
     button.setAttribute('aria-keyshortcuts', info.key);
     button.addEventListener('click', tool.run);
-    button.addEventListener('pointerenter', () => {
-      tooltip.show(button, info);
-    });
-    button.addEventListener('focus', () => {
-      if (button.matches(':focus-visible')) tooltip.show(button, info);
-    });
-    for (const event of ['pointerleave', 'blur', 'pointerdown']) button.addEventListener(event, tooltip.hide);
+    tooltip.attach(button, info);
     return [button, tool] as const;
   });
 
