@@ -207,4 +207,12 @@ export const mountNav = (
     },
   ]);
   $('.nav-left').append(file.root, editMenu.root, view.root, help.root);
+
+  // Footer: who made the editor and the no-warranty note, with a link to the author's site.
+  const footer = document.createElement('footer');
+  footer.className = 'app-foot';
+  footer.innerHTML = `
+    <span class="app-foot-text">Made by Stelios Bitzas. Free and open source, provided as is, without warranty.</span>
+    <a href="https://bitzas.dev" target="_blank" rel="noopener">bitzas.dev ↗</a>`;
+  document.body.append(footer);
 };
