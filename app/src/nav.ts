@@ -259,8 +259,7 @@ export const mountNav = (
     : presentation.folder;
   $('.nav-folder-chip').hidden = empty;
 
-  // Each pane's switch sits by the edge it folds into: the slide list's at the top of the slide area beside it, the
-  // animation list's just above it, by the slide counter's row.
+  // Each pane's switch sits in its pane's head, top right; with the pane folded away, it waits where the pane was.
   const TOGGLES = {
     sidebar: { open: PanelLeftOpen, close: PanelLeftClose, label: 'slide list' },
     animations: { open: PanelBottomOpen, close: PanelBottomClose, label: 'animation list' },
@@ -272,12 +271,17 @@ export const mountNav = (
     button.setAttribute('aria-label', `Show the ${TOGGLES[part].label}`);
     return button;
   });
-  must(document.querySelector('.stage'), '.stage').append(toggles[0]);
-  must(document.querySelector('.stage-foot'), '.stage-foot').prepend(toggles[1]);
+  const sidebarHead = document.createElement('div');
+  sidebarHead.className = 'sidebar-head';
+  sidebarHead.innerHTML = '<span class="sidebar-title">Slides</span>';
+  must(document.querySelector('.sidebar'), '.sidebar').prepend(sidebarHead);
   const refreshToggles = () => {
     for (const button of toggles) {
       const part = button.dataset.part as keyof typeof TOGGLES;
       const shown = !isHidden(part);
+      if (part === 'sidebar') (shown ? sidebarHead : must(document.querySelector('.stage'), '.stage')).append(button);
+      else if (shown) must(document.querySelector('.strip-actions'), '.strip-actions').append(button);
+      else must(document.querySelector('.stage-foot'), '.stage-foot').prepend(button);
       button.setAttribute('aria-pressed', String(shown));
       button.title = `${shown ? 'Hide' : 'Show'} the ${TOGGLES[part].label}`;
       button.replaceChildren(icon(shown ? TOGGLES[part].close : TOGGLES[part].open));

@@ -1095,6 +1095,19 @@ body.empty .stage-title {
   background: var(--ui-accent-soft);
   color: var(--ui-ink);
 }
+.strip-actions {
+  display: flex;
+  align-self: center;
+  margin-left: auto;
+}
+.strip-replay ~ .strip-actions {
+  margin-left: 0;
+}
+.strip-actions .pane-toggle {
+  width: 30px;
+  height: 28px;
+  margin: -4px -6px -4px 0;
+}
 .strip-replay {
   display: inline-flex;
   align-items: center;
@@ -1165,9 +1178,10 @@ body.empty .stage-title {
   background: var(--ui-panel);
   box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
 }
-/* Below the menu's island (exported files have no menu). */
+/* Below the menu's island (exported files have no menu), and scrolled so a slide never hides under the list's head. */
 body:has(.nav) .sidebar {
   margin-top: 66px;
+  scroll-padding-top: 44px;
 }
 /* Drag handles on the slide list's right edge and the animation list's top edge: a thin line that lights on hover
    and while dragging. */
@@ -1179,12 +1193,17 @@ body:has(.nav) .sidebar {
 }
 .resize-right {
   width: 9px;
-  margin: 0 -5px 0 -4px;
+  /* As tall as the slide list's box, not the whole column beside it. */
+  margin: 12px -5px 12px -4px;
   cursor: col-resize;
+}
+body:has(.nav) .resize-right {
+  margin-top: 66px;
 }
 .resize-top {
   height: 9px;
-  margin: -4px 0 -5px;
+  /* As wide as the animation list's box. */
+  margin: -4px 12px -5px;
   cursor: row-resize;
 }
 .resize-handle::after {
@@ -1465,8 +1484,8 @@ body.presenting .resize-handle {
   background: var(--ui-surface-raised);
   color: var(--ui-ink);
 }
-/* The panes' switches, by the edges they fold into: the slide list's at the top left of the slide area (clear of the
-   menu once the list is gone), the animation list's at the left of the row above it. Quiet until pointed at. */
+/* The panes' switches, top right in each pane's head; once a pane is folded away, its switch waits where it was
+   (the slide list's under the menu, the animation list's at the left of the row above it). Quiet until pointed at. */
 .pane-toggle {
   display: grid;
   place-items: center;
@@ -1483,14 +1502,31 @@ body.presenting .resize-handle {
   background: var(--ui-surface-raised);
   color: var(--ui-ink);
 }
-.pane-toggle-sidebar {
-  position: absolute;
-  top: 16px;
-  left: 10px;
-  z-index: 3;
+/* The slide list's head: its name, and the switch at the top right, staying in view as the list scrolls. */
+.sidebar-head {
+  position: sticky;
+  top: -12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -12px -8px 6px;
+  padding: 8px 8px 4px 14px;
+  background: var(--ui-panel);
 }
-body.hide-sidebar .pane-toggle-sidebar {
-  left: 70px;
+.sidebar-title {
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ui-ink-soft);
+}
+.stage > .pane-toggle-sidebar {
+  position: absolute;
+  top: 66px;
+  left: 18px;
+  z-index: 3;
 }
 .pane-toggle-animations {
   grid-column: 1;
@@ -1834,6 +1870,7 @@ body.presenting.inking .slide-stack {
   .bar,
   .stage,
   .resize-handle,
+  .pane-toggle,
   .nav-folder-chip,
   .menu-list .menu-view-item {
     display: none;

@@ -32,6 +32,8 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
   // Rebuilt only when the slide, its animation or the details setting changes, so other redraws (a tool switched
   // on, say) leave a lit row alone.
   let shown: { current: number; animation: gsap.core.Animation | null; details: boolean } | null = null;
+  // Kept across rebuilds, for controls placed in the head from outside (the list's fold switch).
+  const actions = el('span', 'strip-actions', '');
   const render = (current: number) => {
     const { details } = animationPrefs.get();
     const animation = player.entrance();
@@ -40,7 +42,7 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
     solo = null;
     if (empty) {
       const head = el('div', 'strip-head', '');
-      head.append(el('span', 'strip-title', 'Animations'));
+      head.append(el('span', 'strip-title', 'Animations'), actions);
       strip.replaceChildren(head, el('p', 'strip-empty', "Open a presentation to see each slide's animation steps."));
       return;
     }
@@ -107,6 +109,7 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
       });
       head.append(replay);
     }
+    head.append(actions);
     strip.replaceChildren(head, ol);
   };
   animationPrefs.onChange(() => {

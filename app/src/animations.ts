@@ -165,10 +165,12 @@ const plainVerbs = (vars: gsap.TweenVars, names: string[]) => {
 };
 
 const plainSentence = (vars: gsap.TweenVars, names: string[], targets: unknown[]) => {
-  const verbs = plainVerbs(vars, names);
+  // Several things move together, so each verb loses its "s": "the title rises", "the title and the label rise".
+  const verbs = (plainVerbs(vars, names).length ? plainVerbs(vars, names) : ['moves']).map((verb) =>
+    targets.length > 1 ? verb.replace(/s(?= |$)/, '') : verb,
+  );
   const subject = plainTargets(targets);
-  const action =
-    verbs.length > 1 ? `${verbs.slice(0, -1).join(', ')} and ${verbs.at(-1) ?? ''}` : (verbs[0] ?? 'moves');
+  const action = verbs.length > 1 ? `${verbs.slice(0, -1).join(', ')} and ${verbs.at(-1) ?? ''}` : (verbs[0] ?? '');
   const order = vars.stagger !== undefined && targets.length > 1 ? ', one after another' : '';
   const loop = vars.repeat === -1 ? ', again and again' : '';
   return `${subject.charAt(0).toUpperCase()}${subject.slice(1)} ${action}${order}${loop}`;
