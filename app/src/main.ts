@@ -13,6 +13,9 @@ import { createToolbar, slideNumbers } from './toolbar.ts';
 // Loads the presentation and wires the parts together: player, slide list, toolbar, presentation mode,
 // drawing, keyboard, and (outside exports) the nav bar and animation list.
 
+// The page address holds the current slide (#3), so a reload after a file changes stays on it. Read before
+// anything renders, since rendering writes the address.
+const fromAddress = Number.parseInt(location.hash.slice(1), 10);
 const { presentation, choose, inBrowser, empty } = await loadPresentation();
 // Nothing open yet (hosted app): placeholders show and the tools stay off until a presentation is opened.
 document.body.classList.toggle('empty', empty);
@@ -123,6 +126,7 @@ const render = () => {
   stageFile.textContent = empty ? '' : presentation.slides[k].file;
   animationList?.render(k);
   toolbar.render(k, player.elements.length);
+  if (!empty) history.replaceState(null, '', `#${k + 1}`);
   if (empty)
     for (const b of document.querySelectorAll<HTMLButtonElement>('.bar button, .slide-nav button')) b.disabled = true;
   player.fit();
@@ -171,4 +175,4 @@ if (authoring) {
   });
 }
 
-player.show(0);
+player.show(Number.isInteger(fromAddress) ? Math.min(Math.max(fromAddress, 1), player.elements.length) - 1 : 0);

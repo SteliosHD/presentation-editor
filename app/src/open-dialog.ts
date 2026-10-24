@@ -101,6 +101,12 @@ const LOCAL_RECENT = `
   <h3 class="od-recent-title">Recent</h3>
   <ul class="od-recent"></ul>`;
 
+// Another presentation starts at its first slide, so the slide number in the address goes.
+const reopen = () => {
+  history.replaceState(null, '', location.pathname + location.search);
+  location.reload();
+};
+
 export const createOpenDialog = (currentFolder: string, repo: string) => {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal open-dialog';
@@ -174,7 +180,7 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
       setBusy(`Reading ${files.length} files`);
       storeOpened(await readPresentation(files));
       setBusy('Opening');
-      location.reload();
+      reopen();
     } catch (err) {
       fail(err);
     }
@@ -191,7 +197,7 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
       if (folder) rememberFolder(folder);
       forgetOpened();
       setBusy('Opening');
-      location.reload();
+      reopen();
     } catch (err) {
       fail(err);
     }
@@ -241,7 +247,7 @@ export const createOpenDialog = (currentFolder: string, repo: string) => {
       requestSample();
       queueTour();
       setBusy('Opening the sample');
-      location.reload();
+      reopen();
     });
   } else {
     const recent = readRecent().filter((f) => f !== currentFolder);
