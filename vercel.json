@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "installCommand": "npx --yes pnpm@12.9.1 install --frozen-lockfile",
+  "buildCommand": "node server/build-web.ts",
+  "outputDirectory": "dist"
+}

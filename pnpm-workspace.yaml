@@ -1,0 +1,3 @@
+# core-js (via jsPDF) only prints a donation message on install.
+allowBuilds:
+  core-js: false

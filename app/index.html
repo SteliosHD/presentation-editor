@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Presentation Editor</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  </head>
+  <body>
+    <div class="bar" role="toolbar" aria-label="Tools">
+      <div class="tools">
+        <button data-tool="notes" aria-label="Speaker notes"></button>
+        <button data-tool="pointer" aria-label="Laser pointer"></button>
+        <span class="tools-sep"></span>
+        <button data-tool="numbers" aria-label="Slide numbers"></button>
+        <span class="tools-sep"></span>
+        <button data-tool="present" aria-label="Present"></button>
+      </div>
+    </div>
+    <div class="app">
+      <aside class="sidebar"><ol class="slide-list"></ol></aside>
+      <main class="stage">
+        <div class="viewport"><div class="slide-stack"></div></div>
+        <div class="slide-nav">
+          <button class="slide-prev" aria-label="Previous slide" aria-keyshortcuts="ArrowLeft"></button>
+          <button class="slide-next" aria-label="Next slide" aria-keyshortcuts="ArrowRight"></button>
+        </div>
+        <span class="counter"></span>
+      </main>
+    </div>
+    <div class="present-hint" aria-live="polite">
+      Press <kbd>F</kbd> to exit presentation mode, or move to the bottom center
+    </div>
+    <div class="exit-zone">
+      <button class="exit-present" aria-label="Exit presentation mode" title="Exit presentation mode (F)"></button>
+    </div>
+    <canvas id="laser"></canvas>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

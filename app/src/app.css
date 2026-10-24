@@ -1,0 +1,927 @@
+/* The app around the slides: nav bar (dev only), slide list, stage, toolbar. Colours come from theme.css. */
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
+body {
+  --sidebar-w: 230px;
+  display: flex;
+  flex-direction: column;
+}
+body.laser-on,
+body.laser-on * {
+  cursor: none;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+button:hover {
+  border-color: var(--muted);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+::selection {
+  background: rgb(from var(--accent) r g b / 0.35);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+kbd {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+/* Nav bar: icon and File menu, the folder name centred, export status on the right. */
+.nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  font-size: 14px;
+}
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  margin-right: 4px;
+}
+.nav-folder {
+  /* Centred over the slide area: it starts where the slide list ends. */
+  position: absolute;
+  left: var(--sidebar-w);
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--soft);
+  cursor: default;
+}
+.nav-status {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--soft);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.nav-status.busy .spinner {
+  display: inline-block;
+}
+.nav-status.error {
+  color: var(--bad);
+}
+.menu {
+  position: relative;
+}
+.menu-button {
+  background: none;
+  border-color: transparent;
+}
+.menu-button:hover,
+.menu-button.on {
+  background: var(--card);
+  border-color: transparent;
+}
+.menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.35);
+}
+.menu-list[hidden] {
+  display: none;
+}
+.menu-list button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  text-align: left;
+  color: var(--text);
+}
+.menu-mark {
+  display: flex;
+  color: var(--muted);
+}
+.menu-list [role='menuitemcheckbox'][aria-checked='false'] .menu-mark {
+  visibility: hidden;
+}
+.menu-list [role='menuitemcheckbox'] .menu-mark {
+  color: var(--accent);
+}
+.menu-list button:hover:not(:disabled),
+.menu-list button:focus-visible {
+  background: var(--card);
+  outline: none;
+}
+.menu-list hr {
+  width: 100%;
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+/* The "Open Presentation folder" modal and the loading spinner. */
+.spinner {
+  display: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+button.busy .spinner {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+.open-dialog {
+  position: relative;
+  width: min(520px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+}
+.open-dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+.od-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px 18px;
+  font-size: 14px;
+}
+.od-body header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: -10px;
+}
+.od-body h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.od-close {
+  display: flex;
+  padding: 4px;
+  background: none;
+  border-color: transparent;
+  color: var(--muted);
+}
+.od-close:hover {
+  color: var(--text);
+}
+.od-lead {
+  margin: 0;
+  color: var(--soft);
+}
+.open-dialog code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  color: var(--accent);
+}
+.od-choose {
+  align-self: flex-start;
+  padding: 7px 16px;
+}
+.od-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 16px;
+  border: 1.5px dashed var(--line);
+  border-radius: 10px;
+  color: var(--soft);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+.od-drop .od-choose {
+  align-self: center;
+}
+.od-drop.over {
+  border-color: var(--accent);
+  background: var(--card);
+}
+.od-drop-icon {
+  display: flex;
+  color: var(--accent);
+}
+.od-drop-title {
+  font-weight: 600;
+  color: var(--text);
+}
+.od-recent-title {
+  margin: 4px 0 -10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.od-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.od-recent button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border-color: transparent;
+  color: var(--soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.od-recent button:hover {
+  background: var(--card);
+  color: var(--text);
+}
+.od-path {
+  display: flex;
+  gap: 8px;
+}
+.od-path input {
+  flex: 1;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+.od-path input::placeholder {
+  color: var(--muted);
+}
+.od-help summary {
+  width: fit-content;
+  color: var(--soft);
+  cursor: pointer;
+  list-style: none;
+}
+.od-help summary::-webkit-details-marker {
+  display: none;
+}
+.od-help summary::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 9px 2px 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+.od-help[open] summary::before {
+  transform: rotate(45deg);
+}
+.od-help summary:hover {
+  color: var(--text);
+}
+.od-help p {
+  margin: 10px 0 8px;
+  color: var(--soft);
+  line-height: 1.5;
+}
+.od-help pre {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--soft);
+}
+.od-help pre i {
+  font-style: normal;
+  color: var(--muted);
+}
+.od-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+.od-link {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+}
+.od-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.od-error {
+  margin: 0;
+  color: var(--bad);
+}
+.od-error:empty {
+  display: none;
+}
+.od-busy {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--soft);
+}
+.open-dialog.busy .od-busy {
+  display: flex;
+}
+.od-busy .spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+
+/* Slides rendered off screen for the hosted app's PDF export. */
+.pdf-stage {
+  position: fixed;
+  top: 0;
+  left: -20000px;
+}
+.pdf-stage .slide {
+  display: flex;
+  transform: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* Animation list above the slide: one row per step of the current slide's animation. */
+.anim-strip {
+  max-height: 170px;
+  overflow-y: auto;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.strip-head {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.strip-title {
+  font-weight: 600;
+}
+.strip-source {
+  color: var(--muted);
+}
+.anim-strip ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.anim-step {
+  display: grid;
+  grid-template-columns: 18px 84px 190px 140px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 3px 0;
+  border-top: 1px solid var(--line);
+  color: var(--soft);
+  white-space: nowrap;
+}
+.anim-step > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.anim-step-icons {
+  display: flex;
+  gap: 5px;
+  color: var(--accent);
+}
+.anim-step-icons svg {
+  display: block;
+}
+.anim-step-n {
+  color: var(--accent);
+  font-weight: 600;
+}
+.anim-step-when,
+.anim-step-ease {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.anim-step-targets {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Slide list and stage */
+.app {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  padding: 10px 8px;
+}
+.slide-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.slide-list button {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 4px;
+  font-size: 12px;
+  background: none;
+  border-color: transparent;
+  color: var(--muted);
+}
+.slide-list button.active {
+  color: var(--accent);
+}
+.slide-list .num {
+  min-width: 16px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* A 180x101 window onto the slide, which is laid out at 1200x675 and scaled to 15%. */
+.thumb {
+  position: relative;
+  width: 180px;
+  height: 101px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  pointer-events: none;
+  /* Undo the button's own text styles so the copy looks like the real slide. */
+  color: var(--text);
+  font-size: 16px;
+  text-align: left;
+}
+.slide-list button:hover .thumb {
+  border-color: var(--muted);
+}
+.slide-list button.active .thumb {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+}
+.thumb .slide {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: none;
+  border-radius: 0;
+  transform: scale(0.15);
+  transform-origin: top left;
+}
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 0 3px;
+}
+.stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.slide-stack {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Toolbar under the nav bar: square icon tools, like a tool picker, and the slide counter on the right. */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.tools button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: var(--soft);
+}
+.tools button:hover {
+  background: var(--card);
+  border-color: transparent;
+  color: var(--text);
+}
+.tools button.on {
+  background: var(--card);
+  border-color: var(--line);
+  color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.tools-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--line);
+}
+/* ← → at the bottom centre of the slide area. */
+.slide-nav {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  display: flex;
+  gap: 4px;
+  transform: translateX(-50%);
+}
+.slide-nav button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border-color: transparent;
+  background: none;
+  color: var(--soft);
+}
+.slide-nav button:hover:not(:disabled) {
+  background: var(--card);
+  color: var(--text);
+}
+.counter {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tool tooltip: name and shortcut, then one line on what the tool does. */
+.tip {
+  position: fixed;
+  z-index: 40;
+  width: max-content;
+  max-width: 250px;
+  padding: 8px 10px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.38);
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    opacity 0.14s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.tip.show {
+  opacity: 1;
+  transform: none;
+}
+.tip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.tip-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.tip kbd {
+  margin: 0;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--soft);
+}
+.tip-text {
+  margin: 3px 0 0;
+  line-height: 1.4;
+  color: var(--soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tip {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* View menu: parts the editor can hide. */
+body.hide-sidebar {
+  --sidebar-w: 0px;
+}
+body.hide-sidebar .sidebar,
+body.hide-toolbar .bar,
+body.hide-animations .anim-strip {
+  display: none;
+}
+
+/* Presentation mode (F): only the slide. */
+body.presenting .nav,
+body.presenting .tip,
+body.presenting .slide-nav,
+body.presenting .counter,
+body.presenting .anim-strip,
+body.presenting .sidebar,
+body.presenting .bar {
+  display: none;
+}
+
+/* Presentation mode's way out: a hint at the top on entry, and an X that appears at the bottom centre. */
+.present-hint {
+  position: fixed;
+  top: 18px;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--soft);
+  font-size: 14px;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.present-hint kbd {
+  margin: 0 2px;
+  font-size: 13px;
+  color: var(--accent);
+}
+.exit-zone {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  z-index: 15;
+  width: 260px;
+  height: 110px;
+  margin-left: -130px;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 22px;
+}
+body.presenting .exit-zone {
+  display: flex;
+}
+.exit-present {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--panel);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.exit-zone:hover .exit-present,
+.exit-present:focus-visible {
+  opacity: 1;
+}
+
+/* Drawing (presentation mode): an ink layer placed and scaled exactly like the slide, and a toolbar that
+   appears at the left edge. */
+.ink {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1200px;
+  height: 675px;
+  margin: -337.5px 0 0 -600px;
+  transform: scale(var(--s, 1));
+  pointer-events: none;
+}
+.ink canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+body.inking .ink {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+.ink-zone {
+  display: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 15;
+  width: 72px;
+  align-items: center;
+  padding-left: 14px;
+}
+body.presenting .ink-zone {
+  display: flex;
+}
+body.inking .ink-zone {
+  width: auto;
+}
+.ink-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.ink-zone:hover .ink-tools,
+body.inking .ink-tools {
+  opacity: 1;
+}
+.ink-tools button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+.ink-tools .ink-swatch {
+  width: 36px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--swatch);
+}
+.ink-tools .ink-swatch.on {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+#laser {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Print and PDF export: one slide per page, each page exactly the slide's size, backgrounds included. */
+@page {
+  size: 1200px 675px;
+  margin: 0;
+}
+@media print {
+  html {
+    print-color-adjust: exact;
+  }
+  body {
+    display: block;
+    background: var(--print-page);
+  }
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
+  .nav,
+  .slide-nav,
+  .counter,
+  .anim-strip,
+  .ink,
+  .ink-zone,
+  .present-hint,
+  .exit-zone,
+  .sidebar,
+  .bar,
+  #laser {
+    display: none !important;
+  }
+  .app,
+  .stage,
+  .viewport,
+  .slide-stack {
+    display: block;
+    position: static;
+    overflow: visible;
+  }
+  .slide {
+    display: flex !important;
+    break-after: page;
+    overflow: hidden;
+    border: none;
+    border-radius: 0;
+    transform: none;
+    margin: 0;
+  }
+  .slide:last-child {
+    break-after: auto;
+  }
+}

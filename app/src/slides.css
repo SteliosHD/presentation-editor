@@ -1,0 +1,258 @@
+/* Slide layouts. Slides are designed at 1200x675; the player scales them to fit (--s). */
+.slide {
+  position: relative;
+  display: none;
+  width: 1200px;
+  height: 675px;
+  flex-shrink: 0;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 48px 60px;
+  transform: scale(var(--s, 1));
+  transform-origin: center;
+}
+.slide.active {
+  display: flex;
+}
+
+/* Text */
+.kicker {
+  color: var(--accent);
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+h1 {
+  font-size: 40px;
+  line-height: 1.15;
+  margin: 0 0 28px;
+  max-width: 30ch;
+}
+h2 {
+  font-size: 36px;
+  line-height: 1.15;
+  margin: 0 0 28px;
+  max-width: 40ch;
+}
+h1,
+h2 {
+  text-wrap: balance;
+}
+.section {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 40px 0 14px;
+}
+.lead {
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--soft);
+  max-width: 60ch;
+  margin: 0;
+}
+.nw {
+  white-space: nowrap;
+}
+.cmd {
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--accent);
+}
+
+/* Flow: three boxes joined by arrows; .mid highlights the middle one. */
+.flow {
+  display: grid;
+  grid-template-columns: 1fr 44px 1.15fr 44px 1fr;
+  align-items: stretch;
+}
+.box {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px 26px;
+}
+.box h3 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+.box p {
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--soft);
+  margin: 0;
+}
+.box.mid {
+  border-color: var(--accent);
+}
+.box.mid h3 {
+  color: var(--accent);
+}
+.arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: var(--accent);
+}
+
+/* Stats: a row of four figures, each with a short list. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.stat {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.stat b {
+  display: block;
+  font-size: 24px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.stat ul {
+  padding-left: 18px;
+  margin: 0;
+}
+.stat li {
+  font-size: 17px;
+  color: var(--soft);
+  line-height: 1.35;
+  margin: 0 0 3px;
+}
+
+/* Two columns of items; .good / .bad colour the headings, .fix adds an arrowed follow-up line. */
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+.col h3 {
+  font-size: 22px;
+  margin: 0 0 14px;
+}
+.col h3.good {
+  color: var(--good);
+}
+.col h3.bad {
+  color: var(--bad);
+}
+.item {
+  margin: 0 0 16px;
+}
+.item b {
+  display: block;
+  font-size: 21px;
+  margin-bottom: 3px;
+}
+.item span {
+  display: block;
+  font-size: 18px;
+  color: var(--soft);
+  line-height: 1.38;
+}
+.item .fix {
+  color: var(--text);
+}
+.item .fix::before {
+  content: '→ ';
+  color: var(--bad);
+}
+
+/* Steps: a timeline of cards; add .four for four across. A .cmd inside sits at the card's foot. */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.steps.four {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  min-height: 210px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 22px 18px 18px;
+}
+.step .when {
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.step h3 {
+  font-size: 21px;
+  margin: 0 0 10px;
+}
+.step p {
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--soft);
+  margin: 0;
+}
+.step .cmd {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+/* Callouts pinned to the bottom of a slide: .later is a dashed aside, .risk a warning. */
+.bottom {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.later,
+.risk {
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.later {
+  border: 1px dashed var(--line);
+  color: var(--soft);
+}
+.later b {
+  color: var(--text);
+}
+.risk {
+  border: 1px solid var(--warn);
+  background: var(--warn-bg);
+}
+.risk b {
+  color: var(--warn);
+}
+
+/* Slide number, bottom right; shown while numbering is on (S). */
+.slide-number {
+  display: none;
+  position: absolute;
+  right: 36px;
+  bottom: 22px;
+  font-size: 14px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+body.numbered .slide-number {
+  display: block;
+}
+body.numbered .thumb .slide-number {
+  display: none;
+}
+
+/* Speaker notes live in each slide but only show in the presenter window (N). */
+.notes {
+  display: none !important;
+}

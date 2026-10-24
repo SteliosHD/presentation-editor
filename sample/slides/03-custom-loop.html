@@ -1,0 +1,53 @@
+<section class="slide">
+  <!-- This slide's own styles; its animation is 03-custom-loop.ts. Nodes are placed by their centre. -->
+  <style>
+    .loop {
+      position: relative;
+      height: 400px;
+    }
+    .loop svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .loop line {
+      stroke: var(--line);
+      stroke-width: 2;
+    }
+    .node {
+      position: absolute;
+      width: 140px;
+      height: 56px;
+      margin: -28px 0 0 -70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .node.hub {
+      border-color: var(--accent);
+      color: var(--accent);
+      /* 03-custom-loop.ts tweens --pulse from 0 to 1: a ring of the accent colour that grows and fades. */
+      box-shadow: 0 0 0 calc(var(--pulse, 0) * 22px) rgb(from var(--accent) r g b / calc(0.6 - 0.6 * var(--pulse, 0)));
+    }
+  </style>
+  <p class="kicker">Custom slide</p>
+  <h2>Any HTML, animated with GSAP</h2>
+  <div class="loop">
+    <svg viewBox="0 0 1080 400">
+      <line x1="540" y1="200" x2="200" y2="80" />
+      <line x1="540" y1="200" x2="880" y2="80" />
+      <line x1="540" y1="200" x2="540" y2="360" />
+    </svg>
+    <div class="node hub" style="left: 540px; top: 200px">Agent</div>
+    <div class="node" style="left: 200px; top: 80px">Plan</div>
+    <div class="node" style="left: 880px; top: 80px">Act</div>
+    <div class="node" style="left: 540px; top: 360px">Check</div>
+  </div>
+  <aside class="notes">Example of a slide with its own markup and its own GSAP timeline.</aside>
+</section>

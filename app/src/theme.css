@@ -1,0 +1,40 @@
+/*
+ * Default theme: every colour and font the app and slides use. Nothing else in presentation-editor hard-codes a colour.
+ * A presentation restyles itself with its own theme.css, which loads after this one; it only needs the tokens it changes.
+ *
+ * Brief for whoever writes a new theme:
+ * - Use these token names; change only the values.
+ * - One accent colour. It marks the kicker, highlighted boxes, step tops and anything the eye should land on.
+ * - good / bad / warn are for meaning only (worked, didn't work, risk), never decoration.
+ * - Text on --panel and --card must stay readable from the back of a room: aim for a 7:1 contrast for --text
+ *   and at least 4.5:1 for --soft.
+ */
+:root {
+  /* Surfaces, darkest to lightest: page behind the slide, the slide itself, cards on the slide. */
+  --bg: #0f1419;
+  --panel: #161d24;
+  --card: #1b242d;
+  --line: #2a3642;
+
+  /* Text: main, secondary (body copy in cards), quiet (footer, hints). */
+  --text: #e6edf3;
+  --soft: #c3cdd7;
+  --muted: #7d8a97;
+
+  /* Emphasis and meaning. --warn-bg is the fill behind a risk callout, a dark tint of --warn. */
+  --accent: #4fb3ff;
+  --good: #3fb950;
+  --bad: #f0883e;
+  --warn: #e3b341;
+  --warn-bg: #2a2412;
+
+  /* Laser pointer (P): the dot and trail, and the dot's bright centre. */
+  --laser: #ff2d2d;
+  --laser-core: #ffd0d0;
+
+  /* Page colour behind slides when printing to PDF. */
+  --print-page: #ffffff;
+
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
