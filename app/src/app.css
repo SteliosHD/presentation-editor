@@ -508,6 +508,45 @@ button.primary {
   color: var(--soft);
 }
 
+/* Help → About: the story, links, and the note on who wrote the copy. */
+.about-dialog {
+  width: min(540px, calc(100vw - 32px));
+}
+.about-copy p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--soft);
+}
+.about-copy p:last-child {
+  margin-bottom: 0;
+}
+.about-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 0;
+  font-size: 13px;
+}
+.about-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.about-links a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.about-note {
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 /* Slides rendered off screen for the hosted app's PDF export. */
 .pdf-stage {
   position: fixed;

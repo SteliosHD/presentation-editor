@@ -1,5 +1,6 @@
-import { Check, createElement, FileCode, FileDown, FolderOpen, LifeBuoy, Sparkles, type IconNode } from 'lucide';
+import { Check, createElement, FileCode, FileDown, FolderOpen, Info, LifeBuoy, Sparkles, type IconNode } from 'lucide';
 import type { Presentation } from 'virtual:presentation';
+import { createAboutDialog } from './about-dialog.ts';
 import { post } from './api.ts';
 import iconUrl from '../favicon.svg';
 import { createOpenDialog, rememberFolder } from './open-dialog.ts';
@@ -197,6 +198,7 @@ export const mountNav = (
       },
     })),
   );
+  const about = createAboutDialog({ repo: REPO });
   const help = createMenu('Help', [
     {
       label: 'Personalize your editor',
@@ -205,6 +207,8 @@ export const mountNav = (
         window.open(`${REPO}#personalize-your-editor`, '_blank', 'noopener');
       },
     },
+    'separator',
+    { label: 'About Presentation Editor', icon: Info, run: about.show },
   ]);
   $('.nav-left').append(file.root, editMenu.root, view.root, help.root);
 
