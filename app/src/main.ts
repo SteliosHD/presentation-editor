@@ -12,7 +12,7 @@ import { createToolbar, slideNumbers } from './toolbar.ts';
 // Loads the presentation and wires the parts together: player, slide list, toolbar, presentation mode,
 // drawing, keyboard, and (outside exports) the nav bar and animation list.
 
-const { presentation, choose } = await loadPresentation();
+const { presentation, choose, inBrowser } = await loadPresentation();
 
 // The presentation's own theme.css goes after the default theme, so its tokens win.
 const presentationTheme = document.createElement('style');
@@ -101,7 +101,7 @@ document.addEventListener('mousedown', (e) => {
 
 if (authoring) {
   void import('./nav.ts').then(({ mountNav }) => {
-    mountNav(presentation, { choose });
+    mountNav(presentation, { choose, inBrowser });
   });
 }
 

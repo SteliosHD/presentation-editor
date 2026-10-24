@@ -15,9 +15,9 @@ Audience: [who it is for]
 Length: [number of slides, or minutes]
 
 Folder
-- presentation.json: { "title": "…" }
+- presentation.json: { "title": "Your talk's title" }
 - theme.css (optional): set theme tokens on :root, only the ones you change.
-- slides/: one HTML file per slide, its name starting with a number that sets the order (01-title.html, 02-agenda.html, …).
+- slides/: one HTML file per slide, its name starting with a number that sets the order (01-title.html, 02-agenda.html and so on).
 
 Each slide
 - One <section class="slide"> per file, designed for a fixed 1200×675 canvas. Everything fits inside it.

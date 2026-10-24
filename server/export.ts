@@ -1,11 +1,11 @@
-import { copyFile, mkdtemp, rm } from 'node:fs/promises';
+import { copyFile, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 import { build } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
-import { presentationPlugin } from './presentation.ts';
+import { emptyPresentationPlugin, presentationPlugin } from './presentation.ts';
 
 export const APP = fileURLToPath(new URL('../app', import.meta.url));
 
@@ -23,6 +23,24 @@ export const exportHtml = async (folder: string, file: string) => {
       build: { outDir, emptyOutDir: true },
     });
     await copyFile(join(outDir, 'index.html'), file);
+  } finally {
+    await rm(outDir, { recursive: true, force: true });
+  }
+};
+
+// The single-file player that browser-side Export HTML fills in (mode "template"); returns its HTML.
+export const buildTemplate = async () => {
+  const outDir = await mkdtemp(join(tmpdir(), 'presentation-template-'));
+  try {
+    await build({
+      configFile: false,
+      root: APP,
+      mode: 'template',
+      logLevel: 'warn',
+      plugins: [emptyPresentationPlugin(), viteSingleFile()],
+      build: { outDir, emptyOutDir: true },
+    });
+    return await readFile(join(outDir, 'index.html'), 'utf8');
   } finally {
     await rm(outDir, { recursive: true, force: true });
   }

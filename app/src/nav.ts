@@ -113,8 +113,11 @@ const toggleHidden = (part: string) => {
   }
 };
 
-export const mountNav = (presentation: Presentation, { choose }: { choose: boolean }) => {
-  if (!isWeb) rememberFolder(presentation.folder);
+export const mountNav = (
+  presentation: Presentation,
+  { choose, inBrowser }: { choose: boolean; inBrowser: boolean },
+) => {
+  if (!inBrowser) rememberFolder(presentation.folder);
   for (const part of readHidden()) document.body.classList.add(`hide-${part}`);
 
   const nav = document.createElement('header');
@@ -127,7 +130,9 @@ export const mountNav = (presentation: Presentation, { choose }: { choose: boole
   const $ = (sel: string) => must(nav.querySelector<HTMLElement>(sel), sel);
   // Just the folder's own name; the full path shows on hover.
   $('.nav-folder').textContent = presentation.folder.split('/').at(-1) ?? presentation.folder;
-  $('.nav-folder').title = isWeb ? 'Opened in this browser tab' : presentation.folder;
+  $('.nav-folder').title = inBrowser
+    ? `Opened in this browser tab${isWeb ? '' : ': edits on disk need opening it again'}`
+    : presentation.folder;
 
   const prompt = createPromptDialog();
   const dialog = createOpenDialog(presentation.folder, { onCreate: prompt.show });
@@ -140,8 +145,8 @@ export const mountNav = (presentation: Presentation, { choose }: { choose: boole
     status.classList.toggle('busy', busy);
   };
   const run = async (format: 'html' | 'pdf') => {
-    if (!isWeb) {
-      say(`Choose where to save the ${format.toUpperCase()}…`, { busy: true });
+    if (!inBrowser) {
+      say(`Choose where to save the ${format.toUpperCase()}`, { busy: true });
       const { file, cancelled } = await post('export', { format });
       say(cancelled ? 'Export cancelled' : `Saved ${file ?? ''}`);
       return;
@@ -168,12 +173,12 @@ export const mountNav = (presentation: Presentation, { choose }: { choose: boole
   };
 
   const file = createMenu('File', [
-    { label: 'Open Presentation folder…', icon: FolderOpen, run: dialog.show },
+    { label: 'Open Presentation folder', icon: FolderOpen, run: dialog.show },
     'separator',
     { label: 'Export HTML', icon: FileCode, run: exporting('html') },
     { label: 'Export PDF', icon: FileDown, run: exporting('pdf') },
   ]);
-  const editMenu = createMenu('Edit', [{ label: 'Slide Creation Prompt…', icon: Sparkles, run: prompt.show }]);
+  const editMenu = createMenu('Edit', [{ label: 'Slide Creation Prompt', icon: Sparkles, run: prompt.show }]);
   const view = createMenu(
     'View',
     PARTS.map(([part, label]) => ({

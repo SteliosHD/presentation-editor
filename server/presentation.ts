@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { transformWithOxc, type Plugin, type ViteDevServer } from 'vite';
 import { chooseFolder, chooseSaveFile } from './dialogs.ts';
-import { exportHtml, exportPdf } from './export.ts';
+import { buildTemplate, exportHtml, exportPdf } from './export.ts';
 
 // A presentation is any folder with a slides/ folder. presentation.json (title) and theme.css are optional.
 export const isPresentation = (folder: string) => existsSync(join(folder, 'slides'));
@@ -164,5 +164,23 @@ export const presentationPlugin = (state: PresentationState): Plugin => ({
       if (watched.some((path) => file.startsWith(path))) reload();
     });
     api(server, state, reload);
+    // The player template for Export HTML of a folder dropped on the local app, built on first request.
+    let template: Promise<string> | null = null;
+    server.middlewares.use((req, res, next) => {
+      if (req.url !== '/export-template.html') {
+        next();
+        return;
+      }
+      template ??= buildTemplate();
+      template
+        .then((html) => {
+          res.setHeader('Content-Type', 'text/html');
+          res.end(html);
+        })
+        .catch((err: unknown) => {
+          template = null;
+          next(err);
+        });
+    });
   },
 });

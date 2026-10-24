@@ -1,7 +1,8 @@
 import { presentation as served, type Presentation, type SlideAnimation } from 'virtual:presentation';
 
 // Where the presentation comes from:
-// - the local app (any mode but "web" and "template"): the server's virtual module, live-reloaded;
+// - the local app (any mode but "web" and "template"): the server's virtual module, live-reloaded, unless a
+//   folder was dropped on it, which is read in the browser like the hosted app's;
 // - the hosted app ("web"): a folder the viewer opened, kept for the tab's session, else the built-in sample;
 // - a downloaded file ("template"): JSON embedded in the page by the export.
 // Stored and embedded presentations carry their animations as code, loaded here as modules.
@@ -64,6 +65,14 @@ const sampleChosen = () => {
 
 export const openedInBrowser = () => readOpened() !== null;
 
+export const forgetOpened = () => {
+  try {
+    sessionStorage.removeItem(STORE_KEY);
+  } catch {
+    // Nothing stored, or storage blocked: either way the server's folder shows.
+  }
+};
+
 const readOpened = () => {
   try {
     const json = sessionStorage.getItem(STORE_KEY);
@@ -73,16 +82,17 @@ const readOpened = () => {
   }
 };
 
-// `choose` is true when the hosted app should first ask which presentation to open.
-export const loadPresentation = async (): Promise<{ presentation: Presentation; choose: boolean }> => {
+// `choose` is true when the hosted app should first ask which presentation to open. `inBrowser` is true when the
+// presentation was read by the browser, so it has no folder on the server: no live reload, exports download.
+type Loaded = { presentation: Presentation; choose: boolean; inBrowser: boolean };
+export const loadPresentation = async (): Promise<Loaded> => {
   if (import.meta.env.MODE === 'template') {
     const json = document.getElementById(DATA_ID)?.textContent;
     if (!json) throw new Error('This file has no presentation in it.');
-    return { presentation: await hydrate(JSON.parse(json) as Stored), choose: false };
+    return { presentation: await hydrate(JSON.parse(json) as Stored), choose: false, inBrowser: true };
   }
   if (!served) throw new Error('No presentation was served.');
-  if (!isWeb) return { presentation: served, choose: false };
   const opened = readOpened();
-  if (opened) return { presentation: await hydrate(opened), choose: false };
-  return { presentation: served, choose: !sampleChosen() };
+  if (opened) return { presentation: await hydrate(opened), choose: false, inBrowser: true };
+  return { presentation: served, choose: isWeb && !sampleChosen(), inBrowser: isWeb };
 };
