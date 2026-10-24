@@ -1,37 +1,30 @@
 import { gsap } from 'gsap';
 import { reduceMotion } from './player.ts';
 
-// Folding a pane away or back. The box shrinks into the corner nearest where its switch waits once it is folded
-// (top left for the slide list, bottom right for the animation list) while the space it took closes up, so the
-// slide grows smoothly. The hide-* class flips at once; folding-* keeps the pane drawn until it has folded away.
+// Folding a pane away or back, like an editor's sidebar: the slide list slides out to the left and the animation
+// list down, while the space each took closes up, so the slide grows smoothly. The hide-* class flips at once;
+// folding-* keeps the pane drawn until it has gone.
 
 // `rest`: the space the pane leaves once folded (the animation list leaves room for its switch under the counter).
 type Pane = { part: string; el: HTMLElement; axis: 'width' | 'height'; rest?: number };
 type Box = { w: number; h: number; margin: number; pad: number };
-const SWITCH = 34;
-const DURATION = 0.45;
+const DURATION = 0.4;
 const running = new Map<string, { tween: gsap.core.Tween; t: { open: number }; box: Box }>();
 
 const draw = ({ el, axis, rest = 0 }: Pane, box: Box, open: number) => {
-  const size = (axis === 'width' ? box.w : box.h) * open;
-  const w = axis === 'width' ? size : box.w;
-  const h = axis === 'height' ? size : box.h;
-  // What still shows: a corner square, the size of the switch, that grows into the whole box.
-  const cutW = Math.max(0, w - (SWITCH + (box.w - SWITCH) * open));
-  const cutH = Math.max(0, h - (SWITCH + (box.h - SWITCH) * open));
+  const full = axis === 'width' ? box.w : box.h;
+  const size = full * open;
+  const pad = `${Math.min(box.pad, size / 2)}px`;
   const edge = `${box.margin * open + rest * (1 - open)}px`;
-  const pad = `${box.pad * open}px`;
+  // The slide list's contents move left with its closing edge, so it slides out rather than being cut off. The
+  // animation list's top edge is the one that moves, and it carries the contents down with it.
+  if (axis === 'width') el.style.setProperty('--fold-shift', `${size - full}px`);
   Object.assign(
     el.style,
-    { overflow: 'hidden', opacity: String(Math.min(1, open * 3)), [axis]: `${size}px` },
+    { overflow: 'hidden', [axis]: `${size}px` },
     axis === 'width'
-      ? { clipPath: `inset(0 ${cutW}px ${cutH}px 0 round 12px)`, marginLeft: edge, paddingLeft: pad, paddingRight: pad }
-      : {
-          clipPath: `inset(${cutH}px 0 0 ${cutW}px round 12px)`,
-          marginBottom: edge,
-          paddingTop: pad,
-          paddingBottom: pad,
-        },
+      ? { marginLeft: edge, paddingLeft: pad, paddingRight: pad }
+      : { marginBottom: edge, paddingTop: pad, paddingBottom: pad },
   );
 };
 
@@ -62,7 +55,7 @@ export const fold = (pane: Pane, show: boolean) => {
   const tween = gsap.to(t, {
     open: show ? 1 : 0,
     duration: DURATION * Math.abs(Number(show) - t.open),
-    ease: 'power3.inOut',
+    ease: 'power2.inOut',
     onUpdate: () => {
       draw(pane, box, t.open);
     },

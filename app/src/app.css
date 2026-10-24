@@ -1666,7 +1666,10 @@ body.presenting .pane-toggle {
 }
 
 /* View menu: parts the viewer can hide. */
-/* A pane stays drawn while it folds away (.folding-*), then goes. */
+/* A pane stays drawn while it folds away (.folding-*), then goes; the slide list's contents move with its edge. */
+.sidebar > * {
+  translate: var(--fold-shift, 0) 0;
+}
 body.hide-sidebar:not(.folding-sidebar) {
   --sidebar-w: 0px;
 }
