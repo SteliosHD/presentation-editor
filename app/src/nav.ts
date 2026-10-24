@@ -18,7 +18,7 @@ import iconUrl from '../favicon.svg';
 import { createOpenDialog, rememberFolder } from './open-dialog.ts';
 import { must } from './player.ts';
 import { createPromptDialog } from './prompt-dialog.ts';
-import { startQueuedTour, startTour } from './tour.ts';
+import { startQueuedTour, startTour, startWelcome } from './tour.ts';
 import { isWeb } from './source.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
@@ -162,7 +162,7 @@ export const mountNav = (
 
   const prompt = createPromptDialog();
   const dialog = createOpenDialog(presentation.folder, REPO);
-  if (choose) dialog.show();
+  if (choose) startWelcome(dialog);
 
   const status = $('.nav-status');
   const say = (text: string, { error = false, busy = false } = {}) => {
