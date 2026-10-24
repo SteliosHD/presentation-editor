@@ -6,7 +6,7 @@ import { createInk } from './ink.ts';
 import { createPlayer, must } from './player.ts';
 import { createPresentationMode } from './presentation-mode.ts';
 import { createSlideList } from './slide-list.ts';
-import { loadPresentation } from './source.ts';
+import { isWeb, loadPresentation } from './source.ts';
 import { shortcutFor, type ShortcutId } from './shortcuts.ts';
 import { createToolbar, slideNumbers } from './toolbar.ts';
 
@@ -157,6 +157,13 @@ document.addEventListener('mousedown', (e) => {
     e.preventDefault();
   }
 });
+
+// Vercel Web Analytics, in the hosted app only: page views, no cookies.
+if (isWeb) {
+  void import('@vercel/analytics').then(({ inject }) => {
+    inject({ mode: 'production' });
+  });
+}
 
 if (authoring) {
   void import('./nav.ts').then(({ mountNav }) => {
