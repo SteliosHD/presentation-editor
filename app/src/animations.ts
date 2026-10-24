@@ -22,7 +22,16 @@ import {
 //   { ..., data: { label: 'Connections draw in', icons: ['draw'] } }
 
 export type Icon = { icon: IconNode; label: string };
-export type Step = { icons: Icon[]; when: string; targets: string; change: string; label: string; ease: string };
+// `tween` is the step itself, so the animation list can tell when it runs and play it on its own.
+export type Step = {
+  icons: Icon[];
+  when: string;
+  targets: string;
+  change: string;
+  label: string;
+  ease: string;
+  tween: gsap.core.Tween;
+};
 
 // The icon names a tween's data.icons may use; AGENTS.md points authors here.
 export const ICONS: Record<string, Icon> = {
@@ -125,7 +134,27 @@ const describeTween = (tween: gsap.core.Tween): Step => {
     change: change + stagger,
     label: note.label ?? '',
     ease: typeof vars.ease === 'string' ? vars.ease : '',
+    tween,
   };
+};
+
+// Where a step starts on the slide's whole animation, adding up the start times of any timelines it sits in.
+const startOn = (root: gsap.core.Animation, tween: gsap.core.Animation) => {
+  let start = 0;
+  for (let at: gsap.core.Animation | null = tween; at && at !== root; at = at.parent) start += at.startTime();
+  return start;
+};
+
+// Plays one step on its own: the slide jumps to the moment the step starts, with earlier steps finished and later
+// ones not yet begun, then only that step plays. A looping step keeps looping; a slide with a single tween
+// replays it.
+// Returns what drives the step, which is running for as long as the step plays.
+export const playStep = (root: gsap.core.Animation, step: Step): gsap.core.Animation => {
+  if (!(root instanceof gsap.core.Timeline)) return root.restart();
+  const start = startOn(root, step.tween);
+  if (step.tween.vars.repeat === -1) return root.play(start);
+  root.pause(start);
+  return root.tweenFromTo(start, start + step.tween.totalDuration());
 };
 
 export const describeAnimation = (animation: gsap.core.Animation): Step[] => {

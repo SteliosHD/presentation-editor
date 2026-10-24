@@ -47,7 +47,7 @@ export default (slide: HTMLElement, gsap: typeof import('gsap').gsap) =>
 
 ## Annotating animations
 
-The animation list under the slide shows one row per tween: timing, targets, what changes, easing, and icons. It names targets by their first class, so give animated elements a meaningful first class.
+The animation list under the slide shows one row per tween: timing, targets, what changes, easing, and icons. It names targets by their first class, so give animated elements a meaningful first class. The row of the step that is running lights up, Replay plays the slide's animation again, and clicking a row plays that step on its own (the slide jumps to the moment it starts), so each step can be checked one at a time.
 
 Annotate every tween in a custom animation through GSAP's `data` field:
 

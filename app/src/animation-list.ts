@@ -1,9 +1,11 @@
-import { createElement } from 'lucide';
+import { createElement, RotateCcw } from 'lucide';
+import { gsap } from 'gsap';
 import type { Presentation } from 'virtual:presentation';
-import { describeAnimation } from './animations.ts';
+import { describeAnimation, playStep, type Step } from './animations.ts';
 import { must, reduceMotion, type Player } from './player.ts';
 
-// At the bottom of the slide area: every step of the current slide's animation, one per row, read from GSAP.
+// At the bottom of the slide area: every step of the current slide's animation, one per row, read from GSAP. The
+// step that is running lights up; Replay plays the whole animation again, and clicking a step plays just that one.
 export const createAnimationList = (presentation: Presentation, player: Player, { empty = false } = {}) => {
   const strip = document.createElement('div');
   strip.className = 'anim-strip';
@@ -16,8 +18,18 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
     return node;
   };
 
+  // Each frame, the rows whose step is running light up. A step played on its own lights while it plays.
+  let steps: Step[] = [];
+  let rows: HTMLElement[] = [];
+  let solo: { step: Step; driver: gsap.core.Animation } | null = null;
+  gsap.ticker.add(() => {
+    if (solo && !solo.driver.isActive()) solo = null;
+    steps.forEach((step, k) => rows[k]?.classList.toggle('now', solo ? solo.step === step : step.tween.isActive()));
+  });
+
   return {
     render: (current: number) => {
+      solo = null;
       if (empty) {
         const head = el('div', 'strip-head', '');
         head.append(el('span', 'strip-title', 'Animations'));
@@ -27,8 +39,10 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
       const slide = presentation.slides[current];
       const source = slide.animationFile ? `custom · ${slide.animationFile}` : 'default entrance';
       const animation = player.entrance();
-      const rows = (animation ? describeAnimation(animation) : []).map((step, n) => {
-        const li = el('li', 'anim-step', '');
+      steps = animation ? describeAnimation(animation) : [];
+      rows = steps.map((step, n) => {
+        const row = el('button', 'anim-step', '');
+        row.title = step.label ? `${step.change}. Click to play this step.` : 'Click to play this step.';
         const icons = el('span', 'anim-step-icons', '');
         for (const { icon, label } of step.icons) {
           const wrap = el('span', '', '');
@@ -36,8 +50,7 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
           wrap.append(createElement(icon, { width: 15, height: 15, 'aria-label': label }));
           icons.append(wrap);
         }
-        if (step.label) li.title = step.change;
-        li.append(
+        row.append(
           el('span', 'anim-step-n', `${n + 1}`),
           icons,
           el('span', 'anim-step-when', step.when),
@@ -45,13 +58,32 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
           el('span', 'anim-step-change', step.label || step.change),
           el('span', 'anim-step-ease', step.ease),
         );
-        return li;
+        row.addEventListener('click', () => {
+          if (animation) solo = { step, driver: playStep(animation, step) };
+        });
+        return row;
       });
-      if (reduceMotion) rows.push(el('li', 'anim-step', 'Off: reduced motion is on'));
       const ol = document.createElement('ol');
-      ol.append(...rows);
+      ol.append(
+        ...rows.map((row) => {
+          const li = document.createElement('li');
+          li.append(row);
+          return li;
+        }),
+      );
+      if (reduceMotion) ol.append(el('li', 'strip-empty', 'Off: reduced motion is on'));
       const head = el('div', 'strip-head', '');
       head.append(el('span', 'strip-title', 'Animations'), el('span', 'strip-source', source));
+      if (animation) {
+        const replay = el('button', 'strip-replay', 'Replay');
+        replay.title = "Play this slide's animation again";
+        replay.prepend(createElement(RotateCcw, { width: 13, height: 13, 'aria-hidden': 'true' }));
+        replay.addEventListener('click', () => {
+          solo = null;
+          animation.restart();
+        });
+        head.append(replay);
+      }
       strip.replaceChildren(head, ol);
     },
   };
