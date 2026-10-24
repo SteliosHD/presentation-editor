@@ -85,3 +85,7 @@ The same app runs in four Vite modes; `app/src/source.ts` decides where the pres
 - The nav bar and the animation list are authoring tools: `export` and `template` builds leave them out. The slide list, toolbar, notes, pointer, numbers, drawing and presentation mode ship in exported files.
 - Edit → Slide Creation Prompt (`app/src/prompt-dialog.ts`) restates this guide's authoring rules for agents that never see it. When those rules change, change the prompt too.
 - The local server's `/api` handles only JSON POSTs from the app's own page; anything else passes through to Vite.
+- A hosted site adds what belongs to it alone (a landing page, credits, analytics) through the site add-on: a
+  module passed with `--site <file>` to `bin/presentation-viewer.ts` or `server/build-web.ts`, described in
+  `app/src/site.ts` and typed in `app/src/presentation.d.ts`. Keep the tool free of anything only one site needs; if
+  an add-on needs more, add a general field to the slot.

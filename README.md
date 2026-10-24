@@ -77,6 +77,10 @@ with icons, and the project's conventions.
 **Your own copy online:** the project deploys to [Vercel](https://vercel.com) as it is (`vercel.json` sets it up).
 Any static host works too: `pnpm build:web` writes the site to `dist/`.
 
+**Your own landing page, credits or analytics:** write a site add-on, a module that default-exports the hooks in
+[`app/src/site.ts`](app/src/site.ts), and pass it with `--site <file>` to `node server/build-web.ts` or the
+`presentation-viewer` command. The tool itself stays unchanged, so you can keep pulling updates.
+
 ## How it's built
 
 - **No UI framework:** plain TypeScript and the DOM, about 2,000 lines across small modules in `app/src/`.
