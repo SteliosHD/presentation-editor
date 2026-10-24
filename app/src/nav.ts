@@ -18,9 +18,9 @@ import iconUrl from '../favicon.svg';
 import { createOpenDialog, rememberFolder } from './open-dialog.ts';
 import { must } from './player.ts';
 import { createPromptDialog } from './prompt-dialog.ts';
-import { startQueuedTour, startTour } from './tour.ts';
+import { queueTour, startQueuedTour, startTour } from './tour.ts';
 import site from './site.ts';
-import { isWeb } from './source.ts';
+import { isWeb, linkedToSample } from './source.ts';
 import { watchOpened } from './watch.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
@@ -269,6 +269,13 @@ export const mountNav = (
     { label: 'Why use the Presentation Viewer', icon: Info, run: about.show },
   ]);
   $('.nav-left').append(file.root, editMenu.root, view.root, help.root);
+  // Arriving by a ?sample link counts as trying the sample: the tour follows, and the address loses the request.
+  if (linkedToSample()) {
+    queueTour();
+    const params = new URLSearchParams(location.search);
+    params.delete('sample');
+    history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : '') + location.hash);
+  }
   startQueuedTour();
 
   // Footer: the site's own, or the license and the source.

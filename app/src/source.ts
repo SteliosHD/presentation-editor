@@ -56,7 +56,10 @@ export const requestSample = () => {
     // Storage blocked: the viewer opens empty again.
   }
 };
+// A link can ask for the sample too, with ?sample in the address (nav.ts then clears it and starts the tour).
+export const linkedToSample = () => new URLSearchParams(location.search).has('sample');
 const takeSampleRequest = () => {
+  if (linkedToSample()) return true;
   try {
     const requested = sessionStorage.getItem(SAMPLE_KEY) === '1';
     sessionStorage.removeItem(SAMPLE_KEY);
