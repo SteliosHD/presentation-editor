@@ -21,15 +21,18 @@
       <aside class="sidebar"><ol class="slide-list"></ol></aside>
       <main class="stage">
         <div class="viewport"><div class="slide-stack"></div></div>
-        <div class="slide-nav">
-          <button class="slide-prev" aria-label="Previous slide"></button>
-          <button class="slide-next" aria-label="Next slide"></button>
+        <div class="stage-foot">
+          <div class="slide-nav">
+            <button class="slide-prev" aria-label="Previous slide"></button>
+            <button class="slide-next" aria-label="Next slide"></button>
+          </div>
+          <span class="counter"></span>
         </div>
-        <span class="counter"></span>
       </main>
     </div>
     <div class="present-hint" aria-live="polite">
-      Press <kbd></kbd> to exit presentation mode, or move to the bottom center
+      Press <kbd></kbd> to exit presentation mode<span class="hint-hover">, or move to the bottom center</span
+      ><span class="hint-touch">, or tap ✕ at the bottom</span>
     </div>
     <div class="exit-zone">
       <button class="exit-present" aria-label="Exit presentation mode" title="Exit presentation mode"></button>

@@ -1,6 +1,7 @@
 {
   "name": "presentation-editor",
   "private": true,
+  "license": "MIT",
   "bin": {
     "presentation-editor": "./bin/presentation-editor.ts"
   },

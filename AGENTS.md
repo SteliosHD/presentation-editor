@@ -76,6 +76,8 @@ The same app runs in four Vite modes; `app/src/source.ts` decides where the pres
 
 - `pnpm typecheck`, `pnpm lint` and `pnpm format:check` pass before a change is finished.
 - `app/src/main.ts` only wires the parts; each feature has its own module (`player`, `slide-list`, `animation-list`, `toolbar`, `presentation-mode`, `ink`, `nav` with the File, Edit and View menus, `open-dialog`, `prompt-dialog`).
+- Layouts cover desktop, tablet (touch: tools stay visible, swipe changes slide) and phone (the slide list only). Nothing may overlap at any size; while presentation tools are on show, the slide fits beside them.
+- `README.md` is the human guide; Help → Personalize your editor links to its "Personalize your editor" section, so keep that heading.
 - Keyboard shortcuts live only in `app/src/shortcuts.ts`; the key handler, tooltips, presentation hint and notes window all read it.
 - Every colour comes from a theme token; `app/src/theme.css` is the only file holding colour values, apart from `app/favicon.svg`, which browsers load on its own.
 - Slide HTML and app chrome share one page, so app classes need names no slide layout uses. `.step` belongs to slides; the animation list uses `.anim-step`.

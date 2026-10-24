@@ -74,7 +74,12 @@ const player = createPlayer(presentation.slides, must(document.querySelector('.v
   },
   onKey,
 });
-const ink = createInk(must(document.querySelector('.slide-stack'), '.slide-stack'));
+// Picking or putting away a drawing tool can change the room around the slide, so refit it.
+const ink = createInk(must(document.querySelector<HTMLElement>('.slide-stack'), '.slide-stack'), {
+  onChange: () => {
+    player.fit();
+  },
+});
 const present = createPresentationMode({
   onChange: (on) => {
     if (!on) ink.stop();
@@ -113,6 +118,24 @@ const render = () => {
 };
 
 document.addEventListener('keydown', onKey);
+
+// Swipe left or right on a touch screen to change slide (not while drawing).
+const viewport = must(document.querySelector<HTMLElement>('.viewport'), '.viewport');
+let swipeFrom: { x: number; y: number } | null = null;
+viewport.addEventListener('pointerdown', (e) => {
+  swipeFrom =
+    e.pointerType === 'touch' && !document.body.classList.contains('inking') ? { x: e.clientX, y: e.clientY } : null;
+});
+viewport.addEventListener('pointercancel', () => {
+  swipeFrom = null;
+});
+viewport.addEventListener('pointerup', (e) => {
+  if (!swipeFrom) return;
+  const dx = e.clientX - swipeFrom.x;
+  const dy = e.clientY - swipeFrom.y;
+  swipeFrom = null;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) actions[dx < 0 ? 'next' : 'prev']();
+});
 // Clicking these buttons must not focus them: a focused button would also react to Space or Enter,
 // toggling a tool or presentation mode when the presenter only meant to change slide.
 document.addEventListener('mousedown', (e) => {

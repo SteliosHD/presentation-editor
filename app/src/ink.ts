@@ -26,7 +26,7 @@ const WIDTH: Record<Tool, number> = { pen: 4, highlighter: 24, eraser: 40 };
 const HIGHLIGHT_ALPHA = 0.35;
 const RES = 2; // canvas pixels per slide pixel, so ink stays sharp when the slide is scaled up
 
-export const createInk = (stack: HTMLElement) => {
+export const createInk = (stack: HTMLElement, { onChange }: { onChange: () => void }) => {
   const layer = document.createElement('div');
   layer.className = 'ink';
   const [ink, live] = [document.createElement('canvas'), document.createElement('canvas')];
@@ -151,6 +151,7 @@ export const createInk = (stack: HTMLElement) => {
     for (const [name, b] of toolButtons) b.classList.toggle('on', tool === name);
     for (const [name, b] of swatches) b.classList.toggle('on', colour === name);
     document.body.classList.toggle('inking', tool !== null);
+    onChange();
   };
   const select = (next: Tool | null) => {
     end();

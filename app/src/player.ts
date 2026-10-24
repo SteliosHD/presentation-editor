@@ -48,6 +48,7 @@ export const createPlayer = (
   { onChange, onKey }: { onChange: () => void; onKey: (e: KeyboardEvent) => void },
 ) => {
   const elements = slides.map((s) => toSlide(s.html));
+  const stack = must(viewport.querySelector<HTMLElement>('.slide-stack'), '.slide-stack');
   // Every slide carries its number; it shows only while numbering is on (body.numbered).
   elements.forEach((el, k) => {
     const number = document.createElement('span');
@@ -55,18 +56,19 @@ export const createPlayer = (
     number.textContent = `${k + 1} / ${slides.length}`;
     el.append(number);
   });
-  must(viewport.querySelector('.slide-stack'), '.slide-stack').replaceChildren(...elements);
+  stack.replaceChildren(...elements);
   let i = -1;
   let entrance: gsap.core.Animation | null = null;
   let notesWin: Window | null = null;
 
-  // Show the 1200x675 slide as large as the stage allows, with a margin outside presentation mode.
+  // Show the 1200x675 slide as large as its box allows, with a margin outside presentation mode. The box is
+  // the slide area, minus room for presentation tools while they are on show.
   const fit = () => {
     const margin = document.body.classList.contains('presenting') ? 1 : 0.94;
-    const s = Math.min(viewport.clientWidth / 1200, viewport.clientHeight / 675) * margin;
+    const s = Math.min(stack.clientWidth / 1200, stack.clientHeight / 675) * margin;
     document.documentElement.style.setProperty('--s', s.toFixed(4));
   };
-  new ResizeObserver(fit).observe(viewport);
+  new ResizeObserver(fit).observe(stack);
 
   // The animation is reverted when the slide is left, so endless loops are fine.
   const animateIn = (k: number) => {
