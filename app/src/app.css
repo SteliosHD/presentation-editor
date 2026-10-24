@@ -315,6 +315,23 @@ button.primary {
   display: flex;
   color: var(--accent);
 }
+.od-drop-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+.od-more {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 22px;
+  margin: 0;
+}
+.od-more .od-link {
+  color: var(--soft);
+}
+.od-more .od-link:hover {
+  color: var(--accent);
+}
 .od-drop-title {
   font-weight: 600;
   color: var(--text);
@@ -357,38 +374,12 @@ button.primary {
   background: var(--card);
   color: var(--text);
 }
-.od-help summary {
-  width: fit-content;
-  color: var(--soft);
-  cursor: pointer;
-  list-style: none;
-}
-.od-help summary::-webkit-details-marker {
-  display: none;
-}
-.od-help summary::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin: 0 9px 2px 2px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform 0.15s;
-}
-.od-help[open] summary::before {
-  transform: rotate(45deg);
-}
-.od-help summary:hover {
-  color: var(--text);
-}
-.od-help p {
+.od-format p {
   margin: 10px 0 8px;
   color: var(--soft);
   line-height: 1.5;
 }
-.od-help pre {
+.od-format pre {
   overflow-x: auto;
   margin: 0;
   padding: 10px 12px;
@@ -399,18 +390,8 @@ button.primary {
   line-height: 1.55;
   color: var(--soft);
 }
-.od-help pre i {
+.od-format pre i {
   font-style: normal;
-  color: var(--muted);
-}
-.od-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  font-size: 12px;
   color: var(--muted);
 }
 .od-link {
@@ -450,12 +431,6 @@ button.primary {
   display: inline-block;
   width: 20px;
   height: 20px;
-}
-
-.od-create {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted);
 }
 
 /* Edit → Slide Creation Prompt: the prompt, its copy action, and the manual route. */
@@ -545,6 +520,73 @@ button.primary {
   font-size: 12px;
   line-height: 1.5;
   color: var(--muted);
+}
+
+/* Tour (Try the sample): the page dims except the lit part, with a card beside it. */
+.tour {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: hidden;
+}
+.tour::backdrop {
+  background: transparent;
+}
+.tour-spot {
+  position: fixed;
+  border-radius: 10px;
+  outline: 2px solid var(--accent);
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.6);
+  pointer-events: none;
+  transition:
+    left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tour.still .tour-spot {
+  transition: none;
+}
+.tour-card {
+  position: fixed;
+  width: min(300px, calc(100vw - 16px));
+  padding: 14px 16px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.4);
+  color: var(--text);
+}
+.tour-count {
+  margin: 0 0 2px;
+  font-size: 12px;
+  color: var(--accent);
+}
+.tour-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.tour-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--soft);
+}
+.tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.tour-next {
+  padding: 5px 16px;
 }
 
 /* Slides rendered off screen for the hosted app's PDF export. */
@@ -872,12 +914,12 @@ body.hide-animations .anim-strip {
   display: none;
 }
 
-/* Footer: who made the editor, the no-warranty note and a link to the author's site. */
+/* Footer: who made the editor and when, its license, and a link to the author's site. */
 .app-foot {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 16px;
   height: 28px;
   padding: 0 14px;
   border-top: 1px solid var(--line);
@@ -891,6 +933,9 @@ body.hide-animations .anim-strip {
   text-overflow: ellipsis;
 }
 .app-foot a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   flex-shrink: 0;
   color: var(--soft);
   text-decoration: none;

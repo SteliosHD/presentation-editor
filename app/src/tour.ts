@@ -1,0 +1,128 @@
+import { must, reduceMotion } from './player.ts';
+
+// A short tour of the editor, started by "Try the sample": three steps, each lighting up one part of the editor
+// with a card beside it. Skip, Esc or Done ends it. Parts hidden at the current size are left out.
+
+const STEPS = [
+  {
+    target: '.sidebar',
+    title: 'Slides',
+    text: 'Every slide in the presentation. Each one is an HTML file in slides/, numbered in the order it shows. Click a slide to open it.',
+  },
+  {
+    target: '.anim-strip',
+    title: 'Animations',
+    text: "Each step of this slide's animation: when it runs, what moves, and how. Slides with their own animation file label their steps.",
+  },
+  {
+    target: '.bar',
+    title: 'Tools',
+    text: 'Speaker notes, laser pointer, slide numbers and Present. Hover a tool to see its shortcut; F presents and Esc comes back.',
+  },
+];
+
+// Survives the reload that switching back to the sample needs.
+const TOUR_KEY = 'presentation-editor:tour';
+export const queueTour = () => {
+  try {
+    sessionStorage.setItem(TOUR_KEY, '1');
+  } catch {
+    // Storage blocked: the tour simply doesn't start after a reload.
+  }
+};
+const takeQueued = () => {
+  try {
+    const queued = sessionStorage.getItem(TOUR_KEY) === '1';
+    sessionStorage.removeItem(TOUR_KEY);
+    return queued;
+  } catch {
+    return false;
+  }
+};
+
+type Step = (typeof STEPS)[number] & { el: HTMLElement };
+
+const visible = (el: HTMLElement | null): el is HTMLElement =>
+  el !== null && el.getClientRects().length > 0 && getComputedStyle(el).display !== 'none';
+
+export const startTour = () => {
+  const steps = STEPS.map((step) => ({ ...step, el: document.querySelector<HTMLElement>(step.target) })).filter(
+    (step): step is Step => visible(step.el),
+  );
+  if (!steps.length) return;
+
+  const dialog = document.createElement('dialog');
+  dialog.className = 'tour';
+  dialog.setAttribute('aria-label', 'Tour of the editor');
+  dialog.innerHTML = `
+    <div class="tour-spot"></div>
+    <div class="tour-card" role="document">
+      <p class="tour-count"></p>
+      <h2 class="tour-title"></h2>
+      <p class="tour-text"></p>
+      <div class="tour-actions">
+        <button class="od-link tour-skip">Skip tour</button>
+        <button class="primary tour-next"></button>
+      </div>
+    </div>`;
+  if (reduceMotion) dialog.classList.add('still');
+  document.body.append(dialog);
+  const $ = (sel: string) => must(dialog.querySelector<HTMLElement>(sel), sel);
+  const spot = $('.tour-spot');
+  const card = $('.tour-card');
+  let at = 0;
+
+  // The card goes beside the lit part: to its right if there is room, else below it, kept inside the window.
+  const place = () => {
+    const r = steps[at].el.getBoundingClientRect();
+    const pad = 6;
+    Object.assign(spot.style, {
+      left: `${r.left + pad}px`,
+      top: `${r.top + pad}px`,
+      width: `${r.width - pad * 2}px`,
+      height: `${r.height - pad * 2}px`,
+    });
+    const gap = 14;
+    const right = r.right + gap + card.offsetWidth < innerWidth - 8;
+    const left = right ? r.right + gap : r.left + 16;
+    const top = right ? r.top + 24 : r.bottom + gap;
+    card.style.left = `${Math.max(8, Math.min(left, innerWidth - card.offsetWidth - 8))}px`;
+    card.style.top = `${Math.max(8, Math.min(top, innerHeight - card.offsetHeight - 8))}px`;
+  };
+  const show = () => {
+    const step = steps[at];
+    $('.tour-count').textContent = `${at + 1} of ${steps.length}`;
+    $('.tour-title').textContent = step.title;
+    $('.tour-text').textContent = step.text;
+    $('.tour-next').textContent = at === steps.length - 1 ? 'Done' : 'Next';
+    place();
+    $('.tour-next').focus();
+  };
+  const end = () => {
+    removeEventListener('resize', place);
+    dialog.close();
+    dialog.remove();
+  };
+
+  $('.tour-next').addEventListener('click', () => {
+    if (at === steps.length - 1) {
+      end();
+      return;
+    }
+    at += 1;
+    show();
+  });
+  $('.tour-skip').addEventListener('click', end);
+  dialog.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    end();
+  });
+  addEventListener('resize', place);
+  dialog.showModal();
+  show();
+};
+
+// Starts the tour if "Try the sample" queued it before a reload.
+export const startQueuedTour = () => {
+  if (takeQueued()) requestAnimationFrame(startTour);
+};

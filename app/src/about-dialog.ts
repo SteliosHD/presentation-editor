@@ -24,7 +24,7 @@ export const createAboutDialog = ({ repo }: { repo: string }) => {
         <a href="${repo}" target="_blank" rel="noopener">Source on GitHub ↗</a>
         <a href="https://bitzas.dev" target="_blank" rel="noopener">bitzas.dev ↗</a>
       </p>
-      <p class="about-note">Written by an AI agent on Stelios' behalf, as a placeholder until he writes his own.</p>
+      <p class="about-note">Written by an AI agent on Stelios' behalf.</p>
     </div>`;
   document.body.append(dialog);
   const close = must(dialog.querySelector('.modal-close'), '.modal-close');

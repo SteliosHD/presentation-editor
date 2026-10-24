@@ -1,4 +1,15 @@
-import { Check, createElement, FileCode, FileDown, FolderOpen, Info, LifeBuoy, Sparkles, type IconNode } from 'lucide';
+import {
+  Check,
+  createElement,
+  FileCode,
+  FileDown,
+  FolderOpen,
+  Info,
+  LifeBuoy,
+  Scale,
+  Sparkles,
+  type IconNode,
+} from 'lucide';
 import type { Presentation } from 'virtual:presentation';
 import { createAboutDialog } from './about-dialog.ts';
 import { post } from './api.ts';
@@ -6,6 +17,7 @@ import iconUrl from '../favicon.svg';
 import { createOpenDialog, rememberFolder } from './open-dialog.ts';
 import { must } from './player.ts';
 import { createPromptDialog } from './prompt-dialog.ts';
+import { startQueuedTour } from './tour.ts';
 import { isWeb } from './source.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
@@ -211,12 +223,18 @@ export const mountNav = (
     { label: 'About Presentation Editor', icon: Info, run: about.show },
   ]);
   $('.nav-left').append(file.root, editMenu.root, view.root, help.root);
+  startQueuedTour();
 
-  // Footer: who made the editor and the no-warranty note, with a link to the author's site.
+  // Footer: who made the editor and when, its license, and a link to the author's site.
   const footer = document.createElement('footer');
   footer.className = 'app-foot';
   footer.innerHTML = `
-    <span class="app-foot-text">Made by Stelios Bitzas. Free and open source, provided as is, without warranty.</span>
+    <span class="app-foot-text">Made by Stelios Bitzas · 2026</span>
+    <a class="app-foot-license" href="${REPO}/blob/main/LICENSE" target="_blank" rel="noopener"
+      title="MIT license: free to use, change and share, provided as is, without warranty">MIT</a>
     <a href="https://bitzas.dev" target="_blank" rel="noopener">bitzas.dev ↗</a>`;
+  must(footer.querySelector('.app-foot-license'), '.app-foot-license').prepend(
+    createElement(Scale, { width: 13, height: 13, 'aria-hidden': 'true' }),
+  );
   document.body.append(footer);
 };

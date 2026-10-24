@@ -2,6 +2,7 @@ import { createElement, FolderOpen, X } from 'lucide';
 import { post } from './api.ts';
 import { must } from './player.ts';
 import { forgetOpened, isWeb, openedInBrowser, storeOpened, useSample } from './source.ts';
+import { queueTour, startQueuedTour } from './tour.ts';
 import { filesFromDrop, filesFromInput, readPresentation } from './web.ts';
 
 // The "Open Presentation folder" modal: a drop zone with Choose folder in both versions. Choosing uses the Mac
@@ -25,10 +26,9 @@ export const rememberFolder = (folder: string) => {
   }
 };
 
-// The folder format, shown on request: most visits only need the button.
-const HELP = `
-  <details class="od-help">
-    <summary>What goes in the folder?</summary>
+// The folder format, opened from the "Folder format" link: most visits only need the drop zone.
+const FORMAT = `
+  <div class="od-format" hidden>
     <p>Each slide is an HTML file; the number at the start of its name sets the order. A <code>.ts</code> file with
     the same name animates that slide.</p>
     <pre>my-talk/
@@ -38,32 +38,33 @@ const HELP = `
     01-title.html
     02-agenda.html
     02-agenda.ts      <i>animation, optional</i></pre>
-  </details>`;
-
-const CREATE = `<p class="od-create">No presentation yet? <button class="od-link">Create one with an AI agent</button></p>`;
+  </div>`;
 
 const BODY = `
   <div class="od-drop">
     <span class="od-drop-icon"></span>
     <span class="od-drop-title">Drop a folder here</span>
     <button class="primary od-choose" autofocus>Choose folder</button>
+    ${isWeb ? '<span class="od-drop-note">Read in your browser, never uploaded.</span>' : ''}
     <input type="file" webkitdirectory hidden />
   </div>
   <p class="od-error" role="alert"></p>`;
 
+// Everything besides opening a folder: one quiet row of links.
+const MORE = `
+  <p class="od-more">
+    ${isWeb ? '<button class="od-link od-sample">Try the sample</button>' : ''}
+    <button class="od-link od-create">Create one with an AI agent</button>
+    <button class="od-link od-format-toggle" aria-expanded="false">Folder format</button>
+  </p>
+  ${FORMAT}`;
+
 const LOCAL_EXTRA = `
   <h3 class="od-recent-title">Recent</h3>
   <ul class="od-recent"></ul>
-  ${HELP}
-  ${CREATE}`;
+  ${MORE}`;
 
-const WEB_EXTRA = `
-  ${HELP}
-  ${CREATE}
-  <footer class="od-foot">
-    <span>Read in your browser, never uploaded.</span>
-    <button class="od-link od-sample">Try the sample</button>
-  </footer>`;
+const WEB_EXTRA = MORE;
 
 export const createOpenDialog = (currentFolder: string, { onCreate }: { onCreate: () => void }) => {
   const dialog = document.createElement('dialog');
@@ -71,7 +72,6 @@ export const createOpenDialog = (currentFolder: string, { onCreate }: { onCreate
   dialog.innerHTML = `
     <div class="modal-body">
       <header><h2>Open Presentation folder</h2><button class="modal-close" aria-label="Close"></button></header>
-      <p class="modal-lead">A folder with your slides in <code>slides/</code>.</p>
       ${BODY}
       ${isWeb ? WEB_EXTRA : LOCAL_EXTRA}
     </div>
@@ -95,7 +95,13 @@ export const createOpenDialog = (currentFolder: string, { onCreate }: { onCreate
   const close = () => {
     if (!busy) dialog.close();
   };
-  $('.od-create button').addEventListener('click', () => {
+  const formatToggle = $('.od-format-toggle');
+  formatToggle.addEventListener('click', () => {
+    const format = $('.od-format');
+    format.hidden = !format.hidden;
+    formatToggle.setAttribute('aria-expanded', String(!format.hidden));
+  });
+  $('.od-create').addEventListener('click', () => {
     dialog.close();
     onCreate();
   });
@@ -183,11 +189,14 @@ export const createOpenDialog = (currentFolder: string, { onCreate }: { onCreate
 
   if (isWeb) {
     // The sample is what shows until a folder is opened: close if it is already showing, else switch to it.
+    // Trying the sample also starts the short tour of the editor, after the reload if one is needed.
     $('.od-sample').addEventListener('click', () => {
       const switching = openedInBrowser();
       useSample();
+      queueTour();
       if (!switching) {
         dialog.close();
+        startQueuedTour();
         return;
       }
       setBusy('Opening the sample');
