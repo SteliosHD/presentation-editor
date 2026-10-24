@@ -35,7 +35,10 @@ const onKey = (e: KeyboardEvent) => {
   if (['ArrowLeft', 'PageUp'].includes(e.key) && handled()) player.show(player.current() - 1);
   if (e.key === 'Home' && handled()) player.show(0);
   if (e.key === 'End' && handled()) player.show(player.elements.length - 1);
-  if (e.key === 'n' || e.key === 'N') player.toggleNotes();
+  if (e.key === 'n' || e.key === 'N') {
+    if (present.active() && !player.notesOpen()) void present.outsideFullscreen(player.toggleNotes);
+    else player.toggleNotes();
+  }
   if (e.key === 'p' || e.key === 'P') player.toggleLaser();
   if (e.key === 's' || e.key === 'S') toggleNumbers();
   if (e.key === 'f' || e.key === 'F') present.toggle();

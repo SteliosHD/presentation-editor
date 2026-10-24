@@ -36,13 +36,34 @@ export const createPresentationMode = ({ onChange }: { onChange: (presenting: bo
     set(true);
     document.documentElement.requestFullscreen().catch(() => undefined);
   };
+  let stepping = false;
   document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && active()) set(false);
+    if (!document.fullscreenElement && active() && !stepping) set(false);
   });
+
+  // On macOS, a window opened from a fullscreen page joins its fullscreen space and covers the slides. So step
+  // out of fullscreen, run `open` (the notes window opens as a normal window), then go back in. The key press
+  // that started this still counts as the user's action for both the pop-up and the return to fullscreen.
+  const outsideFullscreen = async (open: () => void) => {
+    if (!document.fullscreenElement) {
+      open();
+      return;
+    }
+    stepping = true;
+    try {
+      await document.exitFullscreen();
+      // Let macOS finish leaving the fullscreen space before the new window appears.
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      open();
+      await document.documentElement.requestFullscreen().catch(() => undefined);
+    } finally {
+      stepping = false;
+    }
+  };
 
   const exitButton = must(document.querySelector('.exit-present'), '.exit-present');
   exitButton.append(createElement(X, { width: 20, height: 20 }));
   exitButton.addEventListener('click', toggle);
 
-  return { active, toggle };
+  return { active, toggle, outsideFullscreen };
 };
