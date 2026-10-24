@@ -1911,6 +1911,7 @@ body.presenting.inking .slide-stack {
   .stage,
   .resize-handle,
   .pane-toggle,
+  .sidebar-head,
   .nav-folder-chip,
   .menu-list .menu-view-item {
     display: none;
