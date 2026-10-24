@@ -1,4 +1,5 @@
-/* The app around the slides: nav bar (dev only), slide list, stage, toolbar. Colours come from theme.css. */
+/* The app around the slides: nav bar (dev only), slide list, stage, toolbar. Its colours, fonts and corners come
+   from ui-theme.css; only what draws like a slide (thumbnail text, placeholders, print) uses the slide theme. */
 * {
   box-sizing: border-box;
 }
@@ -7,9 +8,11 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
+  /* A faint cool glow from the top corner, so the ground isn't flat black. */
+  background: radial-gradient(1100px 520px at 88% -12%, rgb(143 180 255 / 0.07), transparent 70%), var(--ui-bg);
+  color: var(--ui-ink);
+  font-family: var(--ui-sans);
+  -webkit-font-smoothing: antialiased;
 }
 body {
   --sidebar-w: 230px;
@@ -24,25 +27,29 @@ body.laser-on * {
 button {
   font: inherit;
   color: inherit;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 4px 10px;
+  background: var(--ui-surface-raised);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-pill);
+  padding: 5px 14px;
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 button:hover {
-  border-color: var(--muted);
+  border-color: rgb(255 255 255 / 0.2);
 }
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 2px;
 }
 /* Scrollbars in the theme's colours: thin, a line-coloured thumb on a clear track. Chrome and Firefox use the
    standard properties; Safari reads the -webkit- rules, which also brighten the thumb on hover. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
+  scrollbar-color: var(--ui-border) transparent;
 }
 ::-webkit-scrollbar {
   width: 10px;
@@ -54,29 +61,30 @@ button:hover {
 ::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 10px;
-  background: var(--line) padding-box;
+  background: var(--ui-border) padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--muted);
+  background-color: var(--ui-ink-faint);
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
 ::selection {
-  background: rgb(from var(--accent) r g b / 0.35);
+  background: rgb(from var(--ui-accent) r g b / 0.35);
 }
 button:disabled {
   opacity: 0.5;
   cursor: default;
 }
 button.on {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--ui-accent-border);
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent);
 }
 kbd {
-  font-family: var(--mono);
+  font-family: var(--ui-mono);
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
   margin-left: 4px;
 }
 
@@ -86,10 +94,9 @@ kbd {
   grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(0, 1fr);
   gap: 16px;
   align-items: center;
-  height: 44px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+  height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--ui-border-soft);
   font-size: 14px;
 }
 .nav-left {
@@ -106,7 +113,7 @@ kbd {
 }
 .nav-home:hover {
   border-color: transparent;
-  background: var(--card);
+  background: var(--ui-surface-raised);
 }
 .nav-icon {
   width: 22px;
@@ -116,8 +123,10 @@ kbd {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 600;
-  color: var(--soft);
+  font-family: var(--ui-display);
+  font-size: 17px;
+  font-weight: 480;
+  color: var(--ui-ink);
   cursor: default;
 }
 .nav-right {
@@ -131,21 +140,24 @@ kbd {
 .nav-github {
   display: flex;
   flex-shrink: 0;
-  padding: 4px;
-  border-radius: 6px;
-  color: var(--soft);
+  padding: 6px;
+  border-radius: var(--ui-pill);
+  color: var(--ui-ink-soft);
 }
 .nav-github:hover {
-  background: var(--card);
-  color: var(--text);
+  background: var(--ui-surface-raised);
+  color: var(--ui-ink);
 }
 .nav-live {
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  color: var(--good);
+  gap: 8px;
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ui-good);
   cursor: default;
 }
 .nav-live::before {
@@ -153,12 +165,12 @@ kbd {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--good);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent);
+  background: var(--ui-good);
+  box-shadow: 0 0 10px -1px var(--ui-good);
 }
 .nav-reconnect {
   flex-shrink: 0;
-  padding: 3px 10px;
+  padding: 4px 12px;
   font-size: 12px;
 }
 .nav-live[hidden],
@@ -172,7 +184,7 @@ kbd {
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
   font-size: 13px;
   white-space: nowrap;
 }
@@ -185,33 +197,36 @@ kbd {
   display: inline-block;
 }
 .nav-status.error {
-  color: var(--bad);
+  color: var(--ui-bad);
 }
 .menu {
   position: relative;
 }
 .menu-button {
+  padding: 5px 12px;
   background: none;
   border-color: transparent;
+  color: var(--ui-ink-soft);
 }
 .menu-button:hover,
 .menu-button.on {
-  background: var(--card);
+  background: var(--ui-surface-raised);
   border-color: transparent;
+  color: var(--ui-ink);
 }
 .menu-list {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   left: 0;
   z-index: 30;
   display: flex;
   flex-direction: column;
-  min-width: 240px;
-  padding: 5px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  box-shadow: 0 10px 28px rgb(0 0 0 / 0.35);
+  min-width: 250px;
+  padding: 6px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
 }
 .menu-list[hidden] {
   display: none;
@@ -220,32 +235,33 @@ kbd {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border: none;
+  border-radius: 8px;
   background: none;
   text-align: left;
-  color: var(--text);
+  color: var(--ui-ink);
 }
 .menu-mark {
   display: flex;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 .menu-list [role='menuitemcheckbox'][aria-checked='false'] .menu-mark {
   visibility: hidden;
 }
 .menu-list [role='menuitemcheckbox'] .menu-mark {
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .menu-list button:hover:not(:disabled),
 .menu-list button:focus-visible {
-  background: var(--card);
+  background: var(--ui-surface-raised);
   outline: none;
 }
 .menu-list hr {
   width: 100%;
-  margin: 4px 0;
+  margin: 5px 0;
   border: none;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--ui-border-soft);
 }
 
 /* The "Open Presentation folder" modal and the loading spinner. */
@@ -253,8 +269,8 @@ kbd {
   display: none;
   width: 14px;
   height: 14px;
-  border: 2px solid var(--line);
-  border-top-color: var(--accent);
+  border: 2px solid var(--ui-border);
+  border-top-color: var(--ui-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -268,29 +284,35 @@ button.busy .spinner {
   margin-right: 6px;
   vertical-align: -2px;
 }
+button.primary:hover:not(:disabled) {
+  border-color: #fff;
+  background: #fff;
+}
 button.primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--bg);
-  font-weight: 600;
+  border-color: var(--ui-ink);
+  background: var(--ui-ink);
+  color: var(--ui-on-ink);
+  font-weight: 650;
 }
 .modal {
   position: relative;
   width: min(520px, calc(100vw - 32px));
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-modal);
+  /* The same faint cool glow as the page, from the modal's top. */
+  background: radial-gradient(120% 70% at 50% -10%, rgb(143 180 255 / 0.07), transparent 60%), var(--ui-panel);
+  box-shadow: var(--ui-shadow);
+  color: var(--ui-ink);
 }
 .modal::backdrop {
-  background: rgb(0 0 0 / 0.55);
+  background: rgb(4 6 9 / 0.66);
 }
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px 22px 18px;
+  gap: 18px;
+  padding: 24px 26px 22px;
   font-size: 14px;
 }
 .modal-body header {
@@ -301,17 +323,20 @@ button.primary {
 }
 .modal-body h2 {
   margin: 0;
-  font-size: 18px;
+  font-family: var(--ui-display);
+  font-size: 23px;
+  font-weight: 480;
+  letter-spacing: -0.01em;
 }
 .modal-close {
   display: flex;
-  padding: 4px;
+  padding: 6px;
   background: none;
   border-color: transparent;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 .modal-close:hover {
-  color: var(--text);
+  color: var(--ui-ink);
 }
 /* Every modal and modal section ends the same way: its actions in one row at the bottom right, the main one last. */
 .modal-foot {
@@ -325,27 +350,28 @@ button.primary {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 16px;
+  padding: 7px 18px;
   font-size: 13px;
 }
 .modal-link-button {
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
-  color: var(--text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-pill);
+  background: var(--ui-surface-raised);
+  color: var(--ui-ink);
   text-decoration: none;
 }
 .modal-link-button:hover {
-  border-color: var(--muted);
+  border-color: rgb(255 255 255 / 0.2);
 }
 .modal-lead {
   margin: 0;
-  color: var(--soft);
+  line-height: 1.55;
+  color: var(--ui-ink-soft);
 }
 .modal code {
-  font-family: var(--mono);
+  font-family: var(--ui-mono);
   font-size: 0.92em;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .od-choose {
   align-self: flex-start;
@@ -357,10 +383,11 @@ button.primary {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 28px 16px;
-  border: 1.5px dashed var(--line);
-  border-radius: 10px;
-  color: var(--soft);
+  padding: 30px 16px;
+  border: 1.5px dashed rgb(255 255 255 / 0.16);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-surface);
+  color: var(--ui-ink-soft);
   transition:
     border-color 0.15s,
     background-color 0.15s;
@@ -369,34 +396,38 @@ button.primary {
   align-self: center;
 }
 .od-drop.over {
-  border-color: var(--accent);
-  background: var(--card);
+  border-color: var(--ui-accent-border);
+  background: var(--ui-accent-soft);
 }
 .od-drop-icon {
   display: flex;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .od-drop-note {
-  font-size: 12px;
-  color: var(--muted);
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  color: var(--ui-ink-faint);
 }
 .od-more {
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 26px;
   margin: 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--ui-border-soft);
 }
 /* Tabs: quiet until chosen; the open one is marked by an accent line sitting on the row's rule. */
 .od-tab {
   margin-bottom: -1px;
-  padding: 4px 2px 9px;
+  padding: 4px 2px 10px;
   border: none;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   background: none;
-  font-size: 13px;
-  color: var(--muted);
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-ink-faint);
 }
 /* On a phone the three tabs are wider than the modal, so the row scrolls sideways, starting from the first tab. */
 @media (max-width: 640px) {
@@ -416,12 +447,12 @@ button.primary {
   }
 }
 .od-tab:hover {
-  color: var(--text);
+  color: var(--ui-ink);
   text-decoration: none;
 }
 .od-tab[aria-selected='true'] {
-  border-bottom-color: var(--accent);
-  color: var(--text);
+  border-bottom-color: var(--ui-accent);
+  color: var(--ui-ink);
 }
 /* Every section is the same height: its content on top, scrolling if long, and its one action pinned to the
    bottom right, so the button sits in the same place whichever tab is open. */
@@ -433,7 +464,7 @@ button.primary {
   margin-top: -4px;
   font-size: 13px;
   line-height: 1.55;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
 }
 .od-section[hidden] {
   display: none;
@@ -461,40 +492,49 @@ button.primary {
   margin: 0;
   padding: 0;
   list-style: none;
-  color: var(--text);
+  color: var(--ui-ink);
 }
 .od-sample-list li {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 5px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ui-border-soft);
 }
 .od-sample-n {
   width: 1ch;
-  font-family: var(--mono);
+  font-family: var(--ui-mono);
   font-size: 12px;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 .od-sample-badge {
   margin-left: auto;
-  font-size: 11px;
-  color: var(--accent);
+  padding: 1px 8px;
+  border: 1px solid var(--ui-accent-border);
+  border-radius: var(--ui-pill);
+  font-family: var(--ui-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-accent);
 }
 .od-copy.done {
-  border-color: var(--good);
-  background: var(--good);
+  border-color: var(--ui-good);
+  background: var(--ui-good);
+  color: var(--ui-on-ink);
 }
 .od-drop-title {
   font-weight: 600;
-  color: var(--text);
+  color: var(--ui-ink);
 }
 .od-recent-title {
   margin: 4px 0 -10px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--muted);
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ui-ink-faint);
 }
 .od-recent {
   list-style: none;
@@ -506,10 +546,11 @@ button.primary {
   align-items: baseline;
   gap: 10px;
   width: 100%;
+  border-radius: 8px;
   text-align: left;
   background: none;
   border-color: transparent;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -521,11 +562,11 @@ button.primary {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 .od-recent button:hover {
-  background: var(--card);
-  color: var(--text);
+  background: var(--ui-surface-raised);
+  color: var(--ui-ink);
 }
 .od-section p {
   margin: 0;
@@ -533,23 +574,24 @@ button.primary {
 .od-section pre {
   overflow-x: auto;
   margin: 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--bg);
-  font-family: var(--mono);
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border-soft);
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.25);
+  font-family: var(--ui-mono);
   font-size: 12px;
-  line-height: 1.55;
-  color: var(--soft);
+  line-height: 1.6;
+  color: var(--ui-ink-soft);
 }
 .od-section pre i {
   font-style: normal;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 .od-link {
   padding: 0;
   background: none;
   border: none;
-  color: var(--accent);
+  color: var(--ui-accent);
   font-size: 13px;
 }
 .od-link:hover {
@@ -559,7 +601,7 @@ button.primary {
 .od-error {
   margin: -6px 0 0;
   font-size: 13px;
-  color: var(--bad);
+  color: var(--ui-bad);
 }
 .od-error:empty {
   display: none;
@@ -571,9 +613,9 @@ button.primary {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border-radius: 12px;
-  background: var(--panel);
-  color: var(--soft);
+  border-radius: var(--ui-radius-modal);
+  background: var(--ui-panel);
+  color: var(--ui-ink-soft);
 }
 .open-dialog.busy .od-busy {
   display: flex;
@@ -591,35 +633,38 @@ button.primary {
 .pd-prompt {
   max-height: min(340px, 45vh);
   margin: 0;
-  padding: 12px 14px;
+  padding: 14px 16px;
   overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--bg);
-  font-family: var(--mono);
+  border: 1px solid var(--ui-border-soft);
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.25);
+  font-family: var(--ui-mono);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.65;
   white-space: pre-wrap;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
 }
 .pd-copy.done {
-  border-color: var(--good);
-  background: var(--good);
+  border-color: var(--ui-good);
+  background: var(--ui-good);
+  color: var(--ui-on-ink);
 }
 .pd-manual {
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  border-top: 1px solid var(--ui-border-soft);
 }
 .pd-manual h3 {
   margin: 0 0 4px;
-  font-size: 13px;
-  color: var(--text);
+  font-family: var(--ui-display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ui-ink);
 }
 .pd-manual p {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
 }
 
 /* Help → Why use the Presentation Viewer: what it's for and how it compares, scrolling if the window is short. */
@@ -633,10 +678,11 @@ button.primary {
   overflow-y: auto;
 }
 .about-copy h3 {
-  margin: 18px 0 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
+  margin: 20px 0 4px;
+  font-family: var(--ui-display);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ui-ink);
 }
 .about-copy h3:first-child {
   margin-top: 0;
@@ -645,20 +691,21 @@ button.primary {
   margin: 0 0 12px;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
 }
 .about-copy p:last-child {
   margin-bottom: 0;
 }
 .about-note {
+  align-self: flex-start;
   margin: 0;
-  padding: 9px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--bg);
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--muted);
+  padding: 4px 12px;
+  border: 1px solid var(--ui-border-soft);
+  border-radius: var(--ui-pill);
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ui-ink-faint);
 }
 
 /* Tour (Try the sample): the page dims except the lit part, with a card beside it. */
@@ -680,9 +727,11 @@ button.primary {
 }
 .tour-spot {
   position: fixed;
-  border-radius: 10px;
-  outline: 2px solid var(--accent);
-  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.6);
+  border-radius: var(--ui-radius-card);
+  outline: 1.5px solid var(--ui-accent);
+  box-shadow:
+    0 0 24px -4px var(--ui-accent-border),
+    0 0 0 100vmax rgb(4 6 9 / 0.66);
   pointer-events: none;
   transition:
     left 0.5s cubic-bezier(0.16, 1, 0.3, 1),
@@ -707,28 +756,33 @@ button.primary {
 }
 .tour-card {
   position: fixed;
-  width: min(300px, calc(100vw - 16px));
-  padding: 14px 16px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  box-shadow: 0 12px 32px rgb(0 0 0 / 0.4);
-  color: var(--text);
+  width: min(310px, calc(100vw - 16px));
+  padding: 16px 18px 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
+  color: var(--ui-ink);
 }
 .tour-count {
-  margin: 0 0 2px;
-  font-size: 12px;
-  color: var(--accent);
+  margin: 0 0 4px;
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ui-accent);
 }
 .tour-title {
   margin: 0 0 6px;
-  font-size: 16px;
+  font-family: var(--ui-display);
+  font-size: 19px;
+  font-weight: 480;
 }
 .tour-text {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
 }
 .tour-actions {
   display: flex;
@@ -759,24 +813,32 @@ button.primary {
   flex-shrink: 0;
   height: 150px;
   overflow-y: auto;
-  padding: 8px 14px;
-  border-top: 1px solid var(--line);
+  padding: 10px 16px;
+  border-top: 1px solid var(--ui-border-soft);
   font-size: 12px;
 }
 .strip-head {
   display: flex;
-  gap: 8px;
-  margin-bottom: 6px;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 .strip-title {
-  font-weight: 600;
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ui-ink-soft);
 }
 .strip-source {
-  color: var(--muted);
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  color: var(--ui-ink-faint);
 }
 .strip-empty {
   margin: 0;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 
 /* Before anything is open (hosted app): grey shapes stand in for slides, and the tools wait. */
@@ -820,7 +882,7 @@ body.empty .slide-list button {
   pointer-events: none;
 }
 body.empty .stage-title {
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 .anim-strip ol {
   list-style: none;
@@ -832,9 +894,9 @@ body.empty .stage-title {
   grid-template-columns: 18px 84px 190px 140px 1fr auto;
   gap: 10px;
   align-items: center;
-  padding: 3px 0;
-  border-top: 1px solid var(--line);
-  color: var(--soft);
+  padding: 4px 0;
+  border-top: 1px solid var(--ui-border-soft);
+  color: var(--ui-ink-soft);
   white-space: nowrap;
 }
 .anim-step > * {
@@ -844,23 +906,24 @@ body.empty .stage-title {
 .anim-step-icons {
   display: flex;
   gap: 5px;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .anim-step-icons svg {
   display: block;
 }
 .anim-step-n {
-  color: var(--accent);
-  font-weight: 600;
+  font-family: var(--ui-mono);
+  color: var(--ui-accent);
+  font-weight: 500;
 }
 .anim-step-when,
 .anim-step-ease {
-  font-family: var(--mono);
+  font-family: var(--ui-mono);
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 .anim-step-targets {
-  color: var(--text);
+  color: var(--ui-ink);
   font-weight: 600;
 }
 
@@ -874,8 +937,8 @@ body.empty .stage-title {
   width: var(--sidebar-w);
   flex-shrink: 0;
   overflow-y: auto;
-  border-right: 1px solid var(--line);
-  padding: 10px 8px;
+  border-right: 1px solid var(--ui-border-soft);
+  padding: 12px 8px;
 }
 .slide-list {
   list-style: none;
@@ -887,15 +950,17 @@ body.empty .stage-title {
   align-items: flex-start;
   gap: 6px;
   width: 100%;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   padding: 4px;
-  font-size: 12px;
+  border-radius: 12px;
+  font-family: var(--ui-mono);
+  font-size: 11px;
   background: none;
   border-color: transparent;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
 }
 .slide-list button.active {
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .slide-list .num {
   min-width: 16px;
@@ -908,20 +973,24 @@ body.empty .stage-title {
   width: var(--thumb-w);
   aspect-ratio: 1200 / 675;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 4px;
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
   pointer-events: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   /* Undo the button's own text styles so the copy looks like the real slide. */
   color: var(--text);
+  font-family: var(--font);
   font-size: 16px;
   text-align: left;
 }
 .slide-list button:hover .thumb {
-  border-color: var(--muted);
+  border-color: rgb(255 255 255 / 0.22);
 }
 .slide-list button.active .thumb {
-  border-color: var(--accent);
-  outline: 1px solid var(--accent);
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 3px var(--ui-accent-soft);
 }
 .thumb .slide {
   display: flex;
@@ -935,16 +1004,17 @@ body.empty .stage-title {
 }
 .badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 5px;
+  right: 5px;
+  padding: 0 6px;
+  border: 1px solid var(--ui-accent-border);
+  border-radius: var(--ui-pill);
+  background: rgb(11 14 19 / 0.85);
+  font-family: var(--ui-mono);
   font-size: 9px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
-  background: var(--bg);
-  border: 1px solid var(--accent);
-  border-radius: 3px;
-  padding: 0 3px;
+  color: var(--ui-accent);
 }
 .stage {
   position: relative;
@@ -971,10 +1041,9 @@ body.empty .stage-title {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 46px;
-  padding: 0 10px;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg);
+  height: 48px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-border-soft);
 }
 .tools {
   display: flex;
@@ -988,26 +1057,25 @@ body.empty .stage-title {
   height: 34px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: var(--ui-radius);
   background: none;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
 }
 .tools button:hover {
-  background: var(--card);
+  background: var(--ui-surface-raised);
   border-color: transparent;
-  color: var(--text);
+  color: var(--ui-ink);
 }
 .tools button.on {
-  background: var(--card);
-  border-color: var(--line);
-  color: var(--accent);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  background: var(--ui-accent-soft);
+  border-color: var(--ui-accent-border);
+  color: var(--ui-accent);
 }
 .tools-sep {
   width: 1px;
   height: 20px;
   margin: 0 6px;
-  background: var(--line);
+  background: var(--ui-border);
 }
 /* Above the slide: the presentation's title and the current slide's file, kept small. */
 .stage-head {
@@ -1026,14 +1094,16 @@ body.empty .stage-title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: 600;
-  color: var(--soft);
+  font-family: var(--ui-display);
+  font-size: 16px;
+  font-weight: 480;
+  color: var(--ui-ink);
 }
 .stage-file {
   flex-shrink: 0;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--muted);
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  color: var(--ui-ink-faint);
 }
 
 /* Under the slide: ← → centred and the counter on the right, in their own row so they never cover the slide. */
@@ -1052,22 +1122,23 @@ body.empty .stage-title {
 .slide-nav button {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 28px;
+  width: 34px;
+  height: 30px;
   padding: 0;
   border-color: transparent;
   background: none;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
 }
 .slide-nav button:hover:not(:disabled) {
-  background: var(--card);
-  color: var(--text);
+  background: var(--ui-surface-raised);
+  color: var(--ui-ink);
 }
 .counter {
   grid-column: 3;
   justify-self: end;
-  font-size: 13px;
-  color: var(--muted);
+  font-family: var(--ui-mono);
+  font-size: 12px;
+  color: var(--ui-ink-faint);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1077,11 +1148,11 @@ body.empty .stage-title {
   z-index: 40;
   width: max-content;
   max-width: 250px;
-  padding: 8px 10px 9px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.38);
+  padding: 9px 12px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
   font-size: 12px;
   opacity: 0;
   transform: translateY(-3px);
@@ -1103,21 +1174,20 @@ body.empty .stage-title {
 .tip-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ui-ink);
 }
 .tip kbd {
   margin: 0;
-  padding: 1px 6px;
-  border: 1px solid var(--line);
-  border-bottom-width: 2px;
-  border-radius: 4px;
-  background: var(--card);
-  color: var(--soft);
+  padding: 1px 7px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: var(--ui-surface-raised);
+  color: var(--ui-ink-soft);
 }
 .tip-text {
   margin: 3px 0 0;
   line-height: 1.4;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
 }
 @media (prefers-reduced-motion: reduce) {
   .tip {
@@ -1127,6 +1197,9 @@ body.empty .stage-title {
 }
 
 @media (max-width: 560px) {
+  .nav {
+    grid-template-columns: 1fr auto;
+  }
   .nav-folder {
     display: none;
   }
@@ -1148,11 +1221,11 @@ body.hide-animations .anim-strip {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  height: 28px;
+  height: 30px;
   padding: 0 14px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--ui-border-soft);
   font-size: 12px;
-  color: var(--muted);
+  color: var(--ui-ink-faint);
   white-space: nowrap;
 }
 .app-foot-text {
@@ -1165,11 +1238,11 @@ body.hide-animations .anim-strip {
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
-  color: var(--soft);
+  color: var(--ui-ink-soft);
   text-decoration: none;
 }
 .app-foot a:hover {
-  color: var(--accent);
+  color: var(--ui-accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -1195,11 +1268,12 @@ body.presenting .bar {
   z-index: 15;
   width: fit-content;
   margin: 0 auto;
-  padding: 8px 16px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--soft);
+  padding: 8px 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-pill);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
+  color: var(--ui-ink-soft);
   font-size: 14px;
   visibility: hidden;
   opacity: 0;
@@ -1208,7 +1282,7 @@ body.presenting .bar {
 .present-hint kbd {
   margin: 0 2px;
   font-size: 13px;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .exit-zone {
   display: none;
@@ -1234,7 +1308,8 @@ body.presenting .exit-zone {
   height: 44px;
   padding: 0;
   border-radius: 50%;
-  background: var(--panel);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -1287,9 +1362,10 @@ body.inking .ink-zone {
   flex-direction: column;
   gap: 6px;
   padding: 8px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel);
+  border: 1px solid var(--ui-border);
+  border-radius: 18px;
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -1304,6 +1380,7 @@ body.inking .ink-tools {
   width: 36px;
   height: 36px;
   padding: 0;
+  border-radius: var(--ui-radius);
 }
 .ink-tools .ink-swatch {
   width: 36px;
@@ -1312,7 +1389,7 @@ body.inking .ink-tools {
   background: var(--swatch);
 }
 .ink-tools .ink-swatch.on {
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--ui-ink);
   outline-offset: 2px;
 }
 
@@ -1425,19 +1502,19 @@ body.presenting.inking .slide-stack {
 /* After a file change reloads the page: a short notice at the top saying what changed. */
 .change-note {
   position: fixed;
-  top: 52px;
+  top: 56px;
   left: 50%;
   z-index: 40;
   display: flex;
   align-items: center;
   gap: 8px;
   max-width: calc(100vw - 32px);
-  padding: 7px 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--card);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
-  color: var(--text);
+  padding: 7px 16px;
+  border: 1px solid var(--ui-accent-border);
+  border-radius: var(--ui-pill);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
+  color: var(--ui-ink);
   font-size: 13px;
   white-space: nowrap;
   translate: -50% 0;
@@ -1446,7 +1523,7 @@ body.presenting.inking .slide-stack {
 }
 .change-note svg {
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .change-note.leaving {
   opacity: 0;

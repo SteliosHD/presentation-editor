@@ -1,0 +1,54 @@
+/*
+ * The viewer's own look: every colour, font and radius of the app around the slides. Slides never use these; they
+ * take theme.css (and a presentation's own theme.css) instead, so a presentation can't restyle the viewer and the
+ * viewer's colours never leak into a slide.
+ *
+ * Brief for whoever changes it:
+ * - Keep the ground near-black with a blue cast and the accent cool and soft. Slides of any colour sit inside the
+ *   viewer, and a neutral frame keeps them reading as they will on the projector.
+ * - Surfaces are white at low opacity over the ground, so a panel always reads one step lighter than what's
+ *   under it. Borders are hairlines.
+ * - --ui-good and --ui-bad are for meaning only (live, copied, an error), never decoration.
+ * - Text: --ui-ink for content, --ui-ink-soft for body copy, --ui-ink-faint for hints. Each passes 4.5:1 on
+ *   --ui-bg and --ui-panel.
+ */
+:root {
+  /* Ground: the page, then opaque panels (menus, modals, cards that float). */
+  --ui-bg: #0b0e13;
+  --ui-panel: #121722;
+
+  /* Layers over the ground, lightest last, and the hairlines between them. */
+  --ui-surface: rgb(255 255 255 / 0.04);
+  --ui-surface-raised: rgb(255 255 255 / 0.075);
+  --ui-border: rgb(255 255 255 / 0.1);
+  --ui-border-soft: rgb(255 255 255 / 0.065);
+
+  /* Text, and the dark text on the light primary button. */
+  --ui-ink: #e8ecf2;
+  --ui-ink-soft: #a9b2c0;
+  --ui-ink-faint: #7d8797;
+  --ui-on-ink: #0b0e13;
+
+  /* The accent, its soft fill and its border, for what is on, chosen or worth a look. */
+  --ui-accent: #8fb4ff;
+  --ui-accent-soft: rgb(143 180 255 / 0.12);
+  --ui-accent-border: rgb(143 180 255 / 0.34);
+
+  /* Meaning. */
+  --ui-good: #7fd0b4;
+  --ui-bad: #ec8f7d;
+
+  /* Type: headings, the interface, and small labels, tags and numbers. */
+  --ui-display: 'Fraunces Variable', Georgia, serif;
+  --ui-sans: 'Manrope Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --ui-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Corners: controls, cards, modals; pills for text buttons, chips and notices. */
+  --ui-radius: 10px;
+  --ui-radius-card: 14px;
+  --ui-radius-modal: 20px;
+  --ui-pill: 999px;
+
+  /* Floating things cast a long, soft shadow. */
+  --ui-shadow: 0 24px 48px -16px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.25);
+}

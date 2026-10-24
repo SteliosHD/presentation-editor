@@ -61,7 +61,8 @@ Everything visual lives in a few plain files, so you can change it yourself or a
 
 | To change                                                    | Edit                                                                                                                                     |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Colours and fonts                                            | `app/src/theme.css`. The brief at the top explains each token. A presentation's own `theme.css` overrides it for that presentation only. |
+| Colours and fonts of slides                                  | `app/src/theme.css`. The brief at the top explains each token. A presentation's own `theme.css` overrides it for that presentation only. |
+| Colours, fonts and corners of the viewer itself              | `app/src/ui-theme.css`. Slides never use these, so any slide reads as it will on the projector.                                          |
 | Slide layouts (boxes, columns, steps, callouts)              | `app/src/slides.css`                                                                                                                     |
 | The viewer's own look (nav bar, slide list, toolbar, modals) | `app/src/app.css`                                                                                                                        |
 | Keyboard shortcuts                                           | `app/src/shortcuts.ts`. The key handler, tooltips and notes window all read this one list.                                               |

@@ -1,4 +1,5 @@
 import './theme.css';
+import './ui-theme.css';
 import './slides.css';
 import './app.css';
 import { createAnimationList } from './animation-list.ts';
@@ -16,6 +17,7 @@ import { createToolbar, slideNumbers } from './toolbar.ts';
 // drawing, keyboard, and (outside exports) the nav bar and animation list.
 
 site?.init?.();
+if (import.meta.env.MODE !== 'export' && import.meta.env.MODE !== 'template') void import('./fonts.ts');
 
 // Settings saved before the app was renamed from Presentation Editor carry over once.
 for (const store of [localStorage, sessionStorage]) {

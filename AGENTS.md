@@ -82,7 +82,9 @@ The same app runs in four Vite modes; `app/src/source.ts` decides where the pres
   to it; the tour then follows as with Try the sample.
 - `README.md` is the human guide; Help → Personalize your viewer links to its "Personalize your viewer" section, so keep that heading.
 - Keyboard shortcuts live only in `app/src/shortcuts.ts`; the key handler, tooltips, presentation hint and notes window all read it.
-- Every colour comes from a theme token; `app/src/theme.css` is the only file holding colour values, apart from `app/favicon.svg`, which browsers load on its own.
+- Every colour comes from a token. Slides use the slide theme (`app/src/theme.css`, which a presentation overrides);
+  the viewer around them uses its own tokens in `app/src/ui-theme.css`, so a presentation can't restyle the viewer.
+  These two files hold every colour value, apart from `app/favicon.svg`, which browsers load on its own.
 - Slide HTML and app chrome share one page, so app classes need names no slide layout uses. `.step` belongs to slides; the animation list uses `.anim-step`.
 - The nav bar and the animation list are authoring tools: `export` and `template` builds leave them out. The slide list, toolbar, notes, pointer, numbers, drawing and presentation mode ship in exported files.
 - Edit → Slide Creation Prompt (`app/src/prompt-dialog.ts`) restates this guide's authoring rules for agents that never see it. When those rules change, change the prompt too.
