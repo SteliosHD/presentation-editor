@@ -114,7 +114,14 @@ const stamps = async (dir: FileSystemDirectoryHandle) =>
   new Map(
     (await filesFromHandle(dir))
       .map(({ path, file }) => ({ rel: path.slice(dir.name.length + 1), file }))
-      .filter(({ rel }) => rel.startsWith('slides/') || rel === 'theme.css' || rel === 'presentation.json')
+      // A folder of slides opened on its own has them at the top.
+      .filter(
+        ({ rel }) =>
+          rel.startsWith('slides/') ||
+          /^[^/]+\.(html|ts)$/.test(rel) ||
+          rel === 'theme.css' ||
+          rel === 'presentation.json',
+      )
       .map(({ rel, file }) => [rel, `${file.size}:${file.lastModified}`]),
   );
 const same = (a: Map<string, string>, b: Map<string, string>) =>

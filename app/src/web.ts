@@ -50,15 +50,24 @@ export const filesFromDrop = async (root: FileSystemDirectoryEntry): Promise<Fol
 };
 
 // Turns a folder's files into a presentation, with each .ts animation converted to JavaScript by Sucrase
-// (loaded only when needed).
+// (loaded only when needed). A folder of slides picked on its own (the slides/ folder itself, say) opens too, in
+// the default theme and titled after the folder, since its theme and title live one folder up.
 export const readPresentation = async (files: FolderFile[]) => {
   const root = files.at(0)?.path.split('/')[0] ?? 'folder';
   const at = (rel: string) => files.find((f) => f.path === `${root}/${rel}`)?.file;
-  const slideFiles = files
-    .filter((f) => new RegExp(`^${root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/slides/[^/]+\\.html$`).test(f.path))
-    .sort((a, b) => a.path.localeCompare(b.path));
+  const htmlIn = (dir: string) =>
+    files
+      .filter(
+        (f) => f.path.startsWith(`${root}/${dir}`) && /^[^/]+\.html$/.test(f.path.slice(root.length + 1 + dir.length)),
+      )
+      .sort((a, b) => a.path.localeCompare(b.path));
+  const nested = htmlIn('slides/');
+  const dir = nested.length ? 'slides/' : '';
+  const slideFiles = nested.length ? nested : htmlIn('');
   if (!slideFiles.length)
-    throw new Error(`“${root}” has no slides/ folder with HTML slides. Choose the folder that contains it.`);
+    throw new Error(
+      `“${root}” has no HTML slides, in a slides/ folder or on their own. Choose the presentation folder.`,
+    );
 
   const config = at('presentation.json');
   const { title } = config ? (JSON.parse(await config.text()) as { title?: string }) : {};
@@ -69,7 +78,7 @@ export const readPresentation = async (files: FolderFile[]) => {
   const slides = await Promise.all(
     slideFiles.map(async ({ path, file }) => {
       const name = path.split('/').at(-1) ?? path;
-      const script = at(`slides/${name.replace(/\.html$/, '.ts')}`);
+      const script = at(`${dir}${name.replace(/\.html$/, '.ts')}`);
       const html = await file.text();
       if (!script || !sucrase) return { file: name, html };
       const { code } = sucrase.transform(await script.text(), { transforms: ['typescript'], filePath: script.name });

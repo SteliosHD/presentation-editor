@@ -85,7 +85,9 @@ const api = (server: ViteDevServer, state: PresentationState, reload: () => void
         return;
       }
       const body = await readJson(req);
-      const open = (folder: string) => {
+      const open = (picked: string) => {
+        // Picking the slides/ folder itself opens the presentation around it.
+        const folder = !isPresentation(picked) && isPresentation(dirname(picked)) ? dirname(picked) : picked;
         if (!isPresentation(folder)) {
           const name = `“${basename(folder)}”`;
           const error = existsSync(folder)
