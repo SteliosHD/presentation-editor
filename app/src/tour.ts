@@ -27,8 +27,8 @@ const STEPS: Step[] = [
   },
   {
     target: '.nav-left',
-    title: 'Menu and panels',
-    text: 'The menu opens folders, exports and settings. The two buttons beside it show or hide the slide list and the animation list.',
+    title: 'Menu',
+    text: 'Open a folder, export, get the slide prompt and change settings. The small buttons by the slide list and the animation list fold them away.',
   },
   {
     target: '.menu-main',

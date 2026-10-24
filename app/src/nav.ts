@@ -10,8 +10,10 @@ import {
   LifeBuoy,
   Map as MapIcon,
   Menu,
-  PanelBottom,
-  PanelLeft,
+  PanelBottomClose,
+  PanelBottomOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
   Scale,
   Sparkles,
   type IconNode,
@@ -31,9 +33,9 @@ import { watchOpened } from './watch.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
 
 // Buttons floating over the top corners, after Excalidraw. Top left: the menu (open, export, the slide prompt, view
-// settings and help) and switches for the slide list and the animation list. Top right: the folder's name, whether
-// it's live, export status and a link to the source. Locally, exports go through the server (Mac save dialog,
-// Chrome-made PDF); hosted, they are built in the browser and downloaded.
+// settings and help). Top right: the folder's name, whether it's live, export status and a link to the source.
+// Locally, exports go through the server (Mac save dialog, Chrome-made PDF); hosted, they are built in the browser
+// and downloaded.
 
 const REPO = 'https://github.com/SteliosHD/presentation-viewer';
 // GitHub's mark (Octicons mark-github, MIT); Lucide no longer ships brand icons.
@@ -233,9 +235,6 @@ export const mountNav = (
   nav.className = 'nav';
   nav.innerHTML = `
     <div class="nav-left">
-      <span class="nav-sep"></span>
-      <button class="nav-toggle" data-part="sidebar"></button>
-      <button class="nav-toggle" data-part="animations"></button>
     </div>
     <div class="nav-right">
       <div class="nav-notes">
@@ -260,24 +259,32 @@ export const mountNav = (
     : presentation.folder;
   $('.nav-folder-chip').hidden = empty;
 
-  // The two switches beside the menu show or hide the slide list and the animation list.
+  // Each pane's switch sits by the edge it folds into: the slide list's at the top of the slide area beside it, the
+  // animation list's just above it, by the slide counter's row.
   const TOGGLES = {
-    sidebar: { icon: PanelLeft, label: 'slide list' },
-    animations: { icon: PanelBottom, label: 'animation list' },
+    sidebar: { open: PanelLeftOpen, close: PanelLeftClose, label: 'slide list' },
+    animations: { open: PanelBottomOpen, close: PanelBottomClose, label: 'animation list' },
   } as const;
-  const toggles = [...nav.querySelectorAll<HTMLButtonElement>('.nav-toggle')];
+  const toggles = (['sidebar', 'animations'] as const).map((part) => {
+    const button = document.createElement('button');
+    button.className = `pane-toggle pane-toggle-${part}`;
+    button.dataset.part = part;
+    button.setAttribute('aria-label', `Show the ${TOGGLES[part].label}`);
+    return button;
+  });
+  must(document.querySelector('.stage'), '.stage').append(toggles[0]);
+  must(document.querySelector('.stage-foot'), '.stage-foot').prepend(toggles[1]);
   const refreshToggles = () => {
     for (const button of toggles) {
       const part = button.dataset.part as keyof typeof TOGGLES;
       const shown = !isHidden(part);
       button.setAttribute('aria-pressed', String(shown));
       button.title = `${shown ? 'Hide' : 'Show'} the ${TOGGLES[part].label}`;
+      button.replaceChildren(icon(shown ? TOGGLES[part].close : TOGGLES[part].open));
     }
   };
   for (const button of toggles) {
     const part = button.dataset.part as keyof typeof TOGGLES;
-    button.setAttribute('aria-label', `Show the ${TOGGLES[part].label}`);
-    button.append(icon(TOGGLES[part].icon));
     // A click must not leave the button focused, or Space would press it again instead of changing slide.
     button.addEventListener('mousedown', (e) => {
       e.preventDefault();

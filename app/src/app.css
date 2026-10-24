@@ -121,7 +121,7 @@ kbd {
   gap: 2px;
   padding: 4px;
 }
-.nav-left button {
+.nav-left .menu-button {
   display: grid;
   place-items: center;
   width: 38px;
@@ -132,22 +132,11 @@ kbd {
   background: none;
   color: var(--ui-ink-soft);
 }
-.nav-left button:hover,
+.nav-left .menu-button:hover,
 .nav-left .menu-button.on {
   background: var(--ui-surface-raised);
   border-color: transparent;
   color: var(--ui-ink);
-}
-.nav-left .nav-toggle[aria-pressed='true'] {
-  background: var(--ui-accent-soft);
-  border-color: var(--ui-accent-border);
-  color: var(--ui-accent);
-}
-.nav-sep {
-  width: 1px;
-  height: 22px;
-  margin: 0 4px;
-  background: var(--ui-border);
 }
 .nav-right {
   position: relative;
@@ -468,7 +457,7 @@ button.primary {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 30px 16px;
+  padding: 38px 24px 34px;
   border: 1.5px dashed rgb(255 255 255 / 0.16);
   border-radius: var(--ui-radius-card);
   background: var(--ui-surface);
@@ -476,6 +465,14 @@ button.primary {
   transition:
     border-color 0.15s,
     background-color 0.15s;
+}
+/* The Open modal gives its drop area room to breathe on every side. */
+.open-dialog {
+  width: min(580px, calc(100vw - 32px));
+}
+.open-dialog .modal-body {
+  gap: 24px;
+  padding: 30px 36px 28px;
 }
 .od-drop .od-choose {
   align-self: center;
@@ -572,8 +569,7 @@ button.primary {
 }
 .od-sample-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 20px;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -593,7 +589,7 @@ button.primary {
   color: var(--ui-ink-faint);
 }
 .od-sample-badge {
-  margin-left: auto;
+  margin-left: 4px;
   padding: 1px 8px;
   border: 1px solid var(--ui-accent-border);
   border-radius: var(--ui-pill);
@@ -992,8 +988,12 @@ button.primary {
   flex-shrink: 0;
   height: var(--strip-user, 150px);
   overflow-y: auto;
+  margin: 0 12px 12px;
   padding: 10px 16px;
-  border-top: 1px solid var(--ui-border-soft);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-panel);
+  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
   font-size: 12px;
 }
 .strip-head {
@@ -1157,12 +1157,17 @@ body.empty .stage-title {
   flex-shrink: 0;
   position: relative;
   overflow-y: auto;
-  border-right: 1px solid var(--ui-border-soft);
+  /* A floating box, like the islands up top. */
+  margin: 12px 0 12px 12px;
   padding: 12px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-panel);
+  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
 }
-/* Room for the menu's island floating over the list's top (exported files have no menu). */
+/* Below the menu's island (exported files have no menu). */
 body:has(.nav) .sidebar {
-  padding-top: 66px;
+  margin-top: 66px;
 }
 /* Drag handles on the slide list's right edge and the animation list's top edge: a thin line that lights on hover
    and while dragging. */
@@ -1460,6 +1465,40 @@ body.presenting .resize-handle {
   background: var(--ui-surface-raised);
   color: var(--ui-ink);
 }
+/* The panes' switches, by the edges they fold into: the slide list's at the top left of the slide area (clear of the
+   menu once the list is gone), the animation list's at the left of the row above it. Quiet until pointed at. */
+.pane-toggle {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: none;
+  color: var(--ui-ink-faint);
+}
+.pane-toggle:hover {
+  border-color: var(--ui-border);
+  background: var(--ui-surface-raised);
+  color: var(--ui-ink);
+}
+.pane-toggle-sidebar {
+  position: absolute;
+  top: 16px;
+  left: 10px;
+  z-index: 3;
+}
+body.hide-sidebar .pane-toggle-sidebar {
+  left: 70px;
+}
+.pane-toggle-animations {
+  grid-column: 1;
+  justify-self: start;
+}
+body.presenting .pane-toggle {
+  display: none;
+}
 .counter {
   grid-column: 3;
   justify-self: end;
@@ -1534,14 +1573,22 @@ body.hide-animations .anim-strip {
 }
 
 /* Footer: who made the viewer and when, its license, and a link to the author's site. */
+/* A small floating pill under the panes, centred, like the islands up top. */
 .app-foot {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   gap: 16px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
   height: 30px;
-  padding: 0 14px;
-  border-top: 1px solid var(--ui-border-soft);
+  margin: 0 auto 10px;
+  padding: 0 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-pill);
+  background: var(--ui-panel);
+  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
   font-size: 12px;
   color: var(--ui-ink-faint);
   white-space: nowrap;
@@ -1787,8 +1834,6 @@ body.presenting.inking .slide-stack {
   .bar,
   .stage,
   .resize-handle,
-  .nav-left .nav-sep,
-  .nav-left .nav-toggle,
   .nav-folder-chip,
   .menu-list .menu-view-item {
     display: none;
@@ -1797,11 +1842,19 @@ body.presenting.inking .slide-stack {
     display: block;
     overflow-y: auto;
   }
-  .sidebar {
+  .sidebar,
+  body:has(.nav) .sidebar {
     width: 100%;
     overflow: visible;
-    border-right: none;
+    margin: 0;
     padding: 14px 16px 24px;
+    border: none;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+  body:has(.nav) .sidebar {
+    padding-top: 66px;
   }
   .slide-list button {
     gap: 10px;
