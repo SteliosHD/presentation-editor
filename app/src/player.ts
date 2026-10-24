@@ -1,5 +1,6 @@
 import { gsap } from 'gsap';
 import type { PresentationSlide, SlideAnimation } from 'virtual:presentation';
+import { keyName, SHORTCUTS } from './shortcuts.ts';
 
 type Point = { x: number; y: number; t: number };
 
@@ -129,10 +130,30 @@ export const createPlayer = (
         #n-title { font-size: 24px; margin: 8px 0 18px; }
         #n-body { font-size: 22px; line-height: 1.5; color: var(--soft); white-space: pre-wrap; }
         #n-next { margin-top: 26px; font-size: 16px; color: var(--muted); }
-        #n-help { position: fixed; bottom: 12px; right: 18px; font-size: 13px; color: var(--muted); }
+        #n-keys { margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--line); }
+        #n-keys h2 { margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: .08em;
+          text-transform: uppercase; color: var(--muted); }
+        #n-keys dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 28px; margin: 0; }
+        #n-keys dl > div { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+          font-size: 13px; color: var(--soft); }
+        #n-keys dd { margin: 0; white-space: nowrap; }
+        kbd { margin-left: 4px; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px;
+          border-radius: 4px; background: var(--card); font-family: var(--mono); font-size: 11px; color: var(--text); }
       </style>`;
     d.body.innerHTML = `<div id="n-pos"></div><div id="n-title"></div><div id="n-body"></div><div id="n-next"></div>
-      <div id="n-help">← → move the slides · N closes this window · P toggles the pointer</div>`;
+      <section id="n-keys"><h2>Shortcuts</h2><dl></dl></section>`;
+    // Every shortcut, read from the one list the key handler uses.
+    must(d.querySelector('#n-keys dl'), '#n-keys dl').append(
+      ...Object.values(SHORTCUTS).map(({ keys, label }) => {
+        const row = d.createElement('div');
+        const name = d.createElement('dt');
+        name.textContent = label;
+        const caps = d.createElement('dd');
+        for (const key of keys) caps.append(Object.assign(d.createElement('kbd'), { textContent: keyName(key) }));
+        row.append(name, caps);
+        return row;
+      }),
+    );
     d.addEventListener('keydown', onKey);
     notesWin.addEventListener('pagehide', () => {
       notesWin = null;

@@ -1,13 +1,16 @@
 import { gsap } from 'gsap';
 import { createElement, X } from 'lucide';
 import { must, reduceMotion } from './player.ts';
+import { mainKey } from './shortcuts.ts';
 
-// Presentation mode (F): fullscreen with only the slide. F again, Esc, or the X that appears at the bottom
-// centre brings back the rest. On entry, a hint drops in at the top centre for a few seconds.
+// Presentation mode (F): only the slide, filling the browser window (not the Mac's own fullscreen, which would
+// pull the notes window into its space). F again, Esc, or the X that appears at the bottom centre brings back
+// the rest. On entry, a hint drops in at the top centre for a few seconds.
 export const createPresentationMode = ({ onChange }: { onChange: (presenting: boolean) => void }) => {
   const active = () => document.body.classList.contains('presenting');
 
   const hintEl = must(document.querySelector('.present-hint'), '.present-hint');
+  must(hintEl.querySelector('kbd'), '.present-hint kbd').textContent = mainKey('present');
   let hint: gsap.core.Timeline | null = null;
   const showHint = (on: boolean) => {
     hint?.kill();
@@ -28,42 +31,12 @@ export const createPresentationMode = ({ onChange }: { onChange: (presenting: bo
     onChange(on);
   };
   const toggle = () => {
-    if (active()) {
-      if (document.fullscreenElement) void document.exitFullscreen();
-      set(false);
-      return;
-    }
-    set(true);
-    document.documentElement.requestFullscreen().catch(() => undefined);
-  };
-  let stepping = false;
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && active() && !stepping) set(false);
-  });
-
-  // On macOS, a window opened from a fullscreen page joins its fullscreen space and covers the slides. So step
-  // out of fullscreen, run `open` (the notes window opens as a normal window), then go back in. The key press
-  // that started this still counts as the user's action for both the pop-up and the return to fullscreen.
-  const outsideFullscreen = async (open: () => void) => {
-    if (!document.fullscreenElement) {
-      open();
-      return;
-    }
-    stepping = true;
-    try {
-      await document.exitFullscreen();
-      // Let macOS finish leaving the fullscreen space before the new window appears.
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      open();
-      await document.documentElement.requestFullscreen().catch(() => undefined);
-    } finally {
-      stepping = false;
-    }
+    set(!active());
   };
 
   const exitButton = must(document.querySelector('.exit-present'), '.exit-present');
   exitButton.append(createElement(X, { width: 20, height: 20 }));
   exitButton.addEventListener('click', toggle);
 
-  return { active, toggle, outsideFullscreen };
+  return { active, toggle };
 };

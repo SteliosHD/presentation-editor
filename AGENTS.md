@@ -76,6 +76,7 @@ The same app runs in four Vite modes; `app/src/source.ts` decides where the pres
 
 - `pnpm typecheck`, `pnpm lint` and `pnpm format:check` pass before a change is finished.
 - `app/src/main.ts` only wires the parts; each feature has its own module (`player`, `slide-list`, `animation-list`, `toolbar`, `presentation-mode`, `ink`, `nav` with the File, Edit and View menus, `open-dialog`, `prompt-dialog`).
+- Keyboard shortcuts live only in `app/src/shortcuts.ts`; the key handler, tooltips, presentation hint and notes window all read it.
 - Every colour comes from a theme token; `app/src/theme.css` is the only file holding colour values, apart from `app/favicon.svg`, which browsers load on its own.
 - Slide HTML and app chrome share one page, so app classes need names no slide layout uses. `.step` belongs to slides; the animation list uses `.anim-step`.
 - The nav bar and the animation list are authoring tools: `export` and `template` builds leave them out. The slide list, toolbar, notes, pointer, numbers, drawing and presentation mode ship in exported files.

@@ -1,5 +1,6 @@
 import { BrushCleaning, createElement, Eraser, Highlighter, Pencil, type IconNode } from 'lucide';
 import { must } from './player.ts';
+import { mainKey } from './shortcuts.ts';
 
 // Drawing over the slide in presentation mode. The ink sits on a 1200x675 layer scaled exactly like the slide,
 // so strokes stay put when the window resizes. A stroke is drawn on a live layer first and merged when it ends,
@@ -9,7 +10,7 @@ type Tool = 'pen' | 'highlighter' | 'eraser';
 type Point = { x: number; y: number };
 
 const TOOLS: [Tool, IconNode, string][] = [
-  ['pen', Pencil, 'Pen (D)'],
+  ['pen', Pencil, `Pen (${mainKey('draw')})`],
   ['highlighter', Highlighter, 'Highlighter'],
   ['eraser', Eraser, 'Eraser'],
 ];

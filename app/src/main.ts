@@ -7,6 +7,7 @@ import { createPlayer, must } from './player.ts';
 import { createPresentationMode } from './presentation-mode.ts';
 import { createSlideList } from './slide-list.ts';
 import { loadPresentation } from './source.ts';
+import { shortcutFor, type ShortcutId } from './shortcuts.ts';
 import { createToolbar, slideNumbers } from './toolbar.ts';
 
 // Loads the presentation and wires the parts together: player, slide list, toolbar, presentation mode,
@@ -27,23 +28,44 @@ const onKey = (e: KeyboardEvent) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   // Typing in a field, or working the Open modal or File menu, is not slide control.
   if (e.target instanceof Element && e.target.closest('input, dialog, .menu')) return;
-  const handled = () => {
-    e.preventDefault();
-    return true;
-  };
-  if (['ArrowRight', 'PageDown', ' '].includes(e.key) && handled()) player.show(player.current() + 1);
-  if (['ArrowLeft', 'PageUp'].includes(e.key) && handled()) player.show(player.current() - 1);
-  if (e.key === 'Home' && handled()) player.show(0);
-  if (e.key === 'End' && handled()) player.show(player.elements.length - 1);
-  if (e.key === 'n' || e.key === 'N') {
-    if (present.active() && !player.notesOpen()) void present.outsideFullscreen(player.toggleNotes);
-    else player.toggleNotes();
-  }
-  if (e.key === 'p' || e.key === 'P') player.toggleLaser();
-  if (e.key === 's' || e.key === 'S') toggleNumbers();
-  if (e.key === 'f' || e.key === 'F') present.toggle();
-  if (e.key === 'Escape' && present.active()) present.toggle();
-  if ((e.key === 'd' || e.key === 'D') && present.active()) ink.togglePen();
+  const id = shortcutFor(e.key);
+  // Esc and D only mean something while presenting; elsewhere Esc stays with the browser.
+  if (!id || ((id === 'exit' || id === 'draw') && !present.active())) return;
+  e.preventDefault();
+  actions[id]();
+};
+
+const actions: Record<ShortcutId, () => void> = {
+  next: () => {
+    player.show(player.current() + 1);
+  },
+  prev: () => {
+    player.show(player.current() - 1);
+  },
+  first: () => {
+    player.show(0);
+  },
+  last: () => {
+    player.show(player.elements.length - 1);
+  },
+  notes: () => {
+    player.toggleNotes();
+  },
+  pointer: () => {
+    player.toggleLaser();
+  },
+  numbers: () => {
+    toggleNumbers();
+  },
+  present: () => {
+    present.toggle();
+  },
+  draw: () => {
+    ink.togglePen();
+  },
+  exit: () => {
+    present.toggle();
+  },
 };
 
 const player = createPlayer(presentation.slides, must(document.querySelector('.viewport'), '.viewport'), {

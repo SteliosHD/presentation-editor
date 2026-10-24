@@ -9,6 +9,7 @@ import {
   type IconNode,
 } from 'lucide';
 import { must } from './player.ts';
+import { allKeys, mainKey, SHORTCUTS, type ShortcutId } from './shortcuts.ts';
 
 // The toolbar under the nav bar: Notes (N), Pointer (P), Numbers (S), Present (F), as square icon tools.
 // Each tool reports whether it is on so its button lights up; hovering or focusing one shows its tooltip.
@@ -19,32 +20,20 @@ type Tool = { run: () => void; isOn: () => boolean };
 
 type Info = { name: string; text: string; key: string };
 
-const INFO: Record<ToolName, Info & { icon: IconNode }> = {
-  notes: {
-    icon: NotebookText,
-    name: 'Speaker notes',
-    text: 'Your notes and the next slide, in their own window.',
-    key: 'N',
-  },
-  pointer: {
-    icon: Crosshair,
-    name: 'Laser pointer',
-    text: 'A red dot with a fading trail, for pointing at the slide.',
-    key: 'P',
-  },
-  numbers: {
-    icon: Hash,
-    name: 'Slide numbers',
-    text: "Shows each slide's number in its bottom-right corner.",
-    key: 'S',
-  },
+// What each tool does; its name and key come from the shortcuts list.
+const TOOLS: Record<ToolName, { icon: IconNode; text: string }> = {
+  notes: { icon: NotebookText, text: 'Your notes and the next slide, in their own window.' },
+  pointer: { icon: Crosshair, text: 'A red dot with a fading trail, for pointing at the slide.' },
+  numbers: { icon: Hash, text: "Shows each slide's number in its bottom-right corner." },
   present: {
     icon: Presentation,
-    name: 'Present',
-    text: 'Full screen, only the slide. Draw with D, leave with Esc.',
-    key: 'F',
+    text: `Only the slide, filling the window. Draw with ${mainKey('draw')}, leave with ${mainKey('exit')}.`,
   },
 };
+
+const infoFor = (id: ShortcutId, text: string): Info => ({ name: SHORTCUTS[id].label, key: mainKey(id), text });
+// aria-keyshortcuts names keys as KeyboardEvent.key does, with Space spelled out.
+const ariaKeys = (id: ShortcutId) => SHORTCUTS[id].keys.map((k) => (k === ' ' ? 'Space' : k)).join(' ');
 
 // One shared tooltip. It waits a moment before the first show, then follows the pointer from tool to tool
 // without waiting again, as native tooltips do.
@@ -106,16 +95,10 @@ export const createToolbar = (tools: Record<ToolName, Tool>, step: (delta: numbe
   const next = must(document.querySelector<HTMLButtonElement>('.slide-next'), '.slide-next');
   prev.append(createElement(ChevronLeft, { width: 18, height: 18, 'aria-hidden': 'true' }));
   next.append(createElement(ChevronRight, { width: 18, height: 18, 'aria-hidden': 'true' }));
-  tooltip.attach(prev, {
-    name: 'Previous slide',
-    key: '←',
-    text: 'Or press ← or Page Up. Home goes to the first slide.',
-  });
-  tooltip.attach(next, {
-    name: 'Next slide',
-    key: '→',
-    text: 'Or press →, Space or Page Down. End goes to the last slide.',
-  });
+  tooltip.attach(prev, infoFor('prev', `Or press ${allKeys('prev')}. ${mainKey('first')} goes to the first slide.`));
+  tooltip.attach(next, infoFor('next', `Or press ${allKeys('next')}. ${mainKey('last')} goes to the last slide.`));
+  prev.setAttribute('aria-keyshortcuts', ariaKeys('prev'));
+  next.setAttribute('aria-keyshortcuts', ariaKeys('next'));
   prev.addEventListener('click', () => {
     step(-1);
   });
@@ -123,10 +106,11 @@ export const createToolbar = (tools: Record<ToolName, Tool>, step: (delta: numbe
     step(1);
   });
   const buttons = (Object.entries(tools) as [ToolName, Tool][]).map(([name, tool]) => {
-    const info = INFO[name];
+    const { icon, text } = TOOLS[name];
+    const info = infoFor(name, text);
     const button = must(document.querySelector<HTMLElement>(`[data-tool="${name}"]`), `[data-tool="${name}"]`);
-    button.prepend(createElement(info.icon, { width: 19, height: 19, 'aria-hidden': 'true' }));
-    button.setAttribute('aria-keyshortcuts', info.key);
+    button.prepend(createElement(icon, { width: 19, height: 19, 'aria-hidden': 'true' }));
+    button.setAttribute('aria-keyshortcuts', ariaKeys(name));
     button.addEventListener('click', tool.run);
     tooltip.attach(button, info);
     return [button, tool] as const;
