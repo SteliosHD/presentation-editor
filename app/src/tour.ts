@@ -1,6 +1,6 @@
 import { must, reduceMotion } from './player.ts';
 
-// A short tour of the editor: three steps, each lighting up one part of the editor with a card beside it. Skip,
+// A short tour of the editor: four steps, each lighting up one part of the editor with a card beside it. Skip,
 // Esc or Done ends it, and it is then remembered so "Try the sample" doesn't start it again; Help → Take the tour
 // always does. Parts hidden at the current size are left out.
 
@@ -11,6 +11,11 @@ const STEPS = [
     text: 'Every slide in the presentation. Each one is an HTML file in slides/, numbered in the order it shows. Click a slide to open it.',
   },
   {
+    target: '.viewport',
+    title: 'Slide',
+    text: 'The current slide. Press F to present it full screen with only the slide showing; Esc comes back. ← and → change slides.',
+  },
+  {
     target: '.anim-strip',
     title: 'Animations',
     text: "Each step of this slide's animation: when it runs, what moves, and how. Slides with their own animation file label their steps.",
@@ -18,7 +23,7 @@ const STEPS = [
   {
     target: '.bar',
     title: 'Tools',
-    text: 'Speaker notes, laser pointer, slide numbers and Present. Hover a tool to see its shortcut; F presents and Esc comes back.',
+    text: 'Speaker notes, laser pointer, slide numbers and Present. Hover a tool to see its name and shortcut.',
   },
 ];
 
@@ -90,7 +95,7 @@ export const startTour = () => {
   let at = 0;
 
   // The card goes beside the lit part: to its right if there is room, else below it, else above it, and always
-  // inside the window.
+  // inside the window. A large part, such as the slide, keeps the card inside its top-left corner instead.
   const place = () => {
     const r = steps[at].el.getBoundingClientRect();
     const pad = 6;
@@ -103,8 +108,9 @@ export const startTour = () => {
     const gap = 14;
     const right = r.right + gap + card.offsetWidth < innerWidth - 8;
     const below = r.bottom + gap + card.offsetHeight < innerHeight - 8;
-    const left = right ? r.right + gap : r.left + 16;
-    const top = right ? r.top + 24 : below ? r.bottom + gap : r.top - gap - card.offsetHeight;
+    const large = r.width > innerWidth * 0.4 && r.height > innerHeight * 0.4;
+    const left = large ? r.left + 24 : right ? r.right + gap : r.left + 16;
+    const top = large ? r.top + 24 : right ? r.top + 24 : below ? r.bottom + gap : r.top - gap - card.offsetHeight;
     card.style.left = `${Math.max(8, Math.min(left, innerWidth - card.offsetWidth - 8))}px`;
     card.style.top = `${Math.max(8, Math.min(top, innerHeight - card.offsetHeight - 8))}px`;
   };
