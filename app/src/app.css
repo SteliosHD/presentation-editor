@@ -288,6 +288,11 @@ kbd {
   background: var(--ui-surface-raised);
   outline: none;
 }
+/* The main menu opens to the right of the burger, its top level with the island's. */
+.menu-main > .menu-list {
+  top: -5px;
+  left: calc(100% + 14px);
+}
 /* A submenu opens beside its entry, on hover or with the right arrow. */
 .menu-sub-wrap {
   position: relative;
