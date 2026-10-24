@@ -2,11 +2,11 @@ import { gsap } from 'gsap';
 import { ArrowRight, createElement, X } from 'lucide';
 import { must, reduceMotion } from './player.ts';
 
-// The first time the hosted editor opens empty: one card saying what the app is, with a short animation of a folder's
+// The first time the hosted viewer opens empty: one card saying what the app is, with a short animation of a folder's
 // files becoming a slide. Closing it, however it closes, moves on to the Open modal; it is then remembered in this
 // browser and never shows again. Nothing in the menus opens it.
 
-const SEEN_KEY = 'presentation-editor:welcome-seen';
+const SEEN_KEY = 'presentation-viewer:welcome-seen';
 const seen = () => {
   try {
     return localStorage.getItem(SEEN_KEY) === '1';
@@ -31,7 +31,7 @@ export const showWelcome = (then: () => void) => {
   dialog.className = 'modal welcome-dialog';
   dialog.innerHTML = `
     <div class="modal-body">
-      <header><h2>Welcome to Presentation Editor</h2><button class="modal-close" aria-label="Close"></button></header>
+      <header><h2>Welcome to Presentation Viewer</h2><button class="modal-close" aria-label="Close"></button></header>
       <div class="welcome-art" aria-hidden="true">
         <ul class="welcome-files">
           <li>01-title.html</li>

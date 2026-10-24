@@ -13,6 +13,19 @@ import { createToolbar, slideNumbers } from './toolbar.ts';
 // Loads the presentation and wires the parts together: player, slide list, toolbar, presentation mode,
 // drawing, keyboard, and (outside exports) the nav bar and animation list.
 
+// Settings saved before the app was renamed from Presentation Editor carry over once.
+for (const store of [localStorage, sessionStorage]) {
+  try {
+    for (const key of Object.keys(store).filter((k) => k.startsWith('presentation-editor:'))) {
+      const renamed = key.replace('presentation-editor:', 'presentation-viewer:');
+      if (store.getItem(renamed) === null) store.setItem(renamed, store.getItem(key) ?? '');
+      store.removeItem(key);
+    }
+  } catch {
+    // Storage blocked: nothing to carry over.
+  }
+}
+
 // The page address holds the current slide (#3), so a reload after a file changes stays on it. Read before
 // anything renders, since rendering writes the address.
 const fromAddress = Number.parseInt(location.hash.slice(1), 10);
@@ -27,7 +40,7 @@ document.head.append(presentationTheme);
 
 // Authoring aids (nav bar, animation list) need the running app, so exported files leave them out.
 const authoring = import.meta.env.MODE !== 'export' && import.meta.env.MODE !== 'template';
-document.title = authoring ? `${presentation.title} · Presentation Editor` : presentation.title;
+document.title = authoring ? `${presentation.title} · Presentation Viewer` : presentation.title;
 
 // Above the slide, while editing: the presentation's title and the current slide's file.
 const stageHead = must(document.querySelector('.stage-head'), '.stage-head');

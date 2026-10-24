@@ -1,6 +1,6 @@
 // Animation for 03-custom-loop.html. The presentation calls it with the slide and GSAP, and reverts what it returns
 // when the slide is left, so the endless pulse stops there. Each step's data field labels it in the app's
-// animation list; see presentation-editor/AGENTS.md.
+// animation list; see presentation-viewer/AGENTS.md.
 export default (slide: HTMLElement, gsap: typeof import('gsap').gsap) => {
   const $ = (sel: string) => slide.querySelectorAll(sel);
   const length = (_: number, el: SVGGeometryElement) => el.getTotalLength();

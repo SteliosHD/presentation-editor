@@ -3,12 +3,12 @@ import { ICONS } from './animations.ts';
 import { must } from './player.ts';
 
 // Edit → Slide Creation Prompt: a ready-made prompt that has an AI agent create a whole presentation in the
-// format this editor opens, plus a short note on doing it with an agent without the fixed prompt.
-// The prompt is built from the same lists the code uses, so it cannot drift from what the editor supports.
+// format this viewer opens, plus a short note on doing it with an agent without the fixed prompt.
+// The prompt is built from the same lists the code uses, so it cannot drift from what the viewer supports.
 
 const TOKENS = ['bg', 'panel', 'card', 'line', 'text', 'soft', 'muted', 'accent', 'good', 'bad', 'warn', 'warn-bg'];
 
-export const SLIDE_PROMPT = `Create a presentation for Presentation Editor in this folder.
+export const SLIDE_PROMPT = `Create a presentation for Presentation Viewer in this folder.
 
 Topic: [what the talk is about]
 Audience: [who it is for]
@@ -21,7 +21,7 @@ Folder
 
 Each slide
 - One <section class="slide"> per file, designed for a fixed 1200×675 canvas. Everything fits inside it.
-- Build from the editor's layouts: .kicker, h1/h2, .lead and .section for text; .flow with .box, .box.mid and .arrow; .stats with .stat; .cols with .col, .item and .fix; .steps (add .four for four across) with .step, .when and .cmd; .bottom with .later and .risk.
+- Build from the viewer's layouts: .kicker, h1/h2, .lead and .section for text; .flow with .box, .box.mid and .arrow; .stats with .stat; .cols with .col, .item and .fix; .steps (add .four for four across) with .step, .when and .cmd; .bottom with .later and .risk.
 - For anything else, write your own markup with a <style> inside the slide, every rule under a class unique to that slide.
 - Colours and fonts come only from theme tokens: ${TOKENS.map((t) => `var(--${t})`).join(', ')}, var(--font), var(--mono).
 - Put speaker notes in <aside class="notes"> inside the slide.
@@ -30,7 +30,7 @@ Animations (optional; slides without one fade their blocks up in turn)
 - Add slides/NN-name.ts next to NN-name.html, default-exporting (slide, gsap) => a GSAP tween or timeline. GSAP is passed in; the file has no imports.
 - Animate into the finished layout with .from() or .fromTo(): previews, the PDF and viewers with reduced motion see the slide without its animation.
 - Animate the slide's children, never the .slide element itself.
-- Label every tween for the editor's animation list: data: { label: 'What happens', icons: [...] }, with icon names from: ${Object.keys(ICONS).join(', ')}.
+- Label every tween for the viewer's animation list: data: { label: 'What happens', icons: [...] }, with icon names from: ${Object.keys(ICONS).join(', ')}.
 
 When done, list each slide file with a one-line summary.`;
 
@@ -86,7 +86,7 @@ export const createPromptDialog = () => {
       <section class="pd-manual">
         <h3>Or guide it yourself</h3>
         <p>Open your agent in the presentation folder, describe the talk in your own words, and ask it to follow the
-        authoring guide in Presentation Editor's <code>AGENTS.md</code>. Keep the folder open here while it works:
+        authoring guide in Presentation Viewer's <code>AGENTS.md</code>. Keep the folder open here while it works:
         every saved slide shows up straight away.</p>
       </section>
       <div class="modal-foot"><button class="primary pd-copy" autofocus></button></div>

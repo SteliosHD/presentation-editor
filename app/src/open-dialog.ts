@@ -12,7 +12,7 @@ import { filesFromDrop, filesFromInput, readPresentation } from './web.ts';
 // A dropped folder is always read in the browser, since browsers never reveal where it lives on disk.
 // While a folder opens, a spinner covers the modal and says what is happening.
 
-const RECENT_KEY = 'presentation-editor:recent';
+const RECENT_KEY = 'presentation-viewer:recent';
 const readRecent = (): string[] => {
   try {
     return JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') as string[];
@@ -47,7 +47,7 @@ const sampleSlides = () =>
 const sections = (repo: string) => `
   <section class="od-section" data-section="sample" role="tabpanel" hidden>
     <div class="od-section-body">
-      <p>Every built-in layout and a custom animation, followed by a short tour of the editor.</p>
+      <p>Every built-in layout and a custom animation, followed by a short tour of the viewer.</p>
       <ol class="od-sample-list">${isWeb ? sampleSlides() : ''}</ol>
     </div>
     <div class="modal-foot"><button class="primary od-sample">Open the sample</button></div>

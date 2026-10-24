@@ -1,12 +1,12 @@
-# Presentation Editor
+# Presentation Viewer
 
-A slide editor for presentations kept as plain files: a folder of numbered HTML slides, each with an optional
+A slide viewer for presentations kept as plain files: a folder of numbered HTML slides, each with an optional
 [GSAP](https://gsap.com) animation. Open the folder, see every slide and every animation step, present it, and export
 it as a single HTML file or a PDF.
 
-![The editor showing a custom slide and its animation steps](docs/editor.png)
+![The viewer showing a custom slide and its animation steps](docs/viewer.png)
 
-**Try it:** [presentation-editor-five.vercel.app](https://presentation-editor-five.vercel.app) asks which presentation
+**Try it:** [presentation.viewer.bitzas.dev](https://presentation.viewer.bitzas.dev) asks which presentation
 to open: drop your own folder on it, which is read in your browser and never uploaded, or try the sample.
 
 ## What it does
@@ -26,17 +26,17 @@ You need [Node.js 24](https://nodejs.org) and [pnpm](https://pnpm.io). The PDF e
 Chrome, and the folder picker and save dialogs are the macOS ones (elsewhere, drop a folder onto the app instead).
 
 ```bash
-git clone https://github.com/SteliosHD/presentation-editor.git
-cd presentation-editor
+git clone https://github.com/SteliosHD/presentation-viewer.git
+cd presentation-viewer
 pnpm install
 pnpm dev                                   # opens the sample presentation
-node bin/presentation-editor.ts ../my-talk # opens your own presentation folder
+node bin/presentation-viewer.ts ../my-talk # opens your own presentation folder
 ```
 
-The editor runs at http://localhost:4747 and reloads whenever a slide, the theme or `presentation.json` changes.
+The viewer runs at http://localhost:4747 and reloads whenever a slide, the theme or `presentation.json` changes.
 Add `--port 5000` to use another port, or `--no-open` to skip opening the browser.
 
-To get a `presentation-editor` command you can run from any folder, run `pnpm link --global` once in this folder.
+To get a `presentation-viewer` command you can run from any folder, run `pnpm link --global` once in this folder.
 
 ## Make a presentation
 
@@ -55,7 +55,7 @@ my-talk/
 Each slide is one `<section class="slide">` designed for a 1200×675 canvas. Copy `sample/` to start, or use
 **Edit → Slide Creation Prompt** to have an AI agent write one for you.
 
-## Personalize your editor
+## Personalize your viewer
 
 Everything visual lives in a few plain files, so you can change it yourself or ask an AI agent to.
 
@@ -63,7 +63,7 @@ Everything visual lives in a few plain files, so you can change it yourself or a
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | Colours and fonts                                            | `app/src/theme.css`. The brief at the top explains each token. A presentation's own `theme.css` overrides it for that presentation only. |
 | Slide layouts (boxes, columns, steps, callouts)              | `app/src/slides.css`                                                                                                                     |
-| The editor's own look (nav bar, slide list, toolbar, modals) | `app/src/app.css`                                                                                                                        |
+| The viewer's own look (nav bar, slide list, toolbar, modals) | `app/src/app.css`                                                                                                                        |
 | Keyboard shortcuts                                           | `app/src/shortcuts.ts`. The key handler, tooltips and notes window all read this one list.                                               |
 | Icons that describe animation steps                          | `ICONS` in `app/src/animations.ts`                                                                                                       |
 | The sample presentation                                      | `sample/`                                                                                                                                |
@@ -80,9 +80,9 @@ Any static host works too: `pnpm build:web` writes the site to `dist/`.
 ## How it's built
 
 - **No UI framework:** plain TypeScript and the DOM, about 2,000 lines across small modules in `app/src/`.
-- **[Vite](https://vite.dev)** runs the local editor and builds the hosted site. A small Vite plugin
+- **[Vite](https://vite.dev)** runs the local viewer and builds the hosted site. A small Vite plugin
   (`server/presentation.ts`) serves the open presentation and live-reloads it.
-- **[GSAP](https://gsap.com)** for slide animations; the editor reads each timeline to list its steps.
+- **[GSAP](https://gsap.com)** for slide animations; the viewer reads each timeline to list its steps.
 - **[Lucide](https://lucide.dev)** icons.
 - **Exports:** [vite-plugin-singlefile](https://github.com/richardtallent/vite-plugin-singlefile) bakes everything into
   one HTML file. PDFs come from Chrome through [Playwright](https://playwright.dev) locally, and from
@@ -93,9 +93,9 @@ Any static host works too: `pnpm build:web` writes the site to `dist/`.
 - **Tooling:** TypeScript 6, ESLint with typescript-eslint, [oxfmt](https://oxc.rs) for formatting, pnpm.
 
 ```
-app/          the editor: index.html, src/ (TypeScript and CSS), favicon
+app/          the viewer: index.html, src/ (TypeScript and CSS), favicon
 server/       the local server plugin, exports, macOS dialogs, hosted build
-bin/          the presentation-editor command
+bin/          the presentation-viewer command
 sample/       the sample presentation
 ```
 

@@ -1,13 +1,13 @@
 {
-  "name": "presentation-editor",
+  "name": "presentation-viewer",
   "private": true,
   "license": "MIT",
   "bin": {
-    "presentation-editor": "./bin/presentation-editor.ts"
+    "presentation-viewer": "./bin/presentation-viewer.ts"
   },
   "type": "module",
   "scripts": {
-    "dev": "node bin/presentation-editor.ts sample",
+    "dev": "node bin/presentation-viewer.ts sample",
     "typecheck": "tsc",
     "lint": "eslint .",
     "format": "oxfmt",

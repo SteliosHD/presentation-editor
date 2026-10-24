@@ -1,6 +1,6 @@
 import { must, reduceMotion } from './player.ts';
 
-// A short tour of the editor: each step lights up one part of the editor with a card beside it. The last steps open
+// A short tour of the viewer: each step lights up one part of the viewer with a card beside it. The last steps open
 // a menu and light up one of its items. Skip, Esc or Done ends it, and it is then remembered so "Try the sample"
 // doesn't start it again; Help → Take the tour always does. Parts hidden at the current size are left out.
 
@@ -33,16 +33,16 @@ const STEPS: Step[] = [
   },
   {
     target: '.menu-help',
-    item: 'Personalize your editor',
-    title: 'Make the editor yours',
-    text: 'Help → Personalize your editor shows how to change its colours, fonts, slide layouts and shortcuts, yourself or with an AI agent.',
+    item: 'Personalize your viewer',
+    title: 'Make the viewer yours',
+    text: 'Help → Personalize your viewer shows how to change its colours, fonts, slide layouts and shortcuts, yourself or with an AI agent.',
   },
 ];
 
 // Survives the reload that switching back to the sample needs.
-const TOUR_KEY = 'presentation-editor:tour';
+const TOUR_KEY = 'presentation-viewer:tour';
 // Set once the tour has been finished or skipped in this browser.
-const SEEN_KEY = 'presentation-editor:tour-seen';
+const SEEN_KEY = 'presentation-viewer:tour-seen';
 const seen = () => {
   try {
     return localStorage.getItem(SEEN_KEY) === '1';
@@ -90,7 +90,7 @@ export const startTour = () => {
 
   const dialog = document.createElement('dialog');
   dialog.className = 'tour';
-  dialog.setAttribute('aria-label', 'Tour of the editor');
+  dialog.setAttribute('aria-label', 'Tour of the viewer');
   dialog.innerHTML = `
     <div class="tour-spot"></div>
     <div class="tour-card" role="document">

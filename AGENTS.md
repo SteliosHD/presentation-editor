@@ -1,8 +1,8 @@
-# Presentation Editor
+# Presentation Viewer
 
 A local app for presentations. A presentation is a folder of HTML slides, each with an optional GSAP animation. The app opens a presentation to edit, present (F) and export (HTML or PDF).
 
-Run it with `node bin/presentation-editor.ts <presentation folder>` (or `presentation-editor <folder>` once linked). It serves http://localhost:4747 and reloads whenever the open presentation's slides, theme or `presentation.json` change. `sample/` is a working presentation to copy from.
+Run it with `node bin/presentation-viewer.ts <presentation folder>` (or `presentation-viewer <folder>` once linked). It serves http://localhost:4747 and reloads whenever the open presentation's slides, theme or `presentation.json` change. `sample/` is a working presentation to copy from.
 
 ## A presentation
 
@@ -63,13 +63,13 @@ Annotate every tween in a custom animation through GSAP's `data` field:
 
 A presentation's `theme.css` sets values for the tokens in `app/src/theme.css` and loads after it, so it lists only the tokens it changes. The brief at the top of `app/src/theme.css` is the rulebook for a new theme.
 
-## Working on Presentation Editor itself
+## Working on Presentation Viewer itself
 
 The same app runs in four Vite modes; `app/src/source.ts` decides where the presentation comes from in each.
 
 | Mode          | Built by                                       | Presentation from                                                                     | Open / Export                                                            |
 | ------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `development` | `bin/presentation-editor.ts` (local server)    | the folder on disk, live-reloaded                                                     | macOS dialogs via the server (`server/dialogs.ts`); Chrome makes the PDF |
+| `development` | `bin/presentation-viewer.ts` (local server)    | the folder on disk, live-reloaded                                                     | macOS dialogs via the server (`server/dialogs.ts`); Chrome makes the PDF |
 | `web`         | `pnpm build:web` → `dist/` (hosted, Vercel)    | a folder the viewer picks or drops, read in the browser; the bundled sample otherwise | browser folder picker; downloads built in the browser                    |
 | `export`      | local Export HTML                              | baked in at build time                                                                | none                                                                     |
 | `template`    | `pnpm build:web` → `dist/export-template.html` | JSON the hosted Export HTML embeds in the page                                        | none                                                                     |
@@ -78,7 +78,7 @@ The same app runs in four Vite modes; `app/src/source.ts` decides where the pres
 - `app/src/main.ts` only wires the parts; each feature has its own module (`player`, `slide-list`, `animation-list`, `toolbar`, `presentation-mode`, `ink`, `nav` with the File, Edit and View menus, `open-dialog`, `prompt-dialog`, `about-dialog`, `tour`).
 - Layouts cover desktop, tablet (touch: tools stay visible, swipe changes slide) and phone (the slide list only). Nothing may overlap at any size; while presentation tools are on show, the slide fits beside them.
 - The tour (Help → Take the tour, or Try the sample the first time) remembers in localStorage that it was seen.
-- `README.md` is the human guide; Help → Personalize your editor links to its "Personalize your editor" section, so keep that heading.
+- `README.md` is the human guide; Help → Personalize your viewer links to its "Personalize your viewer" section, so keep that heading.
 - Keyboard shortcuts live only in `app/src/shortcuts.ts`; the key handler, tooltips, presentation hint and notes window all read it.
 - Every colour comes from a theme token; `app/src/theme.css` is the only file holding colour values, apart from `app/favicon.svg`, which browsers load on its own.
 - Slide HTML and app chrome share one page, so app classes need names no slide layout uses. `.step` belongs to slides; the animation list uses `.anim-step`.

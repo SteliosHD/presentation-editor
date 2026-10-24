@@ -127,7 +127,7 @@ export const createToolbar = (tools: Record<ToolName, Tool>, step: (delta: numbe
 };
 
 // Slide numbers (S): on or off, remembered between visits.
-const NUMBERS_KEY = 'presentation-editor:numbers';
+const NUMBERS_KEY = 'presentation-viewer:numbers';
 export const slideNumbers = {
   isOn: () => document.body.classList.contains('numbered'),
   toggle: () => {

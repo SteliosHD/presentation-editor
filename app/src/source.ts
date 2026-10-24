@@ -9,9 +9,9 @@ import { presentation as served, type Presentation, type SlideAnimation } from '
 // Stored and embedded presentations carry their animations as code, loaded here as modules.
 
 export const isWeb = import.meta.env.MODE === 'web';
-const STORE_KEY = 'presentation-editor:opened';
+const STORE_KEY = 'presentation-viewer:opened';
 // Set by "Try the sample" for the one reload that loads it.
-const SAMPLE_KEY = 'presentation-editor:sample';
+const SAMPLE_KEY = 'presentation-viewer:sample';
 export const DATA_ID = 'presentation-data';
 
 type Stored = Omit<Presentation, 'slides'> & { slides: Omit<Presentation['slides'][number], 'animation'>[] };
@@ -53,7 +53,7 @@ export const requestSample = () => {
     sessionStorage.removeItem(STORE_KEY);
     sessionStorage.setItem(SAMPLE_KEY, '1');
   } catch {
-    // Storage blocked: the editor opens empty again.
+    // Storage blocked: the viewer opens empty again.
   }
 };
 const takeSampleRequest = () => {

@@ -1,4 +1,4 @@
-// Calls to the local app's server (bin/presentation-editor.ts). The hosted app has no server.
+// Calls to the local app's server (bin/presentation-viewer.ts). The hosted app has no server.
 export const post = async (path: string, body: object = {}) => {
   const res = await fetch(`/api/${path}`, {
     method: 'POST',

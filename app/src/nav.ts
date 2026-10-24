@@ -27,7 +27,7 @@ import { downloadHtml, downloadPdf } from './web.ts';
 // export status and a link to the source on the right. Locally, exports go through the server (Mac save dialog, Chrome-made PDF); hosted,
 // they are built in the browser and downloaded.
 
-const REPO = 'https://github.com/SteliosHD/presentation-editor';
+const REPO = 'https://github.com/SteliosHD/presentation-viewer';
 // GitHub's mark (Octicons mark-github, MIT); Lucide no longer ships brand icons.
 const GITHUB_MARK = `<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>`;
 
@@ -116,8 +116,8 @@ const createMenu = (title: string, entries: Entry[]) => {
   return { root, items: items.map(({ item }) => item) };
 };
 
-// View: parts of the editor that can be hidden, remembered between visits.
-const VIEW_KEY = 'presentation-editor:hidden';
+// View: parts of the viewer that can be hidden, remembered between visits.
+const VIEW_KEY = 'presentation-viewer:hidden';
 const PARTS = [
   ['sidebar', 'Slide list'],
   ['toolbar', 'Toolbar'],
@@ -150,12 +150,12 @@ export const mountNav = (
   const nav = document.createElement('header');
   nav.className = 'nav';
   nav.innerHTML = `
-    <div class="nav-left"><img class="nav-icon" src="${iconUrl}" alt="Presentation Editor" /></div>
+    <div class="nav-left"><img class="nav-icon" src="${iconUrl}" alt="Presentation Viewer" /></div>
     <span class="nav-folder"></span>
     <div class="nav-right">
       <span class="nav-status"><span class="spinner"></span><span class="nav-status-text"></span></span>
-      <a class="nav-github" href="${REPO}" target="_blank" rel="noopener" title="Presentation Editor on GitHub"
-        aria-label="Presentation Editor on GitHub">${GITHUB_MARK}</a>
+      <a class="nav-github" href="${REPO}" target="_blank" rel="noopener" title="Presentation Viewer on GitHub"
+        aria-label="Presentation Viewer on GitHub">${GITHUB_MARK}</a>
     </div>`;
   document.body.prepend(nav);
   const $ = (sel: string) => must(nav.querySelector<HTMLElement>(sel), sel);
@@ -226,20 +226,20 @@ export const mountNav = (
   const about = createAboutDialog({ repo: REPO });
   const help = createMenu('Help', [
     {
-      label: 'Personalize your editor',
+      label: 'Personalize your viewer',
       icon: LifeBuoy,
       run: () => {
-        window.open(`${REPO}#personalize-your-editor`, '_blank', 'noopener');
+        window.open(`${REPO}#personalize-your-viewer`, '_blank', 'noopener');
       },
     },
     { label: 'Take the tour', icon: MapIcon, run: startTour },
     'separator',
-    { label: 'About Presentation Editor', icon: Info, run: about.show },
+    { label: 'About Presentation Viewer', icon: Info, run: about.show },
   ]);
   $('.nav-left').append(file.root, editMenu.root, view.root, help.root);
   startQueuedTour();
 
-  // Footer: who made the editor and when, its license, and a link to the author's site.
+  // Footer: who made the viewer and when, its license, and a link to the author's site.
   const footer = document.createElement('footer');
   footer.className = 'app-foot';
   footer.innerHTML = `

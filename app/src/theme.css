@@ -1,5 +1,5 @@
 /*
- * Default theme: every colour and font the app and slides use. Nothing else in presentation-editor hard-codes a colour.
+ * Default theme: every colour and font the app and slides use. Nothing else in presentation-viewer hard-codes a colour.
  * A presentation restyles itself with its own theme.css, which loads after this one; it only needs the tokens it changes.
  *
  * Brief for whoever writes a new theme:

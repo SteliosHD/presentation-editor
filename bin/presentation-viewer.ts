@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// presentation-editor [folder] [--port 4747] [--no-open]: opens a presentation folder in the editor.
+// presentation-viewer [folder] [--port 4747] [--no-open]: opens a presentation folder in the viewer.
 // With no folder it uses the current one, or the bundled sample if the current one isn't a presentation.
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
