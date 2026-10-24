@@ -1143,6 +1143,31 @@ body.empty .stage-title {
   height: 40px;
   padding: 0 14px;
 }
+.present-cue {
+  grid-column: 1;
+  justify-self: start;
+  padding: 4px 14px;
+  border-color: var(--ui-border-soft);
+  background: var(--ui-surface);
+  font-size: 12px;
+  color: var(--ui-ink-soft);
+}
+.present-cue:hover:not(:disabled) {
+  color: var(--ui-ink);
+}
+.present-cue kbd {
+  margin: 0 3px;
+  padding: 0 6px;
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+  color: var(--ui-accent);
+}
+/* Touch screens have no F key; the toolbar's Present button is there instead. */
+@media (hover: none) {
+  .present-cue {
+    display: none;
+  }
+}
 .slide-nav {
   grid-column: 2;
   display: flex;

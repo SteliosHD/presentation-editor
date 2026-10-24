@@ -153,7 +153,8 @@ const render = () => {
   toolbar.render(k, player.elements.length);
   if (!empty) history.replaceState(null, '', `#${k + 1}`);
   if (empty)
-    for (const b of document.querySelectorAll<HTMLButtonElement>('.bar button, .slide-nav button')) b.disabled = true;
+    for (const b of document.querySelectorAll<HTMLButtonElement>('.bar button, .slide-nav button, .present-cue'))
+      b.disabled = true;
   player.fit();
 };
 
@@ -181,7 +182,7 @@ viewport.addEventListener('pointerup', (e) => {
 document.addEventListener('mousedown', (e) => {
   if (
     e.target instanceof Element &&
-    e.target.closest('.bar button, .slide-list button, .slide-nav button, .exit-present')
+    e.target.closest('.bar button, .slide-list button, .slide-nav button, .present-cue, .exit-present')
   ) {
     e.preventDefault();
   }

@@ -13,7 +13,8 @@ import { allKeys, mainKey, SHORTCUTS, type ShortcutId } from './shortcuts.ts';
 
 // The toolbar under the nav bar: Notes (N), Pointer (P), Numbers (S), Present (F), as square icon tools.
 // Each tool reports whether it is on so its button lights up; hovering or focusing one shows its tooltip.
-// The slide area's own controls, the ← → arrows (bottom centre) and the counter (bottom right), update with it.
+// The slide area's own controls, the present cue (bottom left), the ← → arrows (bottom centre) and the counter
+// (bottom right), update with it.
 
 type ToolName = 'notes' | 'pointer' | 'numbers' | 'present';
 type Tool = { run: () => void; isOn: () => boolean };
@@ -99,6 +100,11 @@ export const createToolbar = (tools: Record<ToolName, Tool>, step: (delta: numbe
   tooltip.attach(next, infoFor('next', `Or press ${allKeys('next')}. ${mainKey('last')} goes to the last slide.`));
   prev.setAttribute('aria-keyshortcuts', ariaKeys('prev'));
   next.setAttribute('aria-keyshortcuts', ariaKeys('next'));
+  // Bottom left of the slide area: how to present, as a button that does it.
+  const cue = must(document.querySelector<HTMLElement>('.present-cue'), '.present-cue');
+  must(cue.querySelector('kbd'), '.present-cue kbd').textContent = mainKey('present');
+  cue.setAttribute('aria-keyshortcuts', ariaKeys('present'));
+  cue.addEventListener('click', tools.present.run);
   prev.addEventListener('click', () => {
     step(-1);
   });
