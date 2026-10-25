@@ -1,9 +1,10 @@
 import { animationPrefs } from './animation-prefs.ts';
 import type { Player } from './player.ts';
 
-// Pop-ups (see animations.ts) stay hidden while editing, so the slide underneath can be worked on. Replay or playing a
-// step shows them until you leave the slide, and so does the switch above the slide, which appears only on slides
-// that have one. Presenting and exported files always show them.
+// Pop-ups (see animations.ts) stay hidden while editing, so the slide underneath can be worked on. Turning the switch
+// above the slide off (it appears only on slides with pop-ups) shows them all, even ones the animation has taken away
+// by its end. Replay or playing a step hands them back to the animation until you leave the slide. Presenting and
+// exported files always leave them to the animation.
 export const createPopupSwitch = (player: Player, head: Element) => {
   const button = document.createElement('button');
   button.className = 'popup-switch';
@@ -16,6 +17,7 @@ export const createPopupSwitch = (player: Player, head: Element) => {
   const hiding = () => animationPrefs.get().hidePopups && !revealed;
   const apply = () => {
     document.body.classList.toggle('hide-popups', animationPrefs.get().hidePopups);
+    document.body.classList.toggle('show-popups', !animationPrefs.get().hidePopups);
     document.body.classList.toggle('popups-shown', revealed);
     button.setAttribute('aria-checked', String(hiding()));
     button.title = hiding()

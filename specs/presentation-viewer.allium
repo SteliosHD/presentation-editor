@@ -714,9 +714,10 @@ rule ExportFails {
 -- Invariants
 ------------------------------------------------------------
 
-invariant PopupsHiddenOnlyWhileEditing {
-    -- With hide_popups on, a slide's pop-ups stay hidden while editing unless revealed, but never while presenting
-    -- or in an exported file.
+invariant PopupsWhileEditing {
+    -- While editing and not revealed by Replay or a played step, a slide's pop-ups are all hidden with hide_popups
+    -- on and all shown with it off, whatever the animation leaves. Presenting and exported files leave them to the
+    -- animation.
 }
 
 invariant PicturesTravelWithSlides {

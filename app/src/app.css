@@ -1571,9 +1571,14 @@ body.presenting .resize-handle {
   color: var(--ui-ink-faint);
 }
 
-/* Pop-ups stay out of the slide while editing (popups.ts); presenting always shows them. */
+/* While editing, pop-ups are hidden or all shown by the switch (popups.ts), unless Replay or a step is playing them;
+   presenting leaves them to the animation. */
 body.hide-popups:not(.presenting):not(.popups-shown) .slide-stack .popup {
   visibility: hidden !important;
+}
+body.show-popups:not(.presenting):not(.popups-shown) .slide-stack .popup {
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 /* Beside the slide's file name, on slides with pop-ups: a small switch, lit while they are hidden. */
 .popup-switch {

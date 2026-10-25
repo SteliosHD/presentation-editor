@@ -86,8 +86,9 @@ A pop-up is a picture laid over the slide on its own click, such as a screenshot
 - To place it between other steps, animate the `.popup` element yourself: in with
   `.fromTo(el, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, data: { click: true } })`, out with
   `.to(el, { autoAlpha: 0 })`. Use `autoAlpha`, never `.from()`: the element starts hidden.
-- While editing, pop-ups stay hidden so the slide underneath can be worked on. Replay, playing a step from the list,
-  or the "Hide pop-ups" switch above the slide shows them. Presenting and exports always show them.
+- While editing, pop-ups stay hidden so the slide underneath can be worked on. Turning off the "Hide pop-ups" switch
+  above the slide shows them all, even ones the animation takes away; Replay or playing a step from the list shows
+  them as the animation does. Presenting and exports leave them to the animation.
 
 ## Theme
 
