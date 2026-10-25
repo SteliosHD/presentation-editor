@@ -1,5 +1,6 @@
 import type { Presentation } from 'virtual:presentation';
 import { imagePaths, withImages } from './images.ts';
+import { addPopupPages } from './pages.ts';
 import { toSlide } from './player.ts';
 import { DATA_ID, toStored } from './source.ts';
 
@@ -145,7 +146,8 @@ export const downloadHtml = async (presentation: Presentation) => {
   download(new Blob([html], { type: 'text/html' }), `${nameOf(presentation)}.html`);
 };
 
-// Captures each slide in its finished state as an image and assembles a PDF, one slide per page.
+// Captures each slide in its finished state as an image and assembles a PDF, one slide per page, plus a page per
+// pop-up (pages.ts).
 export const downloadPdf = async (presentation: Presentation, progress: (done: number) => void) => {
   const [{ toJpeg }, { jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')]);
   const pdf = new jsPDF({
@@ -160,20 +162,25 @@ export const downloadPdf = async (presentation: Presentation, progress: (done: n
   stage.className = 'pdf-stage';
   document.body.append(stage);
   try {
+    let pages = 0;
     for (const [k, slide] of presentation.slides.entries()) {
       progress(k);
-      const el = toSlide(slide.html);
-      stage.replaceChildren(el);
-      // JPEG keeps a page to a few hundred KB; PNG made a five-slide PDF of ~50 MB.
-      const image = await toJpeg(el, {
-        pixelRatio: 2,
-        width: 1200,
-        height: 675,
-        quality: 0.92,
-        backgroundColor: background,
-      });
-      if (k > 0) pdf.addPage([1200, 675], 'landscape');
-      pdf.addImage(image, 'JPEG', 0, 0, 1200, 675);
+      stage.replaceChildren(toSlide(slide.html));
+      addPopupPages([stage.firstElementChild as HTMLElement]);
+      for (const el of [...stage.children] as HTMLElement[]) {
+        stage.replaceChildren(el);
+        // JPEG keeps a page to a few hundred KB; PNG made a five-slide PDF of ~50 MB.
+        const image = await toJpeg(el, {
+          pixelRatio: 2,
+          width: 1200,
+          height: 675,
+          quality: 0.92,
+          backgroundColor: background,
+        });
+        if (pages > 0) pdf.addPage([1200, 675], 'landscape');
+        pdf.addImage(image, 'JPEG', 0, 0, 1200, 675);
+        pages += 1;
+      }
     }
     download(pdf.output('blob'), `${nameOf(presentation)}.pdf`);
   } finally {

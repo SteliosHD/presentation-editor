@@ -78,7 +78,8 @@ A pop-up is a picture laid over the slide on its own click, such as a screenshot
 
 - Put it last in the slide. The viewer gives it a standard look: centred on a card, the caption as a chip above.
   A `<style>` rule under a class of your own (`.popup.dot`) can change the card or the picture's size.
-- It starts hidden, so the slide list, the PDF and reduced motion show the slide without it.
+- It starts hidden, so the slide list and reduced motion show the slide without it. The PDF shows the slide without
+  its pop-ups, then a page for each pop-up laid over it.
 - If the slide's animation leaves it alone, it gets standard steps after the rest of the animation: each pop-up comes
   in on its own click as the one before leaves, and the last stays until the slide changes. The animation list
   names it from its caption ("Dot pops up").

@@ -517,7 +517,7 @@ rule PopupStandardSteps {
     @guidance
         -- After every other step that ends, in the order they appear: each pop-up comes in on its own click as the
         -- one before leaves; the last stays until the slide changes. Pop-ups start hidden, so a slide shown still
-        -- (previews, PDF, reduced motion) never shows them.
+        -- (previews, reduced motion) never shows them; the PDF gives each its own page.
 }
 
 rule ToggleHidePopups {
@@ -744,8 +744,8 @@ invariant ExportedHtmlIsSelfContained {
 }
 
 invariant ExportedPdfIsStill {
-    -- One slide per landscape page at the slide's size, each slide finished, with backgrounds,
-    -- without notes, laser, ink or app controls.
+    -- One slide per landscape page at the slide's size, each slide finished and without its pop-ups, then one more
+    -- page for each pop-up laid over it; with backgrounds, without notes, laser, ink or app controls.
 }
 
 ------------------------------------------------------------

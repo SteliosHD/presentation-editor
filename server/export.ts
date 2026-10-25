@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 import { build } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import { addPopupPages } from '../app/src/pages.ts';
 import { emptyPresentationPlugin, presentationPlugin } from './presentation.ts';
 import { sitePlugin } from './site.ts';
 
@@ -47,7 +48,8 @@ export const buildTemplate = async () => {
   }
 };
 
-// Prints the presentation to a PDF at `file` with the installed Google Chrome, one slide per page.
+// Prints the presentation to a PDF at `file` with the installed Google Chrome, one slide per page, plus a page per
+// pop-up (app/src/pages.ts).
 export const exportPdf = async (folder: string, file: string, title?: string) => {
   const dir = await mkdtemp(join(tmpdir(), 'presentation-pdf-'));
   const html = join(dir, 'presentation.html');
@@ -58,6 +60,7 @@ export const exportPdf = async (folder: string, file: string, title?: string) =>
     // With reduced motion the presentation skips its entrance animations, so every slide prints in its finished state.
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(pathToFileURL(html).href);
+    await page.evaluate(`(${addPopupPages.toString()})(document.querySelectorAll('.slide-stack .slide'))`);
     await page.pdf({ path: file, printBackground: true, preferCSSPageSize: true });
   } finally {
     await browser.close();
