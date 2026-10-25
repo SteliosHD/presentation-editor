@@ -15,6 +15,7 @@ external entity Folder {
     html_in_slides_folder: Integer
     html_at_top: Integer
     has_files: Boolean
+    pictures: List<String>          -- paths of the pictures under images/, at any depth
 
     is_readable_presentation: html_in_slides_folder > 0 or html_at_top > 0
 }
@@ -129,6 +130,8 @@ entity Viewer {
     ink_colour: accent | alert | warning | good | text
     play_on_slide_change: Boolean
     step_through_all: Boolean       -- while presenting, every step of a slide's own animation waits
+    hide_popups: Boolean            -- while editing, keep a slide's pop-ups hidden; on by default
+    popups_revealed: Boolean        -- shown on this slide by Replay or a played step, until the slide changes
     show_technical_details: Boolean
     reduced_motion: Boolean         -- from the operating system
     recent_folders: List<Folder>    -- local app only
@@ -391,6 +394,7 @@ rule GoToSlide {
     let target = slide_at(viewer.presentation, clamp(n, 1, viewer.presentation.slides.count))
     requires: target != viewer.current
     ensures: viewer.current = target
+    ensures: viewer.popups_revealed = false
     ensures: viewer.ink.strokes = []
     ensures: SlideArrived(viewer, target)
     ensures: SpeakerNotesRefreshed(viewer)
@@ -503,6 +507,33 @@ rule ToggleStepThroughAll {
     when: StepThroughAllToggled(viewer)
     requires: viewer.build = authoring
     ensures: viewer.step_through_all = not viewer.step_through_all
+}
+
+-- Pop-ups: pictures a slide lays over itself, each on its own click.
+rule PopupStandardSteps {
+    when: SlideArrived(viewer, slide)
+    for popup in popups_of(slide) where not animated_by(slide.animation, popup):
+        ensures: StandardPopupStep(slide.animation, popup)
+    @guidance
+        -- After every other step that ends, in the order they appear: each pop-up comes in on its own click as the
+        -- one before leaves; the last stays until the slide changes. Pop-ups start hidden, so a slide shown still
+        -- (previews, PDF, reduced motion) never shows them.
+}
+
+rule ToggleHidePopups {
+    when: HidePopupsToggled(viewer)
+    requires: viewer.build = authoring
+    ensures:
+        if viewer.hide_popups and not viewer.popups_revealed:
+            viewer.hide_popups = false
+        else:
+            viewer.hide_popups = true
+            viewer.popups_revealed = false
+}
+
+rule PlayingRevealsPopups {
+    when: StepPlayRequested(viewer, _) or ReplayRequested(viewer)
+    ensures: viewer.popups_revealed = true
 }
 
 rule ToggleTechnicalDetails {
@@ -683,6 +714,16 @@ rule ExportFails {
 -- Invariants
 ------------------------------------------------------------
 
+invariant PopupsHiddenOnlyWhileEditing {
+    -- With hide_popups on, a slide's pop-ups stay hidden while editing unless revealed, but never while presenting
+    -- or in an exported file.
+}
+
+invariant PicturesTravelWithSlides {
+    -- A slide refers to pictures in the folder's images/ by path; wherever the slide is shown or exported it carries
+    -- the pictures themselves, so an exported file needs nothing beside it. A path with no picture shows as missing.
+}
+
 invariant DrawingOnlyWhilePresenting {
     for v in Viewers:
         v.active_tool != none implies v.mode = presenting
@@ -779,6 +820,7 @@ surface EditingView {
         PaneResized(viewer, pane, requested)
         PlayOnSlideChangeToggled(viewer)
         StepThroughAllToggled(viewer)
+        HidePopupsToggled(viewer) when popups_of(viewer.current).count > 0
         TechnicalDetailsToggled(viewer)
         ReconnectClicked(viewer) when viewer.watch_state = paused
         ExportRequested(viewer, format) when not viewer.is_empty

@@ -90,12 +90,23 @@ const savedFolder = () =>
     (store) => store.get(tabId()) as IDBRequest<FileSystemDirectoryHandle | undefined>,
   ).catch(() => undefined);
 
-// The same files a drop reads: the folder's top level and its slides/ folder.
+const allIn = async (dir: FileSystemDirectoryHandle, path: string): Promise<FolderFile[]> => {
+  const files: FolderFile[] = [];
+  for await (const entry of dir.values()) {
+    if (entry.kind === 'file') files.push({ path: `${path}/${entry.name}`, file: await entry.getFile() });
+    else files.push(...(await allIn(entry, `${path}/${entry.name}`)));
+  }
+  return files;
+};
+
+// The same files a drop reads: the folder's top level, its slides/ folder and its images/ folder.
 export const filesFromHandle = async (dir: FileSystemDirectoryHandle): Promise<FolderFile[]> => {
   const files: FolderFile[] = [];
   for await (const entry of dir.values()) {
     if (entry.kind === 'file') {
       files.push({ path: `${dir.name}/${entry.name}`, file: await entry.getFile() });
+    } else if (entry.name === 'images') {
+      files.push(...(await allIn(entry, `${dir.name}/images`)));
     } else if (entry.name === 'slides') {
       for await (const slide of entry.values()) {
         if (slide.kind === 'file') {
@@ -108,13 +119,19 @@ export const filesFromHandle = async (dir: FileSystemDirectoryHandle): Promise<F
   return files;
 };
 
-// Each watched file's size and modified time, by name: the slides and the theme, as the local server watches. Other files in the folder, such as exports, don't count.
+// Each watched file's size and modified time, by name: the slides, pictures and theme, as the local server watches. Other files in the folder, such as exports, don't count.
 const stamps = async (dir: FileSystemDirectoryHandle) =>
   new Map(
     (await filesFromHandle(dir))
       .map(({ path, file }) => ({ rel: path.slice(dir.name.length + 1), file }))
       // A folder of slides opened on its own has them at the top.
-      .filter(({ rel }) => rel.startsWith('slides/') || /^[^/]+\.(html|ts)$/.test(rel) || rel === 'theme.css')
+      .filter(
+        ({ rel }) =>
+          rel.startsWith('slides/') ||
+          rel.startsWith('images/') ||
+          /^[^/]+\.(html|ts)$/.test(rel) ||
+          rel === 'theme.css',
+      )
       .map(({ rel, file }) => [rel, `${file.size}:${file.lastModified}`]),
   );
 const same = (a: Map<string, string>, b: Map<string, string>) =>

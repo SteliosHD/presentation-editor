@@ -3,10 +3,11 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { homedir } from 'node:os';
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { transformWithOxc, type Plugin, type ViteDevServer } from 'vite';
+import { imagePaths, imageType, withImages } from '../app/src/images.ts';
 import { chooseFolder, chooseSaveFile } from './dialogs.ts';
 import { buildTemplate, exportHtml, exportPdf } from './export.ts';
 
-// A presentation is any folder with a slides/ folder; theme.css is optional. Its title is the folder's name (the
+// A presentation is any folder with a slides/ folder; theme.css and an images/ folder are optional. Its title is the folder's name (the
 // viewer can rename it, kept in the browser and passed in as `title` for exports). A folder
 // of HTML slides on its own (the slides/ folder itself, say) opens too, titled after the folder, in the default theme.
 const hasSlides = (folder: string) => existsSync(join(folder, 'slides'));
@@ -23,6 +24,18 @@ const RESOLVED = `\0${VIRTUAL}`;
 // virtual:presentation holds the open presentation's content. Slide HTML and the theme are inlined as strings; a slide's
 // animation file (same name, .ts) is imported, so Vite compiles it and allows serving it from outside the app.
 // The animation is also inlined as plain JavaScript (animationCode), which the hosted app's HTML export embeds.
+// The pictures a slide refers to in images/, inlined as data: URLs.
+const inlineImages = (folder: string, html: string) =>
+  withImages(
+    html,
+    new Map(
+      imagePaths(html)
+        .map((path) => [path, join(folder, path)])
+        .filter(([, file]) => existsSync(file))
+        .map(([path, file]) => [path, `data:${imageType(path)};base64,${readFileSync(file).toString('base64')}`]),
+    ),
+  );
+
 const presentationModule = async (folder: string, title = basename(folder), label = folder) => {
   const slidesDir = slidesDirOf(folder);
   const themeFile = join(folder, 'theme.css');
@@ -33,7 +46,7 @@ const presentationModule = async (folder: string, title = basename(folder), labe
   const slides = await Promise.all(
     files.map(async (file, k) => {
       const script = join(slidesDir, file.replace(/\.html$/, '.ts'));
-      const html = JSON.stringify(readFileSync(join(slidesDir, file), 'utf8'));
+      const html = JSON.stringify(inlineImages(folder, readFileSync(join(slidesDir, file), 'utf8')));
       if (!existsSync(script)) return `{ file: ${JSON.stringify(file)}, html: ${html} }`;
       imports.push(`import animation${k} from ${JSON.stringify(script)};`);
       const { code } = await transformWithOxc(readFileSync(script, 'utf8'), script);
@@ -179,12 +192,16 @@ export const presentationPlugin = (state: PresentationState): Plugin => ({
       server.ws.send({ type: 'full-reload' });
     };
     server.watcher.add(state.folder);
-    // Editing the open presentation's slides, theme or title reloads the page; anything else in the folder,
+    // Editing the open presentation's slides, pictures or theme reloads the page; anything else in the folder,
     // such as exports, does not.
     // The page is told which file changed first, so it can say so after reloading.
     const kinds = { add: 'added', change: 'updated', unlink: 'removed' } as const;
     server.watcher.on('all', (event, file) => {
-      const watched = [join(state.folder, 'slides') + sep, join(state.folder, 'theme.css')];
+      const watched = [
+        join(state.folder, 'slides') + sep,
+        join(state.folder, 'images') + sep,
+        join(state.folder, 'theme.css'),
+      ];
       // A folder of slides on its own: its slides and their animations sit at the top.
       const flat = !hasSlides(state.folder) && dirname(file) === state.folder && /\.(html|ts)$/.test(file);
       if (!flat && !watched.some((path) => file.startsWith(path))) return;

@@ -7,6 +7,7 @@ import { animationPrefs } from './animation-prefs.ts';
 import { noteChanges, showChanges, type Change } from './changes.ts';
 import { createInk } from './ink.ts';
 import { createPlayer, must } from './player.ts';
+import { createPopupSwitch } from './popups.ts';
 import { createPresentationMode } from './presentation-mode.ts';
 import { createSlideList } from './slide-list.ts';
 import { makeResizable } from './resizer.ts';
@@ -163,7 +164,8 @@ makeResizable({
   max: () => Math.min(420, innerWidth / 2),
   label: 'Resize the slide list',
 });
-const animationList = authoring ? createAnimationList(presentation, player, { empty }) : null;
+const popups = authoring && !empty ? createPopupSwitch(player, stageHead) : null;
+const animationList = authoring ? createAnimationList(presentation, player, { empty, onPlay: popups?.reveal }) : null;
 if (animationList)
   makeResizable({
     target: animationList.strip,
@@ -194,6 +196,7 @@ const render = () => {
   shownSlide = k;
   slideList.render(k);
   stageFile.textContent = empty ? '' : presentation.slides[k].file;
+  popups?.render(k);
   animationList?.render(k);
   toolbar.render(k, player.elements.length);
   if (!empty) history.replaceState(null, '', `#${k + 1}`);

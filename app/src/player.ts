@@ -1,5 +1,5 @@
 import { gsap } from 'gsap';
-import { finish, stepThrough, type Stepper } from './animations.ts';
+import { finish, stepThrough, withPopups, type Stepper } from './animations.ts';
 import type { PresentationSlide, SlideAnimation } from 'virtual:presentation';
 import { keyName, SHORTCUTS } from './shortcuts.ts';
 
@@ -27,7 +27,7 @@ export const toSlide = (html: string) => {
 const GROUPS = '.flow, .stats, .cols, .steps, .bottom';
 const partsOf = (slide: HTMLElement) =>
   [...slide.children].flatMap((el) =>
-    el.matches('style, script, .notes, .slide-number') ? [] : el.matches(GROUPS) ? [...el.children] : [el],
+    el.matches('style, script, .notes, .slide-number, .popup') ? [] : el.matches(GROUPS) ? [...el.children] : [el],
   );
 const defaultAnimation: SlideAnimation = (slide, g) =>
   g.from(partsOf(slide), {
@@ -92,7 +92,7 @@ export const createPlayer = (
     stepper = null;
     if (reduceMotion) return;
     const custom = slides[k].animation;
-    entrance = (custom ?? defaultAnimation)(elements[k], gsap);
+    entrance = withPopups(elements[k], (custom ?? defaultAnimation)(elements[k], gsap));
     if (!autoplay()) {
       finish(entrance);
       return;

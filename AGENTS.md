@@ -13,6 +13,7 @@ my-presentation/
     01-title.html       one slide; the file name sets the order
     03-diagram.html
     03-diagram.ts       optional: that slide's own animation
+  images/               optional: pictures the slides use, in any subfolders
   export/               written by Export; never edit
 ```
 
@@ -25,6 +26,7 @@ The title is the folder's name. Renaming it in the viewer is kept in that browse
 3. Colour and type come only from theme tokens: `var(--accent)`, `var(--font)` and so on, listed in `app/src/theme.css`.
 4. Put speaker notes in `<aside class="notes">` inside the slide. They show only in the notes window (N).
 5. For a custom animation, add `slides/NN-name.ts` with the same base name (see "Slide animations").
+6. Put pictures in `images/` and refer to them from the slide as `../images/name.png`, in an `src` or a CSS `url()`. The viewer inlines them, so exports carry them. Never paste a picture into a slide as base64.
 
 Done when the slide appears in the app's slide list, its content fits inside the 1200×675 frame (print and PDF clip anything outside), every step in the animation list under the slide reads as intended, and it looks right in presentation mode (F).
 
@@ -62,6 +64,29 @@ Annotate every tween in a custom animation through GSAP's `data` field:
   "On click". Steps that start at the same moment wait together. The menu's "Step through animations when presenting"
   makes every step of a slide's own animation wait.
 - Unannotated tweens get icons chosen from the properties they animate.
+
+## Pop-ups
+
+A pop-up is a picture laid over the slide on its own click, such as a screenshot of the app being talked about:
+
+```html
+<figure class="popup">
+  <figcaption>Dot</figcaption>
+  <img src="../images/dot-app.jpg" alt="The Dot app" />
+</figure>
+```
+
+- Put it last in the slide. The viewer gives it a standard look: centred on a card, the caption as a chip above.
+  A `<style>` rule under a class of your own (`.popup.dot`) can change the card or the picture's size.
+- It starts hidden, so the slide list, the PDF and reduced motion show the slide without it.
+- If the slide's animation leaves it alone, it gets standard steps after the rest of the animation: each pop-up comes
+  in on its own click as the one before leaves, and the last stays until the slide changes. The animation list
+  names it from its caption ("Dot pops up").
+- To place it between other steps, animate the `.popup` element yourself: in with
+  `.fromTo(el, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, data: { click: true } })`, out with
+  `.to(el, { autoAlpha: 0 })`. Use `autoAlpha`, never `.from()`: the element starts hidden.
+- While editing, pop-ups stay hidden so the slide underneath can be worked on. Replay, playing a step from the list,
+  or the "Hide pop-ups" switch above the slide shows them. Presenting and exports always show them.
 
 ## Theme
 

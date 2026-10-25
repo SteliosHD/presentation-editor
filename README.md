@@ -15,7 +15,8 @@ to open: drop your own folder on it, which is read in your browser and never upl
 - **Animation list** under the slide: each step of the slide's animation with its timing, targets and icons.
 - **Present** in the browser window, with speaker notes in a separate window, a laser pointer, slide numbers, and a
   pen, highlighter and eraser for drawing on the slide. Animation steps can wait for a click or →, one at a time;
-  ← takes a step back and ↑ ↓ skip to the previous or next slide.
+  ← takes a step back and ↑ ↓ skip to the previous or next slide. Pop-ups lay a picture over the slide on its own
+  click.
 - **Export** to one self-contained HTML file that plays anywhere, or to a PDF with one slide per page.
 - **Slide Creation Prompt** (in the menu): a ready-made prompt that has an AI agent write a whole presentation in this
   format.
@@ -50,6 +51,7 @@ my-talk/
     01-title.html     one slide; the number sets the order
     02-agenda.html
     02-agenda.ts      that slide's own animation, optional
+  images/             pictures the slides use, optional
 ```
 
 The title is the folder's name; click it above the slide to rename it (the new name is kept in your browser and

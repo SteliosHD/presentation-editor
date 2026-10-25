@@ -235,6 +235,44 @@ h2 {
   color: var(--warn);
 }
 
+/* Pop-up: a picture laid over the slide on its own click, usually a <figure class="popup"> with an <img> and an
+   optional <figcaption>. Hidden until a step shows it, so previews and the PDF show the slide without it. */
+.popup {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: fit-content;
+  height: fit-content;
+  margin: auto;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+  visibility: hidden;
+  opacity: 0;
+}
+.popup figcaption {
+  display: block;
+  width: fit-content;
+  margin: 0 0 10px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 20px;
+  font-weight: 700;
+}
+.popup img + figcaption {
+  margin: 10px 0 0;
+}
+.popup img {
+  display: block;
+  max-width: 1040px;
+  max-height: 480px;
+  border-radius: 8px;
+}
+
 /* Slide number, bottom right; shown while numbering is on (S). */
 .slide-number {
   display: none;

@@ -8,7 +8,11 @@ import { must, reduceMotion, type Player } from './player.ts';
 // At the bottom of the slide area: every step of the current slide's animation, one per row, read from GSAP. The
 // step that is running lights up; Replay plays the whole animation again, and clicking a step plays just that one.
 // Rows read as plain sentences unless Show technical details is on in the menu's Animations settings.
-export const createAnimationList = (presentation: Presentation, player: Player, { empty = false } = {}) => {
+export const createAnimationList = (
+  presentation: Presentation,
+  player: Player,
+  { empty = false, onPlay = () => {} }: { empty?: boolean; onPlay?: () => void } = {},
+) => {
   const strip = document.createElement('div');
   strip.className = 'anim-strip';
   must(document.querySelector('.stage'), '.stage').append(strip);
@@ -99,7 +103,9 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
         );
       }
       row.addEventListener('click', () => {
-        if (animation) solo = { step, driver: playStep(animation, step) };
+        if (!animation) return;
+        onPlay();
+        solo = { step, driver: playStep(animation, step) };
       });
       return row;
     });
@@ -120,6 +126,7 @@ export const createAnimationList = (presentation: Presentation, player: Player, 
       replay.prepend(createElement(RotateCcw, { width: 13, height: 13, 'aria-hidden': 'true' }));
       replay.addEventListener('click', () => {
         solo = null;
+        onPlay();
         animation.restart();
       });
       head.append(replay);

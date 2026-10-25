@@ -57,6 +57,12 @@ Animations (optional; slides without one fade their blocks up in turn)
 - Label every tween for the viewer's animation list: data: { label: 'What happens', icons: [...] }, with icon names from: ${Object.keys(ICONS).join(', ')}.
 - To reveal a step only when the presenter clicks or presses →, add click: true to its data.
 
+Pictures and pop-ups
+- Put pictures in images/ and use them as ../images/name.png (src or CSS url()); never paste them into a slide as base64.
+- To show a picture over the slide on its own click (a screenshot of an app, say), end the slide with
+  <figure class="popup"><figcaption>Name</figcaption><img src="../images/name.png" alt="..."></figure>.
+  The viewer styles it and gives it its own click after the slide's other steps; leave it out of the .ts unless it must come in between them, then use autoAlpha (it starts hidden).
+
 When done, list each slide file with a one-line summary.`;
 
 const escape = (text: string) =>

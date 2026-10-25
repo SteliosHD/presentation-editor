@@ -323,3 +323,56 @@ export const stepThrough = (
     },
   };
 };
+
+// Pop-ups: anything a slide marks with class `popup`, laid over the slide on its own click (see slides.css). Ones the
+// slide's own animation leaves alone get the standard steps: after the rest of the animation, each comes in on its own
+// click as the one before leaves, and the last stays until the slide changes.
+export const withPopups = (slide: HTMLElement, animation: gsap.core.Animation): gsap.core.Animation => {
+  const animated = new Set(
+    animation instanceof gsap.core.Timeline
+      ? animation.getChildren(true, true, false).flatMap((tween) => (tween as gsap.core.Tween).targets())
+      : (animation as gsap.core.Tween).targets(),
+  );
+  const popups = [...slide.querySelectorAll<HTMLElement>('.popup')].filter((popup) => !animated.has(popup));
+  if (!popups.length) return animation;
+  const root = animation instanceof gsap.core.Timeline ? animation : gsap.timeline().add(animation, 0);
+  // After every step that ends; a loop carries on underneath.
+  let at = root
+    .getChildren(false, true, true)
+    .reduce((end, c) => Math.max(end, c.startTime() + (c.vars.repeat === -1 ? 0 : c.totalDuration())), 0);
+  // The caption, its parts joined ("A real session · Names hidden"); else the picture's alt text.
+  const nameOf = (popup: HTMLElement, n: number) => {
+    const caption = popup.querySelector('figcaption');
+    const parts = caption ? [...caption.childNodes].map((node) => node.textContent?.trim()).filter(Boolean) : [];
+    return parts.join(' · ') || popup.querySelector('img')?.alt.trim() || `Pop-up ${String(n + 1)}`;
+  };
+  popups.forEach((popup, n) => {
+    const before = popups.at(n - 1);
+    if (n > 0 && before)
+      root.to(
+        before,
+        {
+          autoAlpha: 0,
+          y: 20,
+          duration: 0.3,
+          data: { label: `${nameOf(before, n - 1)} pop-up leaves`, icons: ['fade'] },
+        },
+        at,
+      );
+    root.fromTo(
+      popup,
+      { autoAlpha: 0, y: 30 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out',
+        immediateRender: false,
+        data: { label: `${nameOf(popup, n)} pops up`, icons: ['fade', 'move'], click: true },
+      },
+      at,
+    );
+    at += 0.5;
+  });
+  return root;
+};

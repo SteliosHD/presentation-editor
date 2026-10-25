@@ -58,13 +58,14 @@ const sections = (repo: string) => `
   <section class="od-section" data-section="format" role="tabpanel" hidden>
     <div class="od-section-body">
       <p>Each slide is an HTML file; the number at the start of its name sets the order. A <code>.ts</code> file
-      with the same name animates that slide.</p>
+      with the same name animates that slide, and slides use pictures from <code>images/</code>.</p>
       <pre>my-talk/
   theme.css           <i>colours, optional</i>
   slides/
     01-title.html
     02-agenda.html
-    02-agenda.ts      <i>animation, optional</i></pre>
+    02-agenda.ts      <i>animation, optional</i>
+  images/             <i>pictures, optional</i></pre>
     </div>
     <div class="modal-foot">
       <a class="modal-link-button" href="${repo}#make-a-presentation" target="_blank" rel="noopener">Full guide ↗</a>

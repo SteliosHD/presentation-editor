@@ -1,4 +1,5 @@
 import type { Presentation } from 'virtual:presentation';
+import { imagePaths, withImages } from './images.ts';
 import { toSlide } from './player.ts';
 import { DATA_ID, toStored } from './source.ts';
 
@@ -32,7 +33,19 @@ const fileOf = (entry: FileSystemFileEntry) =>
     entry.file(resolve, reject);
   });
 
-// From a drop: only the folder's top level and its slides/ folder are read.
+// Everything inside a folder, at any depth.
+const allIn = async (dir: FileSystemDirectoryEntry, path: string): Promise<FolderFile[]> =>
+  (
+    await Promise.all(
+      (await readEntries(dir)).map(async (entry) =>
+        entry.isFile
+          ? [{ path: `${path}/${entry.name}`, file: await fileOf(entry as FileSystemFileEntry) }]
+          : allIn(entry as FileSystemDirectoryEntry, `${path}/${entry.name}`),
+      ),
+    )
+  ).flat();
+
+// From a drop: only the folder's top level, its slides/ folder and its images/ folder are read.
 export const filesFromDrop = async (root: FileSystemDirectoryEntry): Promise<FolderFile[]> => {
   const files: FolderFile[] = [];
   for (const entry of await readEntries(root)) {
@@ -45,9 +58,23 @@ export const filesFromDrop = async (root: FileSystemDirectoryEntry): Promise<Fol
         }
       }
     }
+    if (entry.isDirectory && entry.name === 'images')
+      files.push(...(await allIn(entry as FileSystemDirectoryEntry, `${root.name}/images`)));
   }
   return files;
 };
+
+const dataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve(reader.result as string);
+    };
+    reader.onerror = () => {
+      reject(reader.error ?? new Error(`Couldn't read ${file.name}`));
+    };
+    reader.readAsDataURL(file);
+  });
 
 // Turns a folder's files into a presentation, with each .ts animation converted to JavaScript by Sucrase
 // (loaded only when needed). A folder of slides picked on its own (the slides/ folder itself, say) opens too, in
@@ -77,7 +104,14 @@ export const readPresentation = async (files: FolderFile[]) => {
     slideFiles.map(async ({ path, file }) => {
       const name = path.split('/').at(-1) ?? path;
       const script = at(`${dir}${name.replace(/\.html$/, '.ts')}`);
-      const html = await file.text();
+      const text = await file.text();
+      const pictures = await Promise.all(
+        imagePaths(text).map(async (rel) => {
+          const picture = at(rel);
+          return [rel, picture ? await dataUrl(picture) : ''] as const;
+        }),
+      );
+      const html = withImages(text, new Map(pictures.filter(([, url]) => url)));
       if (!script || !sucrase) return { file: name, html };
       const { code } = sucrase.transform(await script.text(), { transforms: ['typescript'], filePath: script.name });
       return { file: name, html, animationFile: script.name, animationCode: code };
