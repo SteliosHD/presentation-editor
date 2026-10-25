@@ -1,0 +1,816 @@
+-- allium: 3
+-- Presentation Viewer: open a folder of HTML slides written by you or an AI agent, watch it
+-- change as the files change, then present it or export it as one offline file or a PDF.
+-- Distilled from the viewer app (app/, server/, bin/). Scope: the viewer only, not the landing site.
+
+------------------------------------------------------------
+-- External Entities
+------------------------------------------------------------
+
+-- Files on disk, written by the author or an agent. The viewer reads them and never edits slides.
+external entity Folder {
+    name: String
+    path: String?                   -- known to the local app; a browser learns only the name
+    has_slides_folder: Boolean
+    html_in_slides_folder: Integer
+    html_at_top: Integer
+    has_files: Boolean
+
+    is_readable_presentation: html_in_slides_folder > 0 or html_at_top > 0
+}
+
+------------------------------------------------------------
+-- Value Types
+------------------------------------------------------------
+
+value Theme {
+    css: String                     -- empty means the default theme
+}
+
+value Stroke {
+    tool: pen | highlighter
+    colour: String
+    points: List<Point>
+}
+
+value Point {
+    x: Decimal
+    y: Decimal
+}
+
+value StepIcon {
+    name: fade | move | move_sideways | scale | rotate | draw | colour | glow | stagger | loop | highlight | reveal | count | other
+    label: String
+}
+
+value ChangeNotice {
+    kind: added | updated | removed
+    file: String
+}
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+entity Presentation {
+    folder: Folder
+    theme: Theme
+    slides: Slide with presentation = this   -- ordered by file name; a leading number sets the order
+    title: Title with presentation = this
+}
+
+entity Title {
+    presentation: Presentation
+    renamed: String?                -- kept in this browser, per folder
+    shown: renamed ?? presentation.folder.name
+}
+
+entity Slide {
+    presentation: Presentation
+    position: Integer               -- 1-based
+    file: String
+    heading: String?
+    notes: String?
+    has_custom_animation: Boolean   -- a script of the same name sits beside the slide
+    animation: SlideAnimation with slide = this
+}
+
+-- A slide's entrance: its own script, or the standard one where blocks rise in one after another.
+entity SlideAnimation {
+    slide: Slide
+    source: custom | standard
+    steps: AnimationStep with animation = this
+    state: idle | playing | shown_finished
+
+    transitions state {
+        idle -> playing
+        idle -> shown_finished
+        shown_finished -> playing
+        playing -> playing
+        playing -> idle
+        shown_finished -> idle
+    }
+}
+
+-- One tween of the animation, in timeline order.
+entity AnimationStep {
+    animation: SlideAnimation
+    position: Integer
+    starts_after: Duration
+    lasts: Duration
+    loops: Boolean
+    staggered: Boolean
+    author_label: String?
+    author_icons: List<String>?
+    animated_properties: Set<String>
+    targets: String                 -- the elements it moves, by class or tag, e.g. "line x3"
+    icons: List<StepIcon>
+    plain_wording: String           -- the author's label, else a generated sentence
+    plain_timing: String            -- "At the start" or "After N seconds", plus ", then keeps going"
+}
+
+-- One open tab of the viewer.
+entity Viewer {
+    runtime: local | hosted_watchable | hosted_read_once
+    build: authoring | exported
+    showing: placeholder | sample | served_folder | browser_folder
+    presentation: Presentation?
+    kept_folder: Folder?            -- read in this browser; kept across refreshes of the tab
+    sample_requested: Boolean       -- kept across refreshes until a folder is opened
+    watch_state: none | live | paused
+    current: Slide?
+    mode: editing | presenting
+    laser: on | off
+    slide_numbers: on | off
+    notes_window: closed | open
+    active_tool: pen | highlighter | eraser | none
+    ink_colour: accent | alert | warning | good | text
+    play_on_slide_change: Boolean
+    show_technical_details: Boolean
+    reduced_motion: Boolean         -- from the operating system
+    recent_folders: List<Folder>    -- local app only
+    ink: Ink with viewer = this
+    panes: Pane with viewer = this
+    animation_list: AnimationList with viewer = this
+    starter: Starter with viewer = this     -- the Create form's draft
+
+    is_empty: showing = placeholder
+    plays_on_arrival: build = exported or mode = presenting or play_on_slide_change
+
+    transitions showing {
+        placeholder -> sample
+        placeholder -> browser_folder
+        sample -> sample
+        sample -> browser_folder
+        sample -> placeholder
+        browser_folder -> browser_folder
+        browser_folder -> sample
+        browser_folder -> served_folder
+        served_folder -> served_folder
+        served_folder -> browser_folder
+    }
+
+    transitions mode {
+        editing -> presenting
+        presenting -> editing
+    }
+
+    transitions watch_state {
+        none -> live
+        none -> paused
+        live -> none
+        paused -> live
+        paused -> none
+    }
+}
+
+entity Ink {
+    viewer: Viewer
+    strokes: List<Stroke>           -- drawn on the current slide
+}
+
+entity Pane {
+    viewer: Viewer
+    kind: slide_list | toolbar | animation_list
+    visibility: shown | hidden      -- remembered between visits
+    size: Integer?                  -- width of the slide list, height of the animation list; null = default
+}
+
+entity AnimationList {
+    viewer: Viewer
+    shown_slide: Slide?
+    solo_step: AnimationStep?       -- a step played on its own from the list
+}
+
+entity Export {
+    presentation: Presentation
+    format: html | pdf
+    route: local | browser
+    status: choosing_location | making | saved | downloaded | cancelled | failed
+    file_name: String               -- "<folder name>.<format>", whatever the title says
+    saved_path: String? when status = saved
+
+    transitions status {
+        choosing_location -> making
+        choosing_location -> cancelled
+        choosing_location -> failed
+        making -> saved
+        making -> downloaded
+        making -> failed
+        terminal: saved, downloaded, cancelled, failed
+    }
+}
+
+entity ExportedFile {
+    export: Export
+    format: html | pdf
+    title: String
+}
+
+-- A starter folder made for an agent: a brief, a theme and one welcome slide.
+entity Starter {
+    viewer: Viewer
+    folder: Folder
+    topic: String
+    audience: String
+    length: String
+    brief: String                   -- the agent prompt, also saved in the folder as AGENTS.md
+}
+
+------------------------------------------------------------
+-- Config
+------------------------------------------------------------
+
+config {
+    poll_interval: Duration = 1.second
+    settle_time: Duration = 300.milliseconds
+    recent_limit: Integer = 8
+    change_notice_duration: Duration = 3500.milliseconds
+    present_hint_duration: Duration = 3.seconds
+    laser_trail_fade: Duration = 450.milliseconds
+    swipe_min_distance: Integer = 50
+    slide_list_min_width: Integer = 150
+    slide_list_max_width: Integer = 420
+    animation_list_min_height: Integer = 110
+    animation_list_max_height: Integer = 480
+    plain_start_threshold: Duration = 50.milliseconds
+    default_starter_folder_name: String = "my-presentation"
+    export_subfolder: String = "export"
+}
+
+------------------------------------------------------------
+-- Rules
+------------------------------------------------------------
+
+-- Opening ---------------------------------------------------
+
+rule ViewerLoads {
+    when: ViewerOpened(viewer, requested_position?)
+    ensures:
+        if viewer.kept_folder != null:
+            viewer.showing = browser_folder
+        else if viewer.runtime = local:
+            viewer.showing = served_folder
+        else if viewer.sample_requested:
+            viewer.showing = sample
+        else:
+            viewer.showing = placeholder
+            OpenDialogShown(viewer, required: true)
+    ensures: GoToSlide(viewer, requested_position ?? 1)
+    ensures: ChangeNoticesShown(viewer)
+}
+
+rule SampleLinkFollowed {
+    when: SampleLinkOpened(viewer)
+    ensures: viewer.kept_folder = null
+    ensures: viewer.sample_requested = true
+    ensures: TourQueued(viewer)
+}
+
+rule OpenLinkFollowed {
+    when: OpenLinkOpened(viewer)
+    ensures: viewer.sample_requested = false
+    ensures: OpenDialogShown(viewer, required: viewer.is_empty)
+}
+
+rule OpenFolderInBrowser {
+    when: FolderOpenedInBrowser(viewer, folder, watchable)
+    requires: folder.is_readable_presentation
+    ensures: viewer.kept_folder = folder
+    ensures: viewer.sample_requested = false
+    ensures: viewer.watch_state = if watchable: live else: none
+    ensures: viewer.showing = browser_folder
+    ensures: GoToSlide(viewer, 1)
+    @guidance
+        -- Slides come from the slides folder when it has HTML, else from the folder's top level,
+        -- which then opens in the default theme with the folder name as its title.
+}
+
+rule OpenFolderOnServer {
+    when: FolderOpenedOnServer(viewer, folder)
+    requires: viewer.runtime = local
+    requires: folder.is_readable_presentation
+    ensures: viewer.kept_folder = null
+    ensures: viewer.watch_state = none
+    ensures: viewer.recent_folders = most_recent_first(folder, viewer.recent_folders, config.recent_limit)
+    ensures: viewer.showing = served_folder
+    ensures: GoToSlide(viewer, 1)
+}
+
+rule TrySample {
+    when: SampleRequested(viewer)
+    requires: viewer.runtime != local
+    ensures: viewer.kept_folder = null
+    ensures: viewer.sample_requested = true
+    ensures: viewer.watch_state = none
+    ensures: TourQueued(viewer)
+    ensures: viewer.showing = sample
+}
+
+-- Live updates ------------------------------------------------
+
+rule ServedFolderChanges {
+    when: SlideFilesChanged(folder, change)
+    for viewer in Viewers where showing = served_folder:
+        ensures: ChangeNotice.created(kind: change.kind, file: change.file)
+        ensures: ViewerReloaded(viewer)
+    @guidance
+        -- Only slides, their scripts and the theme count; exports and other files in the folder do not.
+}
+
+rule WatchedFolderChanges {
+    when: SlideFilesChanged(folder, change)
+    for viewer in Viewers where kept_folder = folder and watch_state = live:
+        ensures: ChangeNotice.created(kind: change.kind, file: change.file)
+        ensures: ViewerReloaded(viewer)
+    @guidance
+        -- A browser cannot be told about changes, so it checks every config.poll_interval and counts a
+        -- change once the folder looks the same for config.settle_time. What it last saw survives a
+        -- refresh, so changes made while away still show.
+}
+
+rule ReloadKeepsPlace {
+    when: ViewerReloaded(viewer)
+    ensures: viewer.current.position = viewer.current.position
+}
+
+rule WatchResumes {
+    when: ViewerOpened(viewer, _)
+    requires: viewer.kept_folder != null and viewer.watch_state != none
+    ensures: viewer.watch_state = if PermissionStillGranted(viewer.kept_folder): live else: paused
+}
+
+rule ReconnectFolder {
+    when: ReconnectClicked(viewer)
+    requires: viewer.watch_state = paused
+    requires: PermissionGranted(viewer.kept_folder)
+    ensures: viewer.watch_state = live
+}
+
+-- Title --------------------------------------------------------
+
+rule RenameTitle {
+    when: TitleRenamed(viewer, text)
+    requires: not viewer.is_empty
+    let name = trim(text)
+    let title = viewer.presentation.title
+    ensures: title.renamed = if name = "" or name = viewer.presentation.folder.name: null else: name
+}
+
+-- Starter folder -------------------------------------------------
+
+rule CreateStarter {
+    when: UseTemplateClicked(viewer)
+    let starter = viewer.starter
+    requires: trim(starter.topic) != ""
+    requires: not starter.folder.has_files or AuthorConfirmed(viewer, starter.folder)
+    ensures: BriefCopied(starter.brief)
+    ensures:
+        if viewer.runtime = hosted_read_once:
+            StarterDownloaded(starter)
+        else:
+            StarterFilesWritten(starter)
+            if viewer.runtime = local:
+                FolderOpenedOnServer(viewer, starter.folder)
+            else:
+                FolderOpenedInBrowser(viewer, starter.folder, true)
+}
+
+-- Moving between slides -----------------------------------------
+
+rule GoToSlide {
+    when: GoToSlide(viewer, n)
+    requires: not viewer.is_empty
+    let target = slide_at(viewer.presentation, clamp(n, 1, viewer.presentation.slides.count))
+    requires: target != viewer.current
+    ensures: viewer.current = target
+    ensures: viewer.ink.strokes = []
+    ensures: SlideArrived(viewer, target)
+    ensures: SpeakerNotesRefreshed(viewer)
+}
+
+rule NextSlide {
+    when: NextRequested(viewer)
+    ensures: GoToSlide(viewer, viewer.current.position + 1)
+}
+
+rule PreviousSlide {
+    when: PreviousRequested(viewer)
+    ensures: GoToSlide(viewer, viewer.current.position - 1)
+}
+
+rule FirstSlide {
+    when: FirstRequested(viewer)
+    ensures: GoToSlide(viewer, 1)
+}
+
+rule LastSlide {
+    when: LastRequested(viewer)
+    ensures: GoToSlide(viewer, viewer.presentation.slides.count)
+}
+
+rule SwipeChangesSlide {
+    when: Swiped(viewer, dx, dy)
+    requires: viewer.active_tool = none
+    requires: abs(dx) > config.swipe_min_distance and abs(dx) > abs(dy)
+    ensures:
+        if dx < 0:
+            NextRequested(viewer)
+        else:
+            PreviousRequested(viewer)
+}
+
+-- Entrance animation ----------------------------------------------
+
+rule SlideEntrance {
+    when: SlideArrived(viewer, slide)
+    requires: not viewer.reduced_motion
+    ensures: for other in viewer.presentation.slides where animation.state != idle and this != slide:
+        other.animation.state = idle
+    ensures:
+        if viewer.plays_on_arrival:
+            slide.animation.state = playing
+        else:
+            slide.animation.state = shown_finished
+    @guidance
+        -- Leaving a slide reverts its animation, so endless loops are safe. Shown finished means every
+        -- ending step is done and looping steps wait at their start.
+}
+
+rule StillUnderReducedMotion {
+    when: SlideArrived(viewer, slide)
+    requires: viewer.reduced_motion
+    ensures: slide.animation.state = idle
+}
+
+rule TogglePlayOnSlideChange {
+    when: PlayOnSlideChangeToggled(viewer)
+    requires: viewer.build = authoring
+    ensures: viewer.play_on_slide_change = not viewer.play_on_slide_change
+}
+
+rule ToggleTechnicalDetails {
+    when: TechnicalDetailsToggled(viewer)
+    ensures: viewer.show_technical_details = not viewer.show_technical_details
+}
+
+-- Animation list ----------------------------------------------------
+
+rule PlayOneStep {
+    when: StepPlayRequested(viewer, step)
+    requires: viewer.build = authoring
+    ensures: viewer.animation_list.solo_step = step
+    ensures: StepPlayedAlone(step)
+    @guidance
+        -- Steps before it show finished, later ones not yet begun. A looping step keeps looping.
+        -- With a single step the whole animation restarts.
+}
+
+rule SoloStepEnds {
+    when: SoloStepFinished(viewer)
+    ensures: viewer.animation_list.solo_step = null
+}
+
+rule ReplayAnimation {
+    when: ReplayRequested(viewer)
+    requires: not viewer.reduced_motion
+    ensures: viewer.animation_list.solo_step = null
+    ensures: viewer.current.animation.state = playing
+}
+
+-- Presentation mode ---------------------------------------------------
+
+rule EnterPresentation {
+    when: PresentRequested(viewer)
+    requires: viewer.mode = editing
+    requires: not viewer.is_empty
+    ensures: viewer.mode = presenting
+    ensures: viewer.current.animation.state = playing
+    ensures: PresentHintShown(viewer, config.present_hint_duration)
+    @guidance
+        -- The slide fills the browser window; it does not ask for operating-system full screen.
+}
+
+rule LeavePresentation {
+    when: LeaveRequested(viewer)
+    requires: viewer.mode = presenting
+    ensures: viewer.mode = editing
+    ensures: viewer.active_tool = none
+}
+
+rule OpenSpeakerNotes {
+    when: NotesToggled(viewer)
+    requires: viewer.notes_window = closed
+    ensures:
+        if PopupsAllowed(viewer):
+            viewer.notes_window = open
+        else:
+            AskedToAllowPopups(viewer)
+}
+
+rule CloseSpeakerNotes {
+    when: NotesToggled(viewer)
+    requires: viewer.notes_window = open
+    ensures: viewer.notes_window = closed
+}
+
+rule ToggleLaser {
+    when: LaserToggled(viewer)
+    ensures: viewer.laser = if viewer.laser = on: off else: on
+}
+
+rule ToggleSlideNumbers {
+    when: SlideNumbersToggled(viewer)
+    ensures: viewer.slide_numbers = if viewer.slide_numbers = on: off else: on
+}
+
+-- Drawing ----------------------------------------------------------------
+
+rule ChooseTool {
+    when: ToolChosen(viewer, tool)
+    requires: viewer.mode = presenting
+    ensures: viewer.active_tool = if viewer.active_tool = tool: none else: tool
+}
+
+rule ChooseInkColour {
+    when: ColourChosen(viewer, colour)
+    requires: viewer.mode = presenting
+    ensures: viewer.ink_colour = colour
+    ensures: if viewer.active_tool in {none, eraser}: viewer.active_tool = pen
+}
+
+rule DrawStroke {
+    when: StrokeDrawn(viewer, points)
+    requires: viewer.active_tool != none
+    ensures:
+        if viewer.active_tool = eraser:
+            viewer.ink.strokes = viewer.ink.strokes - StrokesUnder(viewer.ink.strokes, points)
+        else:
+            viewer.ink.strokes = viewer.ink.strokes + [Stroke{tool: viewer.active_tool, colour: viewer.ink_colour, points: points}]
+}
+
+rule ClearInk {
+    when: ClearDrawingRequested(viewer)
+    ensures: viewer.ink.strokes = []
+}
+
+-- Panes -------------------------------------------------------------------
+
+rule TogglePane {
+    when: PaneToggled(viewer, pane)
+    requires: viewer.build = authoring
+    ensures: pane.visibility = if pane.visibility = shown: hidden else: shown
+}
+
+rule ResizePane {
+    when: PaneResized(viewer, pane, requested)
+    requires: pane.kind in {slide_list, animation_list}
+    ensures:
+        if pane.kind = slide_list:
+            pane.size = clamp(requested, config.slide_list_min_width, config.slide_list_max_width)
+        else:
+            pane.size = clamp(requested, config.animation_list_min_height, config.animation_list_max_height)
+    @guidance
+        -- Also never more than half the window wide, or 45% of it high. Double-clicking the handle resets
+        -- the size to the default.
+}
+
+-- Export ------------------------------------------------------------------
+
+rule StartExport {
+    when: ExportRequested(viewer, format)
+    requires: not viewer.is_empty
+    requires: not exists Export where presentation = viewer.presentation and status in {choosing_location, making}
+    let route = if viewer.showing = browser_folder or viewer.showing = sample: browser else: local
+    let file_name = viewer.presentation.folder.name + "." + format
+    ensures:
+        if route = local:
+            Export.created(presentation: viewer.presentation, format: format, route: route, status: choosing_location, file_name: file_name)
+        else:
+            Export.created(presentation: viewer.presentation, format: format, route: route, status: making, file_name: file_name)
+}
+
+rule ExportLocationChosen {
+    when: SaveLocationChosen(export)
+    requires: export.status = choosing_location
+    ensures: export.status = making
+}
+
+rule ExportLocationCancelled {
+    when: SaveLocationCancelled(export)
+    requires: export.status = choosing_location
+    ensures: export.status = cancelled
+}
+
+rule LocalExportMade {
+    when: export: Export.status transitions_to making
+    requires: export.route = local
+    ensures: ExportedFile.created(export: export, format: export.format, title: export.presentation.title.shown)
+    ensures: export.status = saved
+}
+
+rule BrowserExportMade {
+    when: export: Export.status transitions_to making
+    requires: export.route = browser
+    ensures: ExportedFile.created(export: export, format: export.format, title: export.presentation.title.shown)
+    ensures: export.status = downloaded
+}
+
+rule ExportFails {
+    when: ExportErrored(export)
+    requires: export.status in {choosing_location, making}
+    ensures: export.status = failed
+}
+
+------------------------------------------------------------
+-- Invariants
+------------------------------------------------------------
+
+invariant DrawingOnlyWhilePresenting {
+    for v in Viewers:
+        v.active_tool != none implies v.mode = presenting
+}
+
+invariant StarterNeverOverwrites {
+    -- Making a starter in a folder that already has files only adds the missing ones.
+}
+
+invariant ViewerNeverEditsSlides {
+    -- Slides are only ever read. The only files the viewer writes are a starter's and exports.
+}
+
+invariant ExportedHtmlIsSelfContained {
+    -- One file with every slide, the theme, the animations and the player. It presents offline,
+    -- plays every entrance on arrival, and keeps notes, laser, pen and slide numbers. It has no menu,
+    -- export, folder opening, animation list, title head or live reload.
+}
+
+invariant ExportedPdfIsStill {
+    -- One slide per landscape page at the slide's size, each slide finished, with backgrounds,
+    -- without notes, laser, ink or app controls.
+}
+
+------------------------------------------------------------
+-- Actor Declarations
+------------------------------------------------------------
+
+actor Author {
+    identified_by: Viewer where build = authoring
+}
+
+actor Editor {
+    identified_by: Viewer where build = authoring and mode = editing
+}
+
+actor NotesReader {
+    identified_by: Viewer where notes_window = open
+}
+
+actor Presenter {
+    identified_by: Viewer where mode = presenting
+}
+
+actor Audience {
+    identified_by: Viewer where mode = presenting
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+surface OpenDialog {
+    facing viewer: Author
+
+    exposes:
+        viewer.recent_folders when viewer.runtime = local
+        "Read in your browser, never uploaded." when viewer.runtime != local
+
+    provides:
+        FolderOpenedInBrowser(viewer, folder, watchable) when viewer.runtime != local
+        FolderOpenedOnServer(viewer, folder) when viewer.runtime = local
+        SampleRequested(viewer) when viewer.runtime != local
+        UseTemplateClicked(viewer)
+
+    @guarantee RequiredWhileEmpty
+        -- While nothing is open the dialog has no close button and ignores Esc and outside clicks.
+}
+
+surface EditingView {
+    facing viewer: Editor
+
+    exposes:
+        viewer.presentation.title.shown
+        viewer.current.file
+        for s in viewer.presentation.slides:
+            s.position
+            s.heading
+            s.has_custom_animation
+        viewer.current.position
+        viewer.presentation.slides.count
+        viewer.watch_state
+
+    provides:
+        PreviousRequested(viewer) when viewer.current.position > 1
+        NextRequested(viewer) when viewer.current.position < viewer.presentation.slides.count
+        GoToSlide(viewer, n)
+        PresentRequested(viewer)
+        NotesToggled(viewer)
+        LaserToggled(viewer)
+        SlideNumbersToggled(viewer)
+        TitleRenamed(viewer, text) when not viewer.is_empty
+        PaneToggled(viewer, pane)
+        PaneResized(viewer, pane, requested)
+        PlayOnSlideChangeToggled(viewer)
+        TechnicalDetailsToggled(viewer)
+        ReconnectClicked(viewer) when viewer.watch_state = paused
+        ExportRequested(viewer, format) when not viewer.is_empty
+
+    @guarantee ControlsOffWhenEmpty
+        -- With nothing open, slide controls, shortcuts, export and renaming are off.
+}
+
+surface AnimationListPanel {
+    facing author: Author
+    context list: AnimationList where viewer = author
+
+    exposes:
+        list.viewer.current.animation.source
+        for step in list.viewer.current.animation.steps:
+            step.position
+            step.icons
+            step.plain_wording when not list.viewer.show_technical_details
+            step.plain_timing when not list.viewer.show_technical_details
+            step.targets when list.viewer.show_technical_details
+        "Off: reduced motion is on" when list.viewer.reduced_motion
+
+    provides:
+        StepPlayRequested(list.viewer, step)
+        ReplayRequested(list.viewer)
+}
+
+surface PresentationModeView {
+    facing viewer: Presenter
+
+    exposes:
+        viewer.current
+        viewer.laser
+        viewer.ink.strokes
+
+    provides:
+        NextRequested(viewer)
+        PreviousRequested(viewer)
+        FirstRequested(viewer)
+        LastRequested(viewer)
+        Swiped(viewer, dx, dy)
+        LeaveRequested(viewer)
+        ToolChosen(viewer, tool)
+        ColourChosen(viewer, colour)
+        ClearDrawingRequested(viewer)
+        StrokeDrawn(viewer, points) when viewer.active_tool != none
+}
+
+surface AudienceView {
+    facing viewer: Audience
+
+    exposes:
+        viewer.current
+        viewer.laser
+        viewer.ink.strokes
+        viewer.current.position when viewer.slide_numbers = on
+
+    @guarantee NotesStayPrivate
+        -- Speaker notes open in their own window, so sharing only the slides tab keeps them private.
+}
+
+surface SpeakerNotes {
+    facing viewer: NotesReader
+
+    exposes:
+        viewer.current.position
+        viewer.presentation.slides.count
+        viewer.current.heading
+        viewer.current.notes
+
+    provides:
+        NextRequested(viewer)
+        PreviousRequested(viewer)
+        NotesToggled(viewer)
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "Leaving presentation mode puts the pen away but keeps the strokes until the slide changes. Should leaving clear them?"
+open question "With reduced motion on, presenting plays no entrance at all. Should presenting override it?"
+open question "Arrow keys and Space change slide and silently wipe a drawing, while swiping is blocked when a tool is on. Should a slide change ask first?"
+open question "A local export renders the folder as it is on disk, not the slides on screen. Is that the contract?"
+open question "Export file names use the folder name even after the title is renamed. Should they follow the title?"
+open question "A PDF shows each slide's static layout. Animations that move elements to a new end state show their start instead. Intended?"
+open question "Exported HTML always plays entrances and ignores the play-on-slide-change setting. Intended for every export?"
+open question "With reduced motion the animation list hides its steps entirely. Should it still describe them?"
+open question "The server counts a folder with an empty slides folder as a presentation; the browser needs HTML files. Which rule holds?"
+open question "A ?open link drops a sample on screen, leaving a dialog that cannot be closed. Should the sample stay behind it?"
+open question "On the local app, a tab showing a dropped folder still reloads for changes to the served folder. Accidental?"
+open question "Hosted renames are kept per folder name, so two folders with one name share a title. Acceptable?"
+open question "Only folders opened by the local server join Recent. Should dropped or created folders join too?"
