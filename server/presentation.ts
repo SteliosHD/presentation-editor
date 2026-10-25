@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { homedir } from 'node:os';
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
@@ -111,6 +111,32 @@ const api = (server: ViteDevServer, state: PresentationState, reload: () => void
         const folder = await chooseFolder(dirname(state.folder));
         if (folder === null) send(res, 200, { cancelled: true });
         else open(folder);
+        return;
+      }
+      // A new presentation for an agent: choose its folder, then write the starter files into it. Only the starter's
+      // own files, and never over one that is already there.
+      if (req.url === '/pick-folder') {
+        const folder = await chooseFolder(dirname(state.folder), 'Choose the folder for your presentation');
+        if (folder === null) send(res, 200, { cancelled: true });
+        else send(res, 200, { folder, empty: readdirSync(folder).every((f) => f.startsWith('.')) });
+        return;
+      }
+      if (req.url === '/create-starter') {
+        const folder = typeof body.folder === 'string' ? body.folder : '';
+        const files = Array.isArray(body.files) ? (body.files as { path?: unknown; content?: unknown }[]) : [];
+        if (!folder || !existsSync(folder) || !statSync(folder).isDirectory()) {
+          send(res, 400, { error: 'Choose the folder for your presentation first.' });
+          return;
+        }
+        for (const { path, content } of files) {
+          if (typeof path !== 'string' || typeof content !== 'string') continue;
+          if (!/^(AGENTS\.md|presentation\.json|theme\.css|slides\/[\w.-]+\.html)$/.test(path)) continue;
+          const target = join(folder, path);
+          if (existsSync(target)) continue;
+          mkdirSync(dirname(target), { recursive: true });
+          writeFileSync(target, content);
+        }
+        open(folder);
         return;
       }
       if (req.url === '/export') {

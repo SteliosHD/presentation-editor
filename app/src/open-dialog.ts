@@ -3,7 +3,7 @@ import { presentation as served } from 'virtual:presentation';
 import { post } from './api.ts';
 import { must } from './player.ts';
 import { forgetOpened, isWeb, requestSample, storeOpened } from './source.ts';
-import { attachCopy, SLIDE_PROMPT } from './prompt-dialog.ts';
+import { CREATE_SECTION, mountCreate } from './create.ts';
 import { queueTour } from './tour.ts';
 import { canWatch, filesFromHandle, forgetWatched, rememberWatched } from './watch.ts';
 import { filesFromDrop, filesFromInput, readPresentation, type FolderFile } from './web.ts';
@@ -54,13 +54,7 @@ const sections = (repo: string) => `
     </div>
     <div class="modal-foot"><button class="primary od-sample">Open the sample</button></div>
   </section>
-  <section class="od-section" data-section="create" role="tabpanel" hidden>
-    <div class="od-section-body">
-      <p>Give this prompt to an AI agent in an empty folder, then open that folder here.</p>
-      <pre class="od-prompt" tabindex="0" aria-label="Slide creation prompt"></pre>
-    </div>
-    <div class="modal-foot"><button class="primary od-copy"></button></div>
-  </section>
+  ${CREATE_SECTION}
   <section class="od-section" data-section="format" role="tabpanel" hidden>
     <div class="od-section-body">
       <p>Each slide is an HTML file; the number at the start of its name sets the order. A <code>.ts</code> file
@@ -161,8 +155,6 @@ export const createOpenDialog = (currentFolder: string, repo: string, { required
       openSection(next.dataset.section ?? null);
     });
   }
-  $('.od-prompt').textContent = SLIDE_PROMPT;
-  const copy = attachCopy($('.od-copy'), SLIDE_PROMPT, $('.od-prompt'));
   $('.modal-close').addEventListener('click', close);
   dialog.addEventListener('cancel', (e) => {
     if (busy || required) e.preventDefault();
@@ -218,6 +210,12 @@ export const createOpenDialog = (currentFolder: string, repo: string, { required
       reopen();
     });
   };
+  const create = mountCreate(must(dialog.querySelector<HTMLElement>('section[data-section="create"]'), 'create'), {
+    fail,
+    setBusy,
+    openInBrowser,
+    openOnServer,
+  });
   const choose = () => {
     if (isWeb && window.showDirectoryPicker) {
       window
@@ -305,7 +303,7 @@ export const createOpenDialog = (currentFolder: string, repo: string, { required
     error.textContent = '';
     setBusy(null);
     openSection(null);
-    copy.reset();
+    create.reset();
     dialog.showModal();
   };
   return { show, trySample };

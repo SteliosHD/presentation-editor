@@ -19,8 +19,8 @@ const ask = async (script: string) => {
   }
 };
 
-export const chooseFolder = (startIn: string) =>
-  ask(`choose folder with prompt "Open a presentation folder" default location (POSIX file ${quote(startIn)})`);
+export const chooseFolder = (startIn: string, prompt = 'Open a presentation folder') =>
+  ask(`choose folder with prompt ${quote(prompt)} default location (POSIX file ${quote(startIn)})`);
 
 export const chooseSaveFile = (title: string, name: string, startIn: string) =>
   ask(

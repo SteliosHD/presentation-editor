@@ -75,7 +75,7 @@ The same app runs in four Vite modes; `app/src/source.ts` decides where the pres
 | `template`    | `pnpm build:web` → `dist/export-template.html` | JSON the hosted Export HTML embeds in the page                                        | none                                                                     |
 
 - `pnpm typecheck`, `pnpm lint` and `pnpm format:check` pass before a change is finished.
-- `app/src/main.ts` only wires the parts; each feature has its own module (`player`, `slide-list`, `animation-list`, `toolbar`, `presentation-mode`, `ink`, `nav` with the floating menu, panel switches and folder name, `animation-prefs` for the menu's Animations settings, `resizer` for the slide list's and animation list's drag handles, `open-dialog`, `prompt-dialog`, `about-dialog`, `tour`).
+- `app/src/main.ts` only wires the parts; each feature has its own module (`player`, `slide-list`, `animation-list`, `toolbar`, `presentation-mode`, `ink`, `nav` with the floating menu, panel switches and folder name, `animation-prefs` for the menu's Animations settings, `resizer` for the slide list's and animation list's drag handles, `open-dialog`, `create` for its Create with an AI agent tab, `prompt-dialog`, `about-dialog`, `tour`).
 - Layouts cover desktop, tablet (touch: tools stay visible, swipe changes slide) and phone (the slide list only). Nothing may overlap at any size; while presentation tools are on show, the slide fits beside them.
 - The tour (Take the tour in the menu, or Try the sample the first time) remembers in localStorage that it was seen.
 - The hosted app opens its built-in sample from a `?sample` link too (`app/src/source.ts`), so a site can link straight
@@ -87,7 +87,7 @@ The same app runs in four Vite modes; `app/src/source.ts` decides where the pres
   These two files hold every colour value, apart from `app/favicon.svg`, which browsers load on its own.
 - Slide HTML and app chrome share one page, so app classes need names no slide layout uses. `.step` belongs to slides; the animation list uses `.anim-step`.
 - The floating menu and the animation list are authoring tools: `export` and `template` builds leave them out. The slide list, toolbar, notes, pointer, numbers, drawing and presentation mode ship in exported files.
-- The menu's Slide Creation Prompt (`app/src/prompt-dialog.ts`) restates this guide's authoring rules for agents that never see it. When those rules change, change the prompt too.
+- The agent's brief (`slidePrompt` in `app/src/starter.ts`) restates this guide's authoring rules for agents that never see it. It is both the menu's Slide Creation Prompt and the `AGENTS.md` that Create with an AI agent writes, with the starter files beside it. When those rules change, change the brief too. The server only writes the starter's own files (`/create-starter`) and never over an existing one.
 - The local server's `/api` handles only JSON POSTs from the app's own page; anything else passes through to Vite.
 - A hosted site adds what belongs to it alone (a landing page, credits, analytics) through the site add-on: a
   module passed with `--site <file>` to `bin/presentation-viewer.ts` or `server/build-web.ts`, described in

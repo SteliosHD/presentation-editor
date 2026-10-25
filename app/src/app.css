@@ -717,6 +717,63 @@ button.primary {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+/* Create with an AI agent: the folder and the talk's three details as labelled rows, the prompt to look at
+   underneath, and the button that sets it all up. */
+.od-create-row {
+  display: grid;
+  grid-template-columns: 80px auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.od-create-label {
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-ink-faint);
+}
+.od-create-row input {
+  grid-column: 2 / -1;
+  min-width: 0;
+  padding: 7px 11px;
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  background: var(--ui-surface);
+  font: inherit;
+  color: var(--ui-ink);
+}
+.od-create-row input:focus-visible {
+  border-color: var(--ui-accent-border);
+  outline: none;
+}
+.od-create-pick {
+  justify-self: start;
+  padding: 5px 14px;
+  font-size: 13px;
+}
+.od-create-chosen {
+  overflow: hidden;
+  font-family: var(--ui-mono);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-ink-faint);
+}
+.od-create-preview summary {
+  cursor: pointer;
+  color: var(--ui-accent);
+}
+.od-create-preview pre {
+  max-height: 220px;
+  margin-top: 8px;
+  overflow: auto;
+}
+.od-create-note:empty {
+  display: none;
+}
+.od-create-note {
+  color: var(--ui-good);
+}
 .od-error {
   margin: -6px 0 0;
   font-size: 13px;

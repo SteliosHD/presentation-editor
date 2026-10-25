@@ -1,38 +1,11 @@
 import { Check, Copy, createElement, X } from 'lucide';
-import { ICONS } from './animations.ts';
 import { must } from './player.ts';
+import { slidePrompt } from './starter.ts';
 
 // The menu's Slide Creation Prompt: a ready-made prompt that has an AI agent create a whole presentation in the
 // format this viewer opens, plus a short note on doing it with an agent without the fixed prompt.
-// The prompt is built from the same lists the code uses, so it cannot drift from what the viewer supports.
 
-const TOKENS = ['bg', 'panel', 'card', 'line', 'text', 'soft', 'muted', 'accent', 'good', 'bad', 'warn', 'warn-bg'];
-
-export const SLIDE_PROMPT = `Create a presentation for Presentation Viewer in this folder.
-
-Topic: [what the talk is about]
-Audience: [who it is for]
-Length: [number of slides, or minutes]
-
-Folder
-- presentation.json: { "title": "Your talk's title" }
-- theme.css (optional): set theme tokens on :root, only the ones you change.
-- slides/: one HTML file per slide, its name starting with a number that sets the order (01-title.html, 02-agenda.html and so on).
-
-Each slide
-- One <section class="slide"> per file, designed for a fixed 1200×675 canvas. Everything fits inside it.
-- Build from the viewer's layouts: .kicker, h1/h2, .lead and .section for text; .flow with .box, .box.mid and .arrow; .stats with .stat; .cols with .col, .item and .fix; .steps (add .four for four across) with .step, .when and .cmd; .bottom with .later and .risk.
-- For anything else, write your own markup with a <style> inside the slide, every rule under a class unique to that slide.
-- Colours and fonts come only from theme tokens: ${TOKENS.map((t) => `var(--${t})`).join(', ')}, var(--font), var(--mono).
-- Put speaker notes in <aside class="notes"> inside the slide.
-
-Animations (optional; slides without one fade their blocks up in turn)
-- Add slides/NN-name.ts next to NN-name.html, default-exporting (slide, gsap) => a GSAP tween or timeline. GSAP is passed in; the file has no imports.
-- Animate into the finished layout with .from() or .fromTo(): previews, the PDF and viewers with reduced motion see the slide without its animation.
-- Animate the slide's children, never the .slide element itself.
-- Label every tween for the viewer's animation list: data: { label: 'What happens', icons: [...] }, with icon names from: ${Object.keys(ICONS).join(', ')}.
-
-When done, list each slide file with a one-line summary.`;
+export const SLIDE_PROMPT = slidePrompt();
 
 // A "Copy prompt" button: copies `text`, or, when the clipboard is refused (insecure origin or permissions),
 // selects `source` so Cmd+C works and says so.

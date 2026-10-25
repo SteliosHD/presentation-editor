@@ -52,8 +52,12 @@ my-talk/
     02-agenda.ts      that slide's own animation, optional
 ```
 
-Each slide is one `<section class="slide">` designed for a 1200×675 canvas. Copy `sample/` to start, or use
-**Slide Creation Prompt** in the menu to have an AI agent write one for you.
+Each slide is one `<section class="slide">` designed for a 1200×675 canvas. Copy `sample/` to start, or have an
+AI agent write one: in the Open dialog, **Create one with an AI agent** asks for a folder and three details (topic,
+audience, length), then writes a starter folder there (the agent's brief as `AGENTS.md`, a title, a theme to fill in
+and a welcome slide), copies the brief and opens the folder, so each slide shows up as the agent saves it. Chrome,
+Edge and the local viewer write the folder directly; other browsers download it as a .zip. The brief has the agent
+ask about style and content and agree an outline with you before it writes anything.
 
 ## Personalize your viewer
 

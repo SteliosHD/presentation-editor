@@ -10,7 +10,7 @@ import { readPresentation, type FolderFile } from './web.ts';
 
 declare global {
   interface Window {
-    showDirectoryPicker?: (options?: { mode?: 'read' }) => Promise<FileSystemDirectoryHandle>;
+    showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandle>;
   }
   interface DataTransferItem {
     getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
