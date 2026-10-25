@@ -19,7 +19,8 @@ import {
 
 // Turns a slide's GSAP tween or timeline into a readable list of steps. Steps describe themselves from the
 // properties they animate; a tween can also annotate itself with GSAP's data field:
-//   { ..., data: { label: 'Connections draw in', icons: ['draw'] } }
+//   { ..., data: { label: 'Connections draw in', icons: ['draw'], click: true } }
+// `click` makes the step wait for a click (or →) while presenting, like PowerPoint's On Click.
 
 export type Icon = { icon: IconNode; label: string };
 // `tween` is the step itself, so the animation list can tell when it runs and play it on its own.
@@ -69,7 +70,7 @@ const iconFor = (prop: string): Icon => {
   return match ? ICONS[match[1]] : { icon: Sparkles, label: prop };
 };
 
-type Annotation = { label?: string; icons?: string[] };
+type Annotation = { label?: string; icons?: string[]; click?: boolean };
 
 // Tween settings that are not animated properties.
 const SETTINGS = new Set([
@@ -176,8 +177,12 @@ const plainSentence = (vars: gsap.TweenVars, names: string[], targets: unknown[]
   return `${subject.charAt(0).toUpperCase()}${subject.slice(1)} ${action}${order}${loop}`;
 };
 
-const plainTime = (start: number, loops: boolean) => {
-  const at = start < 0.05 ? 'At the start' : `After ${(Math.round(start * 10) / 10).toString()} seconds`;
+const plainTime = (start: number, loops: boolean, click: boolean) => {
+  const at = click
+    ? 'On click'
+    : start < 0.05
+      ? 'At the start'
+      : `After ${(Math.round(start * 10) / 10).toString()} seconds`;
   return loops ? `${at}, then keeps going` : at;
 };
 
@@ -195,9 +200,10 @@ const describeTween = (tween: gsap.core.Tween): Step => {
   // Inside a timeline, startTime is relative to it; a lone tween's is on GSAP's global clock, so use its delay.
   const start = tween.parent === gsap.globalTimeline ? tween.delay() : tween.startTime();
   const when =
-    vars.repeat === -1
+    (note.click ? 'on click · ' : '') +
+    (vars.repeat === -1
       ? `${seconds(start)} → loops every ${seconds(tween.duration())}`
-      : `${seconds(start)}–${seconds(start + tween.totalDuration())}`;
+      : `${seconds(start)}–${seconds(start + tween.totalDuration())}`);
   const stagger = typeof vars.stagger === 'number' ? ` · stagger ${seconds(vars.stagger)}` : '';
   const targets = tween.targets();
   return {
@@ -210,7 +216,7 @@ const describeTween = (tween: gsap.core.Tween): Step => {
     tween,
     // An author's label is already plain language; otherwise one is written from what the step does.
     plain: note.label ?? plainSentence(vars, names, targets),
-    plainWhen: plainTime(start, vars.repeat === -1),
+    plainWhen: plainTime(start, vars.repeat === -1, Boolean(note.click)),
   };
 };
 
@@ -255,4 +261,65 @@ export const describeAnimation = (animation: gsap.core.Animation): Step[] => {
     return timeline.getChildren(true, true, false).map((child) => describeTween(child as gsap.core.Tween));
   }
   return [describeTween(animation as gsap.core.Tween)];
+};
+
+// Stepping through a slide while presenting. The steps that wait (marked `click`, or every step when the presenter
+// asks for that) are held far ahead on the timeline and pulled back to the playhead when released, so whatever is
+// already running, loops included, carries on while the slide waits. Steps that start together wait together.
+const HELD = 1e5;
+const EPSILON = 1e-6;
+
+const waits = (child: gsap.core.Tween | gsap.core.Timeline): boolean =>
+  Boolean((child.vars.data as Annotation | undefined)?.click) ||
+  (child instanceof gsap.core.Timeline && child.getChildren(true, true, true).some(waits));
+
+export type Stepper = { root: gsap.core.Timeline; shown: () => number; total: number; next: () => void };
+
+// `shown` waiting steps start out released. Unless `settled` is false (arriving fresh), what is released shows
+// finished, as when coming back to a slide or taking a step back.
+export const stepThrough = (
+  animation: gsap.core.Animation,
+  everyStep: boolean,
+  shown: number,
+  settled: boolean,
+): Stepper | null => {
+  const root = animation instanceof gsap.core.Timeline ? animation : gsap.timeline().add(animation, 0);
+  const children = root.getChildren(false, true, true);
+  const stops = [
+    ...new Set(children.filter((c) => everyStep || waits(c)).map((c) => Math.round(c.startTime() / EPSILON) * EPSILON)),
+  ].sort((a, b) => a - b);
+  if (!stops.length) return null;
+  let released = Math.min(shown, stops.length);
+  // Steps from `cut` on are held, `offset` past where the author placed them.
+  let cut = stops.at(released) ?? Infinity;
+  let offset = HELD;
+  if (cut < Infinity) root.shiftChildren(HELD, false, cut - EPSILON);
+  if (!settled) root.restart();
+  else {
+    // Loops keep going.
+    const end = children
+      .filter((c) => c.startTime() < cut)
+      .reduce((end, c) => Math.max(end, c.startTime() + (c.vars.repeat === -1 ? 0 : c.totalDuration())), 0);
+    root.play(end);
+  }
+  return {
+    root,
+    total: stops.length,
+    shown: () => released,
+    next: () => {
+      if (released === stops.length) return;
+      const now = root.time();
+      const move = now - (cut + offset);
+      root.shiftChildren(move, false, cut + offset - EPSILON);
+      offset += move;
+      released += 1;
+      const following = stops.at(released);
+      if (following !== undefined) {
+        root.shiftChildren(HELD, false, following + offset - EPSILON);
+        cut = following;
+        offset += HELD;
+      }
+      root.play();
+    },
+  };
 };

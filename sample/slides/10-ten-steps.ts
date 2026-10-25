@@ -1,5 +1,5 @@
-// Animation for 10-ten-steps.html: ten labelled steps, to see how a long animation reads in the app's list. The last
-// one loops; the app reverts it when the slide is left.
+// Animation for 10-ten-steps.html: ten labelled steps, to see how a long animation reads in the app's list. The chart
+// and its trend line wait for a click while presenting. The last step loops; the app reverts it when the slide is left.
 export default (slide: HTMLElement, gsap: typeof import('gsap').gsap) => {
   const $ = (sel: string) => slide.querySelectorAll(sel);
   const length = (_: number, el: SVGGeometryElement) => el.getTotalLength();
@@ -37,7 +37,7 @@ export default (slide: HTMLElement, gsap: typeof import('gsap').gsap) => {
       opacity: 0,
       scale: 0.96,
       duration: 0.4,
-      data: { label: 'Chart panel opens', icons: ['fade', 'scale'] },
+      data: { label: 'Chart panel opens', icons: ['fade', 'scale'], click: true },
     })
     .from($('.dash-bar'), {
       scaleY: 0,
@@ -53,7 +53,7 @@ export default (slide: HTMLElement, gsap: typeof import('gsap').gsap) => {
     .fromTo(
       $('.dash-trend'),
       { strokeDasharray: length, strokeDashoffset: length },
-      { strokeDashoffset: 0, duration: 0.8, data: { label: 'Trend line draws across', icons: ['draw'] } },
+      { strokeDashoffset: 0, duration: 0.8, data: { label: 'Trend line draws across', icons: ['draw'], click: true } },
     )
     .from($('.dash-badge'), {
       opacity: 0,

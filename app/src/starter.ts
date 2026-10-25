@@ -55,6 +55,7 @@ Animations (optional; slides without one fade their blocks up in turn)
 - Animate into the finished layout with .from() or .fromTo(): previews, the PDF and viewers with reduced motion see the slide without its animation.
 - Animate the slide's children, never the .slide element itself.
 - Label every tween for the viewer's animation list: data: { label: 'What happens', icons: [...] }, with icon names from: ${Object.keys(ICONS).join(', ')}.
+- To reveal a step only when the presenter clicks or presses →, add click: true to its data.
 
 When done, list each slide file with a one-line summary.`;
 

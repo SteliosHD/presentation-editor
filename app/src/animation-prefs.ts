@@ -1,11 +1,12 @@
 // The menu's Animations settings: whether slides play their animation when you switch to them while editing (presenting always
-// plays it), and whether the animation list shows technical details or plain sentences. Remembered between visits;
+// plays it), whether every step of a slide's own animation waits for a click while presenting (steps marked `click`
+// always do), and whether the animation list shows technical details or plain sentences. Remembered between visits;
 // the list's own visibility is the View menu's usual hide-animations switch.
 
-type Prefs = { autoplay: boolean; details: boolean };
+type Prefs = { autoplay: boolean; stepAll: boolean; details: boolean };
 
 const KEY = 'presentation-viewer:animation-prefs';
-const DEFAULTS: Prefs = { autoplay: false, details: false };
+const DEFAULTS: Prefs = { autoplay: false, stepAll: false, details: false };
 
 const read = (): Prefs => {
   try {

@@ -413,6 +413,13 @@ export const mountNav = (
             animationPrefs.set({ autoplay: !animationPrefs.get().autoplay });
           },
         },
+        {
+          label: 'Step through animations when presenting',
+          checked: () => animationPrefs.get().stepAll,
+          run: () => {
+            animationPrefs.set({ stepAll: !animationPrefs.get().stepAll });
+          },
+        },
         showPart('animations', 'Show animations list'),
         {
           label: 'Show technical details',

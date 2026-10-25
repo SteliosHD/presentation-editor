@@ -82,11 +82,19 @@ const onKey = (e: KeyboardEvent) => {
 };
 
 const actions: Record<ShortcutId, () => void> = {
+  // While presenting, a slide's waiting steps come first: → plays the next, ← takes the last back. Going back a
+  // slide lands on it with its steps played, as it was left.
   next: () => {
-    player.show(player.current() + 1);
+    if (!player.step(1)) player.show(player.current() + 1);
   },
   prev: () => {
-    player.show(player.current() - 1);
+    if (!player.step(-1)) player.show(player.current() - 1, true);
+  },
+  nextSlide: () => {
+    player.show(player.current() + 1);
+  },
+  prevSlide: () => {
+    player.show(player.current() - 1, true);
   },
   first: () => {
     player.show(0);
@@ -122,6 +130,7 @@ const player = createPlayer(presentation.slides, must(document.querySelector('.v
   // While editing, a slide plays its animation on arrival only if the menu's Animations settings say so; presenting and
   // exported files always play it.
   autoplay: () => !authoring || present.active() || animationPrefs.get().autoplay,
+  stepping: () => (present.active() ? { everyStep: animationPrefs.get().stepAll } : null),
 });
 // Picking or putting away a drawing tool can change the room around the slide, so refit it.
 const ink = createInk(must(document.querySelector<HTMLElement>('.slide-stack'), '.slide-stack'), {
@@ -132,8 +141,8 @@ const ink = createInk(must(document.querySelector<HTMLElement>('.slide-stack'), 
 const present = createPresentationMode({
   onChange: (on) => {
     if (!on) ink.stop();
-    // Entering presentation mode plays the current slide's animation.
-    if (on) player.entrance()?.restart();
+    // Entering presentation mode plays the current slide's animation, and leaving shows it as editing does.
+    player.replay();
     render();
   },
 });
@@ -212,6 +221,12 @@ viewport.addEventListener('pointerup', (e) => {
   const dy = e.clientY - swipeFrom.y;
   swipeFrom = null;
   if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) actions[dx < 0 ? 'next' : 'prev']();
+});
+// While presenting, clicking the slide moves on like →, unless a drawing tool is out or the click was on a control.
+viewport.addEventListener('click', (e) => {
+  if (!present.active() || document.body.classList.contains('inking') || e.button !== 0) return;
+  if (e.target instanceof Element && e.target.closest('a, button, input, select, textarea, [contenteditable]')) return;
+  actions.next();
 });
 // Clicking these buttons must not focus them: a focused button would also react to Space or Enter,
 // toggling a tool or presentation mode when the presenter only meant to change slide.

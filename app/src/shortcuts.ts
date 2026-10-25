@@ -4,6 +4,8 @@
 export type ShortcutId =
   | 'next'
   | 'prev'
+  | 'nextSlide'
+  | 'prevSlide'
   | 'first'
   | 'last'
   | 'notes'
@@ -14,8 +16,10 @@ export type ShortcutId =
   | 'exit';
 
 export const SHORTCUTS: Record<ShortcutId, { keys: string[]; label: string }> = {
-  next: { keys: ['ArrowRight', ' ', 'PageDown'], label: 'Next slide' },
-  prev: { keys: ['ArrowLeft', 'PageUp'], label: 'Previous slide' },
+  next: { keys: ['ArrowRight', ' ', 'PageDown'], label: 'Next step or slide' },
+  prev: { keys: ['ArrowLeft', 'PageUp'], label: 'Undo a step, or previous slide' },
+  nextSlide: { keys: ['ArrowDown'], label: 'Next slide, skipping steps' },
+  prevSlide: { keys: ['ArrowUp'], label: 'Previous slide' },
   first: { keys: ['Home'], label: 'First slide' },
   last: { keys: ['End'], label: 'Last slide' },
   notes: { keys: ['n'], label: 'Speaker notes' },
@@ -29,6 +33,8 @@ export const SHORTCUTS: Record<ShortcutId, { keys: string[]; label: string }> = 
 const NAMES: Record<string, string> = {
   ArrowRight: '→',
   ArrowLeft: '←',
+  ArrowDown: '↓',
+  ArrowUp: '↑',
   ' ': 'Space',
   PageDown: 'Page Down',
   PageUp: 'Page Up',

@@ -58,6 +58,9 @@ Annotate every tween in a custom animation through GSAP's `data` field:
 
 - `label` replaces the generated description; the generated one stays as the row's tooltip.
 - `icons` are names from `ICONS` in `app/src/animations.ts`. An unknown name shows a sparkle marked "unknown icon name".
+- `click: true` makes the step wait for a click or → while presenting, like PowerPoint's On Click; the list says
+  "On click". Steps that start at the same moment wait together. The menu's "Step through animations when presenting"
+  makes every step of a slide's own animation wait.
 - Unannotated tweens get icons chosen from the properties they animate.
 
 ## Theme

@@ -81,6 +81,7 @@ entity SlideAnimation {
     source: custom | standard
     steps: AnimationStep with animation = this
     state: idle | playing | shown_finished
+    waits_shown: Integer            -- while presenting: how many waiting moments have been played
 
     transitions state {
         idle -> playing
@@ -101,6 +102,7 @@ entity AnimationStep {
     loops: Boolean
     staggered: Boolean
     author_label: String?
+    on_click: Boolean               -- the author marked it to wait for the presenter
     author_icons: List<String>?
     animated_properties: Set<String>
     targets: String                 -- the elements it moves, by class or tag, e.g. "line x3"
@@ -126,6 +128,7 @@ entity Viewer {
     active_tool: pen | highlighter | eraser | none
     ink_colour: accent | alert | warning | good | text
     play_on_slide_change: Boolean
+    step_through_all: Boolean       -- while presenting, every step of a slide's own animation waits
     show_technical_details: Boolean
     reduced_motion: Boolean         -- from the operating system
     recent_folders: List<Folder>    -- local app only
@@ -136,6 +139,10 @@ entity Viewer {
 
     is_empty: showing = placeholder
     plays_on_arrival: build = exported or mode = presenting or play_on_slide_change
+    waiting_moments: if mode = presenting and current.animation.state = playing:
+            waiting_moments_of(current.animation, step_through_all and current.has_custom_animation)
+        else: 0
+    steps_left: waiting_moments - current.animation.waits_shown
 
     transitions showing {
         placeholder -> sample
@@ -389,14 +396,56 @@ rule GoToSlide {
     ensures: SpeakerNotesRefreshed(viewer)
 }
 
+rule NextStep {
+    when: NextRequested(viewer)
+    requires: viewer.steps_left > 0
+    ensures: viewer.current.animation.waits_shown = viewer.current.animation.waits_shown + 1
+    @guidance
+        -- Steps that start at the same moment wait together. Whatever already runs, loops included, carries on
+        -- while the slide waits.
+}
+
 rule NextSlide {
     when: NextRequested(viewer)
+    requires: viewer.steps_left = 0
     ensures: GoToSlide(viewer, viewer.current.position + 1)
+}
+
+rule StepBack {
+    when: PreviousRequested(viewer)
+    requires: viewer.current.animation.waits_shown > 0
+    ensures: viewer.current.animation.waits_shown = viewer.current.animation.waits_shown - 1
+    @guidance
+        -- The slide shows at once as it stood one step earlier; nothing replays.
 }
 
 rule PreviousSlide {
     when: PreviousRequested(viewer)
-    ensures: GoToSlide(viewer, viewer.current.position - 1)
+    requires: viewer.current.animation.waits_shown = 0
+    ensures: GoToSlideBuilt(viewer, viewer.current.position - 1)
+}
+
+rule SkipToNextSlide {
+    when: NextSlideRequested(viewer)
+    ensures: GoToSlide(viewer, viewer.current.position + 1)
+}
+
+rule SkipToPreviousSlide {
+    when: PreviousSlideRequested(viewer)
+    ensures: GoToSlideBuilt(viewer, viewer.current.position - 1)
+}
+
+-- Coming back to a slide finds it as it was left: every waiting step played, everything finished.
+rule GoToSlideBuilt {
+    when: GoToSlideBuilt(viewer, n)
+    ensures: GoToSlide(viewer, n)
+    ensures: viewer.current.animation.waits_shown = waiting_moments_of(viewer.current.animation, viewer.step_through_all and viewer.current.has_custom_animation)
+}
+
+rule ClickSlide {
+    when: SlideClicked(viewer)
+    requires: viewer.mode = presenting and viewer.active_tool = none
+    ensures: NextRequested(viewer)
 }
 
 rule FirstSlide {
@@ -432,6 +481,7 @@ rule SlideEntrance {
             slide.animation.state = playing
         else:
             slide.animation.state = shown_finished
+    ensures: slide.animation.waits_shown = 0
     @guidance
         -- Leaving a slide reverts its animation, so endless loops are safe. Shown finished means every
         -- ending step is done and looping steps wait at their start.
@@ -447,6 +497,12 @@ rule TogglePlayOnSlideChange {
     when: PlayOnSlideChangeToggled(viewer)
     requires: viewer.build = authoring
     ensures: viewer.play_on_slide_change = not viewer.play_on_slide_change
+}
+
+rule ToggleStepThroughAll {
+    when: StepThroughAllToggled(viewer)
+    requires: viewer.build = authoring
+    ensures: viewer.step_through_all = not viewer.step_through_all
 }
 
 rule ToggleTechnicalDetails {
@@ -496,6 +552,7 @@ rule LeavePresentation {
     requires: viewer.mode = presenting
     ensures: viewer.mode = editing
     ensures: viewer.active_tool = none
+    ensures: viewer.current.animation.state = if viewer.play_on_slide_change: playing else: shown_finished
 }
 
 rule OpenSpeakerNotes {
@@ -721,6 +778,7 @@ surface EditingView {
         PaneToggled(viewer, pane)
         PaneResized(viewer, pane, requested)
         PlayOnSlideChangeToggled(viewer)
+        StepThroughAllToggled(viewer)
         TechnicalDetailsToggled(viewer)
         ReconnectClicked(viewer) when viewer.watch_state = paused
         ExportRequested(viewer, format) when not viewer.is_empty
@@ -759,8 +817,11 @@ surface PresentationModeView {
     provides:
         NextRequested(viewer)
         PreviousRequested(viewer)
+        NextSlideRequested(viewer)
+        PreviousSlideRequested(viewer)
         FirstRequested(viewer)
         LastRequested(viewer)
+        SlideClicked(viewer) when viewer.active_tool = none
         Swiped(viewer, dx, dy)
         LeaveRequested(viewer)
         ToolChosen(viewer, tool)
@@ -788,6 +849,8 @@ surface SpeakerNotes {
     exposes:
         viewer.current.position
         viewer.presentation.slides.count
+        viewer.current.animation.waits_shown
+        viewer.waiting_moments
         viewer.current.heading
         viewer.current.notes
 
@@ -814,3 +877,5 @@ open question "A ?open link drops a sample on screen, leaving a dialog that cann
 open question "On the local app, a tab showing a dropped folder still reloads for changes to the served folder. Accidental?"
 open question "Hosted renames are kept per folder name, so two folders with one name share a title. Acceptable?"
 open question "Only folders opened by the local server join Recent. Should dropped or created folders join too?"
+open question "An exported file has no menu, so it can only step through steps marked on click, never every step. Should the export carry the setting?"
+open question "With every step waiting, the first step waits too, so a slide arrives empty. Should the first step play on its own?"

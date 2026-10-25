@@ -1,5 +1,5 @@
 import { gsap } from 'gsap';
-import { finish } from './animations.ts';
+import { finish, stepThrough, type Stepper } from './animations.ts';
 import type { PresentationSlide, SlideAnimation } from 'virtual:presentation';
 import { keyName, SHORTCUTS } from './shortcuts.ts';
 
@@ -50,7 +50,14 @@ export const createPlayer = (
     onChange,
     onKey,
     autoplay = () => true,
-  }: { onChange: () => void; onKey: (e: KeyboardEvent) => void; autoplay?: () => boolean },
+    stepping = () => null,
+  }: {
+    onChange: () => void;
+    onKey: (e: KeyboardEvent) => void;
+    autoplay?: () => boolean;
+    // While presenting: whether steps wait for a click, and whether every step of a slide's own animation does.
+    stepping?: () => { everyStep: boolean } | null;
+  },
 ) => {
   const elements = slides.map((s) => toSlide(s.html));
   const stack = must(viewport.querySelector<HTMLElement>('.slide-stack'), '.slide-stack');
@@ -64,6 +71,7 @@ export const createPlayer = (
   stack.replaceChildren(...elements);
   let i = -1;
   let entrance: gsap.core.Animation | null = null;
+  let stepper: Stepper | null = null;
   let notesWin: Window | null = null;
 
   // Show the 1200x675 slide as large as its box allows, with a margin outside presentation mode. The box is
@@ -77,21 +85,54 @@ export const createPlayer = (
 
   // The animation is reverted when the slide is left, so endless loops are fine. Unless it should play (presenting,
   // or the editor's choice), the slide shows finished.
-  const animateIn = (k: number) => {
+  // `shown`: how many waiting steps start out already played, finished, as when coming back to a slide. Null plays
+  // the slide from its start.
+  const animateIn = (k: number, shown: number | null = null) => {
     entrance?.revert();
+    stepper = null;
     if (reduceMotion) return;
-    entrance = (slides[k].animation ?? defaultAnimation)(elements[k], gsap);
-    if (!autoplay()) finish(entrance);
+    const custom = slides[k].animation;
+    entrance = (custom ?? defaultAnimation)(elements[k], gsap);
+    if (!autoplay()) {
+      finish(entrance);
+      return;
+    }
+    const mode = stepping();
+    stepper = mode && stepThrough(entrance, Boolean(custom) && mode.everyStep, shown ?? 0, shown !== null);
+    if (stepper) entrance = stepper.root;
   };
 
-  const show = (n: number) => {
+  // `built`: arrive with every waiting step already played.
+  const show = (n: number, built = false) => {
     n = Math.max(0, Math.min(elements.length - 1, n));
     if (n === i) return;
     i = n;
     elements.forEach((s, k) => s.classList.toggle('active', k === i));
-    animateIn(i);
+    animateIn(i, built ? Infinity : null);
     renderNotes();
     onChange();
+  };
+
+  // Plays the next waiting step, or takes the last one back by showing the slide one step earlier. False when there
+  // is none, so the caller changes slide instead.
+  const step = (direction: 1 | -1) => {
+    if (!stepper) return false;
+    const shown = stepper.shown();
+    if (direction === 1) {
+      if (shown === stepper.total) return false;
+      stepper.next();
+    } else {
+      if (shown === 0) return false;
+      animateIn(i, shown - 1);
+    }
+    renderNotes();
+    return true;
+  };
+
+  // Plays the current slide's animation again from the start, or shows it finished, by the current settings.
+  const replay = () => {
+    animateIn(i);
+    renderNotes();
   };
 
   // Presenter window: notes for the current slide plus what comes next.
@@ -105,7 +146,8 @@ export const createPlayer = (
     };
     const cur = elements[i];
     const next = elements.at(i + 1);
-    set('n-pos', `Slide ${i + 1} of ${elements.length}`);
+    const steps = stepper ? ` · step ${stepper.shown().toString()} of ${stepper.total.toString()}` : '';
+    set('n-pos', `Slide ${i + 1} of ${elements.length}${steps}`);
     set('n-title', titleOf(cur));
     set('n-body', cur.querySelector('.notes')?.textContent.trim() || 'No notes for this slide.');
     set('n-next', next ? `Next: ${titleOf(next)}` : 'Last slide');
@@ -255,6 +297,8 @@ export const createPlayer = (
     current: () => i,
     entrance: () => entrance,
     show,
+    step,
+    replay,
     fit,
     notesOpen,
     toggleNotes,
