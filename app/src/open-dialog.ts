@@ -60,7 +60,6 @@ const sections = (repo: string) => `
       <p>Each slide is an HTML file; the number at the start of its name sets the order. A <code>.ts</code> file
       with the same name animates that slide.</p>
       <pre>my-talk/
-  presentation.json   <i>title, optional</i>
   theme.css           <i>colours, optional</i>
   slides/
     01-title.html

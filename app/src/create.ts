@@ -8,7 +8,7 @@ import type { FolderFile } from './web.ts';
 import { zip } from './zip.ts';
 
 // The Open modal's "Create one with an AI agent": choose the presentation's folder, give the talk's three details,
-// then one button copies the brief, writes the starter folder (the brief as AGENTS.md, a title, a theme to fill in
+// then one button copies the brief, writes the starter folder (the brief as AGENTS.md, a theme to fill in
 // and a welcome slide) and opens it, so each slide shows up as the agent saves it. The local app writes through its
 // server and knows the folder's full path; Chrome and Edge write through the browser and only learn its name; other
 // browsers cannot write to a folder, so the starter folder downloads as a .zip.
@@ -34,8 +34,7 @@ export const CREATE_SECTION = `
         <input name="audience" placeholder="Who it is for" /></label>
       <label class="od-create-row"><span class="od-create-label">Length</span>
         <input name="length" placeholder="10 slides, or 15 minutes" /></label>
-      <details class="od-create-preview"><summary>See the prompt</summary>
-        <pre class="od-prompt od-create-prompt" tabindex="0" aria-label="The prompt for your agent"></pre></details>
+      <button class="od-link od-create-see" type="button">See the prompt</button>
       <p class="od-create-note" role="status"></p>
     </div>
     <div class="modal-foot">
@@ -87,7 +86,27 @@ export const mountCreate = (section: HTMLElement, { fail, setBusy, openInBrowser
   const $ = (sel: string) => must(section.querySelector<HTMLElement>(sel), sel);
   const field = (name: string) => must(section.querySelector<HTMLInputElement>(`input[name="${name}"]`), name);
   const go = must(section.querySelector<HTMLButtonElement>('.od-create-go'), '.od-create-go');
-  const prompt = $('.od-create-prompt');
+  // The prompt opens in its own modal over this one, rather than as a second scrolling box inside it.
+  const preview = document.createElement('dialog');
+  preview.className = 'modal prompt-dialog';
+  preview.innerHTML = `
+    <div class="modal-body">
+      <header><h2>Your agent’s prompt</h2></header>
+      <p class="modal-lead">Use template copies this and saves it in the folder as ${BRIEF_FILE}.</p>
+      <pre class="pd-prompt" tabindex="0" aria-label="The prompt for your agent"></pre>
+      <div class="modal-foot"><button class="primary od-create-back">Back</button></div>
+    </div>`;
+  document.body.append(preview);
+  const prompt = must(preview.querySelector<HTMLElement>('pre'), 'pre');
+  must(preview.querySelector('.od-create-back'), '.od-create-back').addEventListener('click', () => {
+    preview.close();
+  });
+  preview.addEventListener('click', (e) => {
+    if (e.target === preview) preview.close();
+  });
+  $('.od-create-see').addEventListener('click', () => {
+    preview.showModal();
+  });
   const note = $('.od-create-note');
   let where: Where | null = null;
   let dir: FileSystemDirectoryHandle | null = null;

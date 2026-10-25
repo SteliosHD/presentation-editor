@@ -69,8 +69,6 @@ export const readPresentation = async (files: FolderFile[]) => {
       `“${root}” has no HTML slides, in a slides/ folder or on their own. Choose the presentation folder.`,
     );
 
-  const config = at('presentation.json');
-  const { title } = config ? (JSON.parse(await config.text()) as { title?: string }) : {};
   const theme = (await at('theme.css')?.text()) ?? '';
   const needsSucrase = slideFiles.some(({ path }) => at(path.slice(root.length + 1).replace(/\.html$/, '.ts')));
   const sucrase = needsSucrase ? await import('sucrase') : null;
@@ -85,8 +83,11 @@ export const readPresentation = async (files: FolderFile[]) => {
       return { file: name, html, animationFile: script.name, animationCode: code };
     }),
   );
-  return { title: title ?? root, folder: root, theme, slides };
+  return { title: root, folder: root, theme, slides };
 };
+
+// A download is named after the folder itself, never the path to it.
+const nameOf = (presentation: Presentation) => presentation.folder.split('/').at(-1) ?? presentation.folder;
 
 const download = (blob: Blob, name: string) => {
   const url = URL.createObjectURL(blob);
@@ -107,7 +108,7 @@ export const downloadHtml = async (presentation: Presentation) => {
   const json = JSON.stringify(toStored(presentation)).replaceAll('<', '\\u003c');
   const at = template.lastIndexOf('</body>');
   const html = `${template.slice(0, at)}<script type="application/json" id="${DATA_ID}">${json}</script>${template.slice(at)}`;
-  download(new Blob([html], { type: 'text/html' }), `${presentation.folder}.html`);
+  download(new Blob([html], { type: 'text/html' }), `${nameOf(presentation)}.html`);
 };
 
 // Captures each slide in its finished state as an image and assembles a PDF, one slide per page.
@@ -140,7 +141,7 @@ export const downloadPdf = async (presentation: Presentation, progress: (done: n
       if (k > 0) pdf.addPage([1200, 675], 'landscape');
       pdf.addImage(image, 'JPEG', 0, 0, 1200, 675);
     }
-    download(pdf.output('blob'), `${presentation.folder}.pdf`);
+    download(pdf.output('blob'), `${nameOf(presentation)}.pdf`);
   } finally {
     stage.remove();
   }

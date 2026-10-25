@@ -12,7 +12,7 @@ export const APP = fileURLToPath(new URL('../app', import.meta.url));
 
 // Bakes the presentation (slides, theme, animations, GSAP, player) into one self-contained HTML file at `file`.
 // Mode "export" leaves out the authoring tools, which need the running app.
-export const exportHtml = async (folder: string, file: string) => {
+export const exportHtml = async (folder: string, file: string, title?: string) => {
   const outDir = await mkdtemp(join(tmpdir(), 'presentation-export-'));
   try {
     await build({
@@ -20,7 +20,7 @@ export const exportHtml = async (folder: string, file: string) => {
       root: APP,
       mode: 'export',
       logLevel: 'warn',
-      plugins: [presentationPlugin({ folder, cwd: folder }), sitePlugin(), viteSingleFile()],
+      plugins: [presentationPlugin({ folder, cwd: folder, title }), sitePlugin(), viteSingleFile()],
       build: { outDir, emptyOutDir: true },
     });
     await copyFile(join(outDir, 'index.html'), file);
@@ -48,12 +48,12 @@ export const buildTemplate = async () => {
 };
 
 // Prints the presentation to a PDF at `file` with the installed Google Chrome, one slide per page.
-export const exportPdf = async (folder: string, file: string) => {
+export const exportPdf = async (folder: string, file: string, title?: string) => {
   const dir = await mkdtemp(join(tmpdir(), 'presentation-pdf-'));
   const html = join(dir, 'presentation.html');
   const browser = await chromium.launch({ channel: 'chrome' });
   try {
-    await exportHtml(folder, html);
+    await exportHtml(folder, html, title);
     const page = await browser.newPage();
     // With reduced motion the presentation skips its entrance animations, so every slide prints in its finished state.
     await page.emulateMedia({ reducedMotion: 'reduce' });

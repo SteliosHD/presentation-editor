@@ -6,29 +6,24 @@ import { transformWithOxc, type Plugin, type ViteDevServer } from 'vite';
 import { chooseFolder, chooseSaveFile } from './dialogs.ts';
 import { buildTemplate, exportHtml, exportPdf } from './export.ts';
 
-// A presentation is any folder with a slides/ folder. presentation.json (title) and theme.css are optional. A folder
+// A presentation is any folder with a slides/ folder; theme.css is optional. Its title is the folder's name (the
+// viewer can rename it, kept in the browser and passed in as `title` for exports). A folder
 // of HTML slides on its own (the slides/ folder itself, say) opens too, titled after the folder, in the default theme.
 const hasSlides = (folder: string) => existsSync(join(folder, 'slides'));
 const slidesDirOf = (folder: string) => (hasSlides(folder) ? join(folder, 'slides') : folder);
 export const isPresentation = (folder: string) =>
   hasSlides(folder) || (existsSync(folder) && readdirSync(folder).some((f) => f.endsWith('.html')));
 
-export type PresentationState = { folder: string; cwd: string };
+// `label`: the folder as the page sees it, when it shouldn't see the real path (the hosted build's sample).
+export type PresentationState = { folder: string; cwd: string; title?: string; label?: string };
 
 const VIRTUAL = 'virtual:presentation';
 const RESOLVED = `\0${VIRTUAL}`;
 
-const readTitle = (folder: string) => {
-  const config = join(folder, 'presentation.json');
-  if (!existsSync(config)) return basename(folder);
-  const { title } = JSON.parse(readFileSync(config, 'utf8')) as { title?: string };
-  return title ?? basename(folder);
-};
-
 // virtual:presentation holds the open presentation's content. Slide HTML and the theme are inlined as strings; a slide's
 // animation file (same name, .ts) is imported, so Vite compiles it and allows serving it from outside the app.
 // The animation is also inlined as plain JavaScript (animationCode), which the hosted app's HTML export embeds.
-const presentationModule = async (folder: string) => {
+const presentationModule = async (folder: string, title = basename(folder), label = folder) => {
   const slidesDir = slidesDirOf(folder);
   const themeFile = join(folder, 'theme.css');
   const files = readdirSync(slidesDir)
@@ -46,8 +41,8 @@ const presentationModule = async (folder: string) => {
     }),
   );
   const presentation = `{
-    title: ${JSON.stringify(readTitle(folder))},
-    folder: ${JSON.stringify(folder)},
+    title: ${JSON.stringify(title)},
+    folder: ${JSON.stringify(label)},
     theme: ${JSON.stringify(existsSync(themeFile) ? readFileSync(themeFile, 'utf8') : '')},
     slides: [${slides.join(',\n')}],
   }`;
@@ -130,7 +125,7 @@ const api = (server: ViteDevServer, state: PresentationState, reload: () => void
         }
         for (const { path, content } of files) {
           if (typeof path !== 'string' || typeof content !== 'string') continue;
-          if (!/^(AGENTS\.md|presentation\.json|theme\.css|slides\/[\w.-]+\.html)$/.test(path)) continue;
+          if (!/^(AGENTS\.md|theme\.css|slides\/[\w.-]+\.html)$/.test(path)) continue;
           const target = join(folder, path);
           if (existsSync(target)) continue;
           mkdirSync(dirname(target), { recursive: true });
@@ -153,7 +148,8 @@ const api = (server: ViteDevServer, state: PresentationState, reload: () => void
           return;
         }
         const file = extname(chosen) ? chosen : `${chosen}.${ext}`;
-        await (ext === 'pdf' ? exportPdf : exportHtml)(state.folder, file);
+        const title = typeof body.title === 'string' && body.title.trim() ? body.title.trim() : undefined;
+        await (ext === 'pdf' ? exportPdf : exportHtml)(state.folder, file, title);
         const shown = file.startsWith(state.folder + sep) ? relative(state.folder, file) : file.replace(homedir(), '~');
         send(res, 200, { file: shown });
         return;
@@ -175,7 +171,7 @@ export const emptyPresentationPlugin = (): Plugin => ({
 export const presentationPlugin = (state: PresentationState): Plugin => ({
   name: 'presentation',
   resolveId: (id) => (id === VIRTUAL ? RESOLVED : undefined),
-  load: (id) => (id === RESOLVED ? presentationModule(state.folder) : undefined),
+  load: (id) => (id === RESOLVED ? presentationModule(state.folder, state.title, state.label) : undefined),
   configureServer(server) {
     const reload = () => {
       const mod = server.moduleGraph.getModuleById(RESOLVED);
@@ -188,11 +184,7 @@ export const presentationPlugin = (state: PresentationState): Plugin => ({
     // The page is told which file changed first, so it can say so after reloading.
     const kinds = { add: 'added', change: 'updated', unlink: 'removed' } as const;
     server.watcher.on('all', (event, file) => {
-      const watched = [
-        join(state.folder, 'slides') + sep,
-        join(state.folder, 'theme.css'),
-        join(state.folder, 'presentation.json'),
-      ];
+      const watched = [join(state.folder, 'slides') + sep, join(state.folder, 'theme.css')];
       // A folder of slides on its own: its slides and their animations sit at the top.
       const flat = !hasSlides(state.folder) && dirname(file) === state.folder && /\.(html|ts)$/.test(file);
       if (!flat && !watched.some((path) => file.startsWith(path))) return;

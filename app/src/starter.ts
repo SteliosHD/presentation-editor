@@ -19,7 +19,7 @@ const whereToWork = ({ folder, path }: Where) => {
   return `Where to work
 - The presentation folder is ${root}. Work only inside it.
 - Write each slide to ${slides}. slides/01-welcome.html is a placeholder: delete it once your first slide is saved.
-- Set the title in presentation.json. Give the talk its look in theme.css: uncomment and change only the tokens the style needs.
+- Give the talk its look in theme.css: uncomment and change only the tokens the style needs.
 - Leave ${BRIEF_FILE} as it is: it holds these instructions.
 
 `;
@@ -39,8 +39,8 @@ ${where ? whereToWork(where) : ''}Before you write anything
 - Then show me a slide-by-slide outline, each file name with a one-line summary, and start only once I approve it.
 
 Folder
-- presentation.json: { "title": "Your talk's title" }
 - theme.css (optional): set theme tokens on :root, only the ones you change.
+- There is no title file: the presentation's title is the folder's name, and I can rename it in the viewer.
 - slides/: one HTML file per slide, its name starting with a number that sets the order (01-title.html, 02-agenda.html and so on).
 
 Each slide
@@ -85,10 +85,6 @@ export const starterFiles = (details: Details, where: Where): StarterFile[] => [
   {
     path: BRIEF_FILE,
     content: `<!-- Made by Presentation Viewer: the brief for the AI agent writing this presentation. -->\n\n${slidePrompt(details, where)}\n`,
-  },
-  {
-    path: 'presentation.json',
-    content: `${JSON.stringify({ title: details.topic.trim() || where.folder }, null, 2)}\n`,
   },
   { path: 'theme.css', content: starterTheme() },
   { path: 'slides/01-welcome.html', content: welcomeSlide(details.topic) },

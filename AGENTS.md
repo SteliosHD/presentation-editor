@@ -2,13 +2,12 @@
 
 A local app for presentations. A presentation is a folder of HTML slides, each with an optional GSAP animation. The app opens a presentation to edit, present (F) and export (HTML or PDF).
 
-Run it with `node bin/presentation-viewer.ts <presentation folder>` (or `presentation-viewer <folder>` once linked). It serves http://localhost:4747 and reloads whenever the open presentation's slides, theme or `presentation.json` change. `sample/` is a working presentation to copy from.
+Run it with `node bin/presentation-viewer.ts <presentation folder>` (or `presentation-viewer <folder>` once linked). It serves http://localhost:4747 and reloads whenever the open presentation's slides or theme change. `sample/` is a working presentation to copy from.
 
 ## A presentation
 
 ```
 my-presentation/
-  presentation.json     { "title": "..." }  optional, defaults to the folder name
   theme.css             optional; overrides the default theme's tokens
   slides/
     01-title.html       one slide; the file name sets the order
@@ -16,6 +15,8 @@ my-presentation/
     03-diagram.ts       optional: that slide's own animation
   export/               written by Export; never edit
 ```
+
+The title is the folder's name. Renaming it in the viewer is kept in that browser and carried into exports; there is no title file.
 
 ## Making a slide
 

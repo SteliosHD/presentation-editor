@@ -108,20 +108,13 @@ export const filesFromHandle = async (dir: FileSystemDirectoryHandle): Promise<F
   return files;
 };
 
-// Each watched file's size and modified time, by name: the slides, the theme and the title, as the local server
-// watches. Other files in the folder, such as exports, don't count.
+// Each watched file's size and modified time, by name: the slides and the theme, as the local server watches. Other files in the folder, such as exports, don't count.
 const stamps = async (dir: FileSystemDirectoryHandle) =>
   new Map(
     (await filesFromHandle(dir))
       .map(({ path, file }) => ({ rel: path.slice(dir.name.length + 1), file }))
       // A folder of slides opened on its own has them at the top.
-      .filter(
-        ({ rel }) =>
-          rel.startsWith('slides/') ||
-          /^[^/]+\.(html|ts)$/.test(rel) ||
-          rel === 'theme.css' ||
-          rel === 'presentation.json',
-      )
+      .filter(({ rel }) => rel.startsWith('slides/') || /^[^/]+\.(html|ts)$/.test(rel) || rel === 'theme.css')
       .map(({ rel, file }) => [rel, `${file.size}:${file.lastModified}`]),
   );
 const same = (a: Map<string, string>, b: Map<string, string>) =>

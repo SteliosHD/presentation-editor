@@ -357,7 +357,7 @@ export const mountNav = (
   const run = async (format: 'html' | 'pdf') => {
     if (!inBrowser) {
       say(`Choose where to save the ${format.toUpperCase()}`, { busy: true });
-      const { file, cancelled } = await post('export', { format });
+      const { file, cancelled } = await post('export', { format, title: presentation.title });
       say(cancelled ? 'Export cancelled' : `Saved ${file ?? ''}`);
       return;
     }
@@ -369,7 +369,7 @@ export const mountNav = (
       say('Making the HTML file', { busy: true });
       await downloadHtml(presentation);
     }
-    say(`Downloaded ${presentation.folder}.${format}`);
+    say(`Downloaded ${name}.${format}`);
   };
   let exportItems: HTMLButtonElement[] = [];
   const exporting = (format: 'html' | 'pdf') => () => {

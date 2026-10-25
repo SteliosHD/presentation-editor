@@ -767,14 +767,8 @@ button.primary {
   white-space: nowrap;
   color: var(--ui-ink-faint);
 }
-.od-create-preview summary {
-  cursor: pointer;
-  color: var(--ui-accent);
-}
-.od-create-preview pre {
-  max-height: 220px;
-  margin-top: 8px;
-  overflow: auto;
+.od-create-see {
+  align-self: flex-start;
 }
 .od-create-note:empty {
   display: none;
@@ -1542,6 +1536,31 @@ body.presenting .resize-handle {
   font-size: 16px;
   font-weight: 480;
   color: var(--ui-ink);
+}
+/* The title renames on click: a quiet underline on hover, then a text field in the same type. */
+.stage-title[role='button'] {
+  cursor: text;
+  text-decoration: underline dotted transparent;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.15s;
+}
+.stage-title[role='button']:hover,
+.stage-title[role='button']:focus-visible {
+  outline: none;
+  text-decoration-color: var(--ui-ink-faint);
+}
+.stage-title-input {
+  width: min(420px, 60%);
+  padding: 2px 8px;
+  border: 1px solid var(--ui-accent-border);
+  border-radius: 6px;
+  background: var(--ui-surface);
+  font-family: var(--ui-display);
+  font-size: 16px;
+  font-weight: 480;
+  text-align: center;
+  color: var(--ui-ink);
+  outline: none;
 }
 .stage-file {
   flex-shrink: 0;

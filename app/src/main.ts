@@ -10,6 +10,7 @@ import { createPlayer, must } from './player.ts';
 import { createPresentationMode } from './presentation-mode.ts';
 import { createSlideList } from './slide-list.ts';
 import { makeResizable } from './resizer.ts';
+import { applySavedTitle, makeTitleEditable } from './title.ts';
 import site from './site.ts';
 import { loadPresentation } from './source.ts';
 import { shortcutFor, type ShortcutId } from './shortcuts.ts';
@@ -54,13 +55,20 @@ document.head.append(presentationTheme);
 
 // Authoring aids (the floating menu, the animation list) need the running app, so exported files leave them out.
 const authoring = import.meta.env.MODE !== 'export' && import.meta.env.MODE !== 'template';
-document.title = authoring ? `${presentation.title} · Presentation Viewer` : presentation.title;
+if (authoring && !empty) applySavedTitle(presentation);
+const nameTab = () => {
+  document.title = authoring ? `${presentation.title} · Presentation Viewer` : presentation.title;
+};
+nameTab();
 
 // Above the slide, while editing: the presentation's title and the current slide's file.
 const stageHead = must(document.querySelector('.stage-head'), '.stage-head');
 const stageFile = must(document.querySelector('.stage-file'), '.stage-file');
-if (authoring) must(document.querySelector('.stage-title'), '.stage-title').textContent = presentation.title;
-else stageHead.remove();
+if (authoring) {
+  const stageTitle = must(document.querySelector<HTMLElement>('.stage-title'), '.stage-title');
+  stageTitle.textContent = presentation.title;
+  if (!empty) makeTitleEditable(stageTitle, presentation, nameTab);
+} else stageHead.remove();
 
 const onKey = (e: KeyboardEvent) => {
   if (empty || e.metaKey || e.ctrlKey || e.altKey) return;

@@ -33,7 +33,7 @@ pnpm dev                                   # opens the sample presentation
 node bin/presentation-viewer.ts ../my-talk # opens your own presentation folder
 ```
 
-The viewer runs at http://localhost:4747 and reloads whenever a slide, the theme or `presentation.json` changes.
+The viewer runs at http://localhost:4747 and reloads whenever a slide or the theme changes.
 Add `--port 5000` to use another port, or `--no-open` to skip opening the browser.
 
 To get a `presentation-viewer` command you can run from any folder, run `pnpm link --global` once in this folder.
@@ -44,7 +44,6 @@ A presentation is a folder like this:
 
 ```
 my-talk/
-  presentation.json   { "title": "My talk" }, optional
   theme.css           your colours, optional
   slides/
     01-title.html     one slide; the number sets the order
@@ -52,9 +51,10 @@ my-talk/
     02-agenda.ts      that slide's own animation, optional
 ```
 
-Each slide is one `<section class="slide">` designed for a 1200×675 canvas. Copy `sample/` to start, or have an
+The title is the folder's name; click it above the slide to rename it (the new name is kept in your browser and
+goes into exports). Each slide is one `<section class="slide">` designed for a 1200×675 canvas. Copy `sample/` to start, or have an
 AI agent write one: in the Open dialog, **Create one with an AI agent** asks for a folder and three details (topic,
-audience, length), then writes a starter folder there (the agent's brief as `AGENTS.md`, a title, a theme to fill in
+audience, length), then writes a starter folder there (the agent's brief as `AGENTS.md`, a theme to fill in
 and a welcome slide), copies the brief and opens the folder, so each slide shows up as the agent saves it. Chrome,
 Edge and the local viewer write the folder directly; other browsers download it as a .zip. The brief has the agent
 ask about style and content and agree an outline with you before it writes anything.

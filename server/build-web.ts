@@ -22,7 +22,7 @@ await build({
   base: './',
   mode: 'web',
   logLevel: 'warn',
-  plugins: [presentationPlugin({ folder: join(root, 'sample'), cwd: root }), sitePlugin(site)],
+  plugins: [presentationPlugin({ folder: join(root, 'sample'), cwd: root, label: 'sample' }), sitePlugin(site)],
   resolve: { dedupe: SHARED },
   build: { outDir: dist, emptyOutDir: true },
 });
