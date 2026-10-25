@@ -7,6 +7,7 @@ import {
   FileDown,
   Folder,
   FolderOpen,
+  FolderSearch,
   Info,
   LifeBuoy,
   Map as MapIcon,
@@ -452,7 +453,7 @@ export const mountNav = (
   open.className = 'nav-open';
   open.title = 'Open Presentation folder';
   open.setAttribute('aria-label', 'Open Presentation folder');
-  open.append(icon(FolderOpen));
+  open.append(icon(FolderSearch));
   open.addEventListener('mousedown', (e) => {
     e.preventDefault();
   });
