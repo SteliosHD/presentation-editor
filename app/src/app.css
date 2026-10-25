@@ -495,9 +495,16 @@ button.primary {
     border-color 0.15s,
     background-color 0.15s;
 }
+/* Short screens: a slimmer drop area, so the whole modal still fits. */
+@media (max-height: 760px) {
+  .od-drop {
+    padding-top: 22px;
+    padding-bottom: 20px;
+  }
+}
 /* The Open modal gives its drop area room to breathe on every side. */
 .open-dialog {
-  width: min(580px, calc(100vw - 32px));
+  width: min(680px, calc(100vw - 32px));
 }
 .open-dialog .modal-body {
   gap: 24px;
@@ -571,7 +578,8 @@ button.primary {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  height: 256px;
+  /* Tall enough for the Create form without scrolling, short enough for the whole modal on a laptop screen. */
+  height: clamp(256px, 100vh - 400px, 350px);
   margin-top: -4px;
   font-size: 13px;
   line-height: 1.55;
