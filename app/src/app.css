@@ -1420,6 +1420,8 @@ body.presenting .resize-handle {
   border-radius: 0;
   transform: scale(var(--thumb-scale, 0.15));
   transform-origin: top left;
+  /* The preview sits in a button, whose no-wrap would otherwise keep the slide's text on one line. */
+  white-space: normal;
 }
 .badge {
   position: absolute;
