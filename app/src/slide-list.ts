@@ -2,7 +2,7 @@ import type { Presentation } from 'virtual:presentation';
 import { must, type Player } from './player.ts';
 
 // The slide list on the left: a small, still copy of each slide. Copied before the first slide animates,
-// so each shows its finished state. Slides with their own animation get a "custom" badge.
+// so each shows its finished state. Badges mark slides with their own animation ("custom") and with pop-ups.
 export const createSlideList = (presentation: Presentation, player: Player) => {
   const list = must(document.querySelector<HTMLElement>('.slide-list'), '.slide-list');
   const items = presentation.slides.map((slide, k) => {
@@ -11,7 +11,12 @@ export const createSlideList = (presentation: Presentation, player: Player) => {
     button.innerHTML = `<span class="num">${k + 1}</span><span class="thumb"></span>`;
     const thumb = must(button.querySelector('.thumb'), '.thumb');
     thumb.append(player.elements[k].cloneNode(true));
-    if (slide.animation) thumb.insertAdjacentHTML('beforeend', '<span class="badge">custom</span>');
+    const popups = player.elements[k].querySelectorAll('.popup').length;
+    const badges = [
+      slide.animation ? '<span class="badge">custom</span>' : '',
+      popups ? `<span class="badge badge-popup">${popups > 1 ? `${String(popups)} pop-ups` : 'pop-up'}</span>` : '',
+    ].join('');
+    if (badges) thumb.insertAdjacentHTML('beforeend', `<span class="badges">${badges}</span>`);
     button.title = `${title} (${slide.file})`;
     button.setAttribute('aria-label', `Slide ${k + 1}: ${title}`);
     button.addEventListener('click', () => {

@@ -1423,10 +1423,14 @@ body.presenting .resize-handle {
   /* The preview sits in a button, whose no-wrap would otherwise keep the slide's text on one line. */
   white-space: normal;
 }
-.badge {
+.badges {
   position: absolute;
   top: 5px;
   right: 5px;
+  display: flex;
+  gap: 4px;
+}
+.badge {
   padding: 0 6px;
   border: 1px solid var(--ui-accent-border);
   border-radius: var(--ui-pill);
@@ -1436,6 +1440,10 @@ body.presenting .resize-handle {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ui-accent);
+}
+.badge-popup {
+  border-color: var(--ui-border);
+  color: var(--ui-ink-soft);
 }
 .stage {
   position: relative;
