@@ -84,6 +84,7 @@ kbd {
 }
 .nav-left .menu-button,
 .nav-open,
+.nav-view,
 .nav-folder-chip,
 .nav-github {
   height: 46px;
@@ -99,7 +100,8 @@ kbd {
   gap: 8px;
 }
 .nav-left .menu-button,
-.nav-open {
+.nav-open,
+.nav-view {
   display: grid;
   place-items: center;
   width: 46px;
@@ -108,7 +110,8 @@ kbd {
 }
 .nav-left .menu-button:hover,
 .nav-left .menu-button.on,
-.nav-open:hover {
+.nav-open:hover,
+.nav-view:hover {
   background: var(--ui-surface-raised);
   border-color: var(--ui-border);
   color: var(--ui-ink);
@@ -2197,4 +2200,58 @@ body.presenting .change-note {
   .slide:last-child {
     break-after: auto;
   }
+}
+
+/* Notes view (nav.ts): the slide smaller with its speaker notes under it, the first line of each slide's notes under
+   its preview, and no animation list. Presenting always shows the slide alone. */
+.stage-notes,
+.thumb-note {
+  display: none;
+}
+.nav-view[aria-pressed='true'] {
+  border-color: var(--ui-accent-border);
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent);
+}
+body.notes-view:not(.presenting) .viewport {
+  flex: 0 0 46%;
+}
+body.notes-view:not(.presenting) .stage-notes {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 12px 12px;
+  padding: 18px 24px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-panel);
+  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ui-ink-soft);
+  white-space: pre-wrap;
+}
+body.notes-view:not(.presenting) .anim-strip,
+body.notes-view:not(.presenting) .resize-top,
+body.notes-view:not(.presenting) .pane-toggle-animations {
+  display: none !important;
+}
+body.notes-view:not(.presenting) .stage-foot {
+  margin-bottom: 0;
+}
+body.notes-view .slide-list button {
+  flex-wrap: wrap;
+}
+body.notes-view .thumb-note {
+  display: block;
+  flex-basis: 100%;
+  min-width: 0;
+  padding-left: 22px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ui-sans);
+  font-size: 11px;
+  color: var(--ui-ink-faint);
 }

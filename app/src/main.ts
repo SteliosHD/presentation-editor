@@ -66,6 +66,8 @@ nameTab();
 // Above the slide, while editing: the presentation's title and the current slide's file.
 const stageHead = must(document.querySelector('.stage-head'), '.stage-head');
 const stageFile = must(document.querySelector('.stage-file'), '.stage-file');
+// The notes view's notes, under the slide.
+const stageNotes = must(document.querySelector('.stage-notes'), '.stage-notes');
 if (authoring) {
   const stageTitle = must(document.querySelector<HTMLElement>('.stage-title'), '.stage-title');
   stageTitle.textContent = presentation.title;
@@ -197,6 +199,9 @@ const render = () => {
   shownSlide = k;
   slideList.render(k);
   stageFile.textContent = empty ? '' : presentation.slides[k].file;
+  stageNotes.textContent = empty
+    ? ''
+    : player.elements[k].querySelector('.notes')?.textContent.trim() || 'No notes for this slide.';
   popups?.render(k);
   animationList?.render(k);
   toolbar.render(k, player.elements.length);

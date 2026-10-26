@@ -11,6 +11,9 @@ export const createSlideList = (presentation: Presentation, player: Player) => {
     button.innerHTML = `<span class="num">${k + 1}</span><span class="thumb"></span>`;
     const thumb = must(button.querySelector('.thumb'), '.thumb');
     thumb.append(player.elements[k].cloneNode(true));
+    // The first line of the slide's notes, shown under the preview in the notes view.
+    const note = player.elements[k].querySelector('.notes')?.textContent.trim().split('\n')[0] ?? '';
+    button.append(Object.assign(document.createElement('span'), { className: 'thumb-note', textContent: note }));
     const popups = player.elements[k].querySelectorAll('.popup').length;
     const badges = [
       slide.animation ? '<span class="badge">custom</span>' : '',

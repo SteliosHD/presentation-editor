@@ -8,6 +8,7 @@ import {
   Folder,
   FolderOpen,
   FolderSearch,
+  NotebookText,
   Info,
   LifeBuoy,
   Map as MapIcon,
@@ -465,7 +466,38 @@ export const mountNav = (
     e.preventDefault();
   });
   open.addEventListener('click', dialog.show);
-  $('.nav-left').prepend(menu.root, open);
+  // And a switch to the notes view: each slide smaller with its speaker notes under it, the first line of its notes
+  // under each preview, and no animation list. Remembered in this browser.
+  const VIEW_KEY = 'presentation-viewer:notes-view';
+  const view = document.createElement('button');
+  view.className = 'nav-view';
+  view.append(icon(NotebookText));
+  const setNotesView = (on: boolean) => {
+    document.body.classList.toggle('notes-view', on);
+    view.setAttribute('aria-pressed', String(on));
+    const label = on ? 'Back to the slides view' : 'Notes view: each slide with its speaker notes';
+    view.title = label;
+    view.setAttribute('aria-label', label);
+    try {
+      localStorage.setItem(VIEW_KEY, on ? '1' : '0');
+    } catch {
+      // Storage blocked: the view holds for this visit.
+    }
+  };
+  let saved = false;
+  try {
+    saved = localStorage.getItem(VIEW_KEY) === '1';
+  } catch {
+    // Storage blocked: start in the slides view.
+  }
+  setNotesView(saved);
+  view.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+  });
+  view.addEventListener('click', () => {
+    setNotesView(!document.body.classList.contains('notes-view'));
+  });
+  $('.nav-left').prepend(menu.root, open, view);
 
   // Arriving by a ?sample link counts as trying the sample: the tour follows, and the address loses the request.
   if (linkedToSample()) {

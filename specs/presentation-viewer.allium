@@ -133,6 +133,7 @@ entity Viewer {
     hide_popups: Boolean            -- while editing, keep a slide's pop-ups hidden; on by default
     popups_revealed: Boolean        -- shown on this slide by Replay or a played step, until the slide changes
     show_technical_details: Boolean
+    notes_view: Boolean             -- while editing: the slide smaller with its notes under it, no animation list
     reduced_motion: Boolean         -- from the operating system
     recent_folders: List<Folder>    -- local app only
     ink: Ink with viewer = this
@@ -536,6 +537,12 @@ rule PlayingRevealsPopups {
     ensures: viewer.popups_revealed = true
 }
 
+rule ToggleNotesView {
+    when: NotesViewToggled(viewer)
+    requires: viewer.build = authoring
+    ensures: viewer.notes_view = not viewer.notes_view
+}
+
 rule ToggleTechnicalDetails {
     when: TechnicalDetailsToggled(viewer)
     ensures: viewer.show_technical_details = not viewer.show_technical_details
@@ -823,6 +830,7 @@ surface EditingView {
         StepThroughAllToggled(viewer)
         HidePopupsToggled(viewer) when popups_of(viewer.current).count > 0
         TechnicalDetailsToggled(viewer)
+        NotesViewToggled(viewer)
         ReconnectClicked(viewer) when viewer.watch_state = paused
         ExportRequested(viewer, format) when not viewer.is_empty
 
