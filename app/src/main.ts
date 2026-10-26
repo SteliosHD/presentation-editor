@@ -225,8 +225,10 @@ viewport.addEventListener('pointerup', (e) => {
   swipeFrom = null;
   if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) actions[dx < 0 ? 'next' : 'prev']();
 });
-// While presenting, clicking the slide moves on like →, unless a drawing tool is out or the click was on a control.
-viewport.addEventListener('click', (e) => {
+// While presenting, a click anywhere moves on like →, unless a drawing tool is out or the click was on a control. The
+// strips that hold the drawing tools and the exit button count too: with the laser on the cursor is hidden, so the
+// presenter can't tell they are over one.
+document.addEventListener('click', (e) => {
   if (!present.active() || document.body.classList.contains('inking') || e.button !== 0) return;
   if (e.target instanceof Element && e.target.closest('a, button, input, select, textarea, [contenteditable]')) return;
   actions.next();
