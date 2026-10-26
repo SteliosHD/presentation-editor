@@ -233,16 +233,19 @@ export const createPlayer = (
     d.title = 'Speaker notes';
     d.head.innerHTML = `<meta charset="utf-8">${styles}
       <style>
-        html, body { height: auto; overflow: auto; }
-        body { display: block; margin: 0; padding: 28px 32px; background: var(--bg); color: var(--text);
-          font-family: var(--font); }
+        html, body { height: 100%; overflow: hidden; }
+        body { display: flex; flex-direction: column; box-sizing: border-box; margin: 0; padding: 28px 32px;
+          background: var(--bg); color: var(--text); font-family: var(--font); }
         #n-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
         #n-timer { display: flex; align-items: center; gap: 8px; }
         #n-time { min-width: 5ch; margin-right: 6px; text-align: right; font-family: var(--mono); font-size: 28px;
           font-variant-numeric: tabular-nums; color: var(--text); }
         #n-timer.paused #n-time { color: var(--muted); }
         #n-timer button { padding: 4px 14px; font-size: 13px; }
-        #n-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 44%); gap: 32px; align-items: start; }
+        /* Only the notes scroll: the header stays on top, the shortcuts at the bottom, and the preview in view. */
+        #n-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 44%); gap: 32px; align-items: start;
+          flex: 1; min-height: 0; overflow-y: auto; }
+        #n-top aside { position: sticky; top: 0; }
         #n-preview { position: relative; aspect-ratio: 16 / 9; margin-top: 10px; overflow: hidden;
           border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
         #n-preview .slide { position: absolute; top: 0; left: 0; margin: 0; border: none; border-radius: 0;
@@ -251,7 +254,7 @@ export const createPlayer = (
         #n-title { font-size: 24px; margin: 8px 0 18px; }
         #n-body { font-size: 22px; line-height: 1.5; color: var(--soft); white-space: pre-wrap; }
         #n-next { font-size: 14px; letter-spacing: .04em; color: var(--muted); }
-        #n-keys { margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--line); }
+        #n-keys { flex-shrink: 0; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
         #n-keys h2 { margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: .08em;
           text-transform: uppercase; color: var(--muted); }
         #n-keys dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 28px; margin: 0; }
