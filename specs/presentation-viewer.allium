@@ -926,6 +926,7 @@ open question "Arrow keys and Space change slide and silently wipe a drawing, wh
 open question "A local export renders the folder as it is on disk, not the slides on screen. Is that the contract?"
 open question "Export file names use the folder name even after the title is renamed. Should they follow the title?"
 open question "A PDF shows each slide's static layout. Animations that move elements to a new end state show their start instead. Intended?"
+open question "Two PDF routes exist while the print one (real text, via the browser's print dialog) is tried out; the browser-made one draws slides as pictures. Which stays?"
 open question "Exported HTML always plays entrances and ignores the play-on-slide-change setting. Intended for every export?"
 open question "With reduced motion the animation list hides its steps entirely. Should it still describe them?"
 open question "The server counts a folder with an empty slides folder as a presentation; the browser needs HTML files. Which rule holds?"

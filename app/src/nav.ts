@@ -5,6 +5,7 @@ import {
   createElement,
   FileCode,
   FileDown,
+  FileText,
   Folder,
   FolderOpen,
   FolderSearch,
@@ -35,6 +36,7 @@ import site from './site.ts';
 import { isWeb, linkedToOpen, linkedToSample } from './source.ts';
 import { watchOpened } from './watch.ts';
 import { downloadHtml, downloadPdf } from './web.ts';
+import { printPdf } from './print.ts';
 
 // Buttons floating over the top corners, after Excalidraw. Top left: the menu (open, export, the slide prompt, view
 // settings and help) and a quick way to open a folder. Top right: the folder's name, whether it's live, export status and a link to the source.
@@ -401,6 +403,14 @@ export const mountNav = (
     { label: 'Open Presentation folder', icon: FolderOpen, run: dialog.show },
     { label: 'Export HTML', icon: FileCode, run: exporting('html') },
     { label: 'Export PDF', icon: FileDown, run: exporting('pdf') },
+    {
+      label: 'Export PDF with text (print)',
+      icon: FileText,
+      run: () => {
+        say('In the print dialog, choose Save as PDF');
+        void printPdf(presentation);
+      },
+    },
     'separator',
     { label: 'Slide Creation Prompt', icon: Sparkles, run: prompt.show },
     'separator',
@@ -446,7 +456,7 @@ export const mountNav = (
     },
     { label: 'Why use the Presentation Viewer', icon: Info, run: about.show },
   ]);
-  exportItems = menu.items.slice(1, 3);
+  exportItems = menu.items.slice(1, 4);
   if (empty) exportItems.forEach((b) => (b.disabled = true));
 
   // The menu opens with the app's name, which leads to the site's home page when it has one.

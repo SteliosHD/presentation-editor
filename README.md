@@ -20,7 +20,8 @@ to open: drop your own folder on it, which is read in your browser and never upl
   Animation steps can wait for a click or →, one at a time; ← takes a step back and ↑ ↓ skip to the previous or next
   slide. Pop-ups lay a picture over the slide on its own click.
 - **Export** to one self-contained HTML file that plays anywhere, or to a PDF with one slide per page (plus a page
-  for each pop-up).
+  for each pop-up). "Export PDF with text (print)" makes the PDF through the browser's print dialog (Save as PDF), so
+  its text stays real and selectable wherever the viewer runs.
 - **Slide Creation Prompt** (in the menu): a ready-made prompt that has an AI agent write a whole presentation in this
   format.
 - Works on desktops and tablets; on a phone it shows the slides as a scrolling list.

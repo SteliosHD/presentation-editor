@@ -2166,7 +2166,8 @@ body.presenting .change-note {
     overflow: visible;
   }
   /* Only the slides print; anything else on the page, such as the tooltip, would spill onto an extra page. */
-  body > :not(.app),
+  body > :not(.app, .print-stage),
+  body.printing-text .app,
   .stage-head,
   .stage-foot,
   .anim-strip,
@@ -2199,6 +2200,12 @@ body.presenting .change-note {
   }
   .slide:last-child {
     break-after: auto;
+  }
+}
+/* The print stage (print.ts) exists only while printing, and only the printer sees it. */
+@media screen {
+  .print-stage {
+    display: none;
   }
 }
 
