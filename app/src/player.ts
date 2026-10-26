@@ -102,6 +102,35 @@ export const createPlayer = (
     if (stepper) entrance = stepper.root;
   };
 
+  // What the next click shows, for the presenter's notes: this slide after its next waiting step, else the next slide
+  // as it arrives. Built off-screen from a fresh copy whose animation jumps to that moment, then copied, so the slide
+  // on show is untouched.
+  const upcoming = (): HTMLElement | null => {
+    const waiting = stepper !== null && stepper.shown() < stepper.total;
+    const k = waiting ? i : i + 1;
+    if (k >= slides.length) return null;
+    const stage = document.createElement('div');
+    stage.className = 'pdf-stage';
+    const el = toSlide(slides[k].html);
+    stage.append(el);
+    document.body.append(stage);
+    let animation: gsap.core.Animation | null = null;
+    if (!reduceMotion) {
+      const custom = slides[k].animation;
+      animation = withPopups(el, (custom ?? defaultAnimation)(el, gsap));
+      const mode = stepping();
+      const shown = waiting && stepper ? stepper.shown() + 1 : 0;
+      const ahead = mode && stepThrough(animation, Boolean(custom) && mode.everyStep, shown, true);
+      if (ahead) animation = ahead.root;
+      else finish(animation);
+    }
+    const copy = el.cloneNode(true) as HTMLElement;
+    animation?.revert();
+    stage.remove();
+    copy.classList.add('active');
+    return copy;
+  };
+
   // `built`: arrive with every waiting step already played.
   const show = (n: number, built = false) => {
     n = Math.max(0, Math.min(elements.length - 1, n));
@@ -150,7 +179,20 @@ export const createPlayer = (
     set('n-pos', `Slide ${i + 1} of ${elements.length}${steps}`);
     set('n-title', titleOf(cur));
     set('n-body', cur.querySelector('.notes')?.textContent.trim() || 'No notes for this slide.');
-    set('n-next', next ? `Next: ${titleOf(next)}` : 'Last slide');
+    const waiting = stepper !== null && stepper.shown() < stepper.total;
+    set(
+      'n-next',
+      waiting && stepper
+        ? `Next click: step ${(stepper.shown() + 1).toString()} of ${stepper.total.toString()}`
+        : next
+          ? `Next slide: ${titleOf(next)}`
+          : 'Last slide',
+    );
+    const preview = must(d.getElementById('n-preview'), '#n-preview');
+    const picture = upcoming();
+    preview.replaceChildren(...(picture ? [picture] : []));
+    preview.hidden = !picture;
+    preview.style.setProperty('--ns', (preview.clientWidth / 1200).toFixed(4));
   };
   const notesOpen = () => notesWin !== null && !notesWin.closed;
   const toggleNotes = () => {
@@ -160,27 +202,38 @@ export const createPlayer = (
       onChange();
       return;
     }
-    notesWin = window.open('', `${document.title}-notes`, 'width=760,height=520');
+    notesWin = window.open('', `${document.title}-notes`, 'width=1080,height=620');
     if (!notesWin) {
       alert('The browser blocked the notes window. Allow pop-ups for this page and press N again.');
       return;
     }
-    // The notes window has no stylesheets of its own, so it gets a copy of the theme's :root tokens.
-    const theme = [...document.styleSheets]
-      .flatMap((sheet) => [...sheet.cssRules])
-      .filter((rule) => rule instanceof CSSStyleRule && rule.selectorText === ':root')
-      .map((rule) => rule.cssText)
-      .join('\n');
+    // The notes window has no stylesheets of its own, so it gets the page's: the theme for its colours and the slide
+    // styles for the preview of the next click. Its own rules come after and win.
+    const styles = [
+      ...document.head.querySelectorAll<HTMLLinkElement | HTMLStyleElement>('link[rel="stylesheet"], style'),
+    ]
+      .map((node) =>
+        node instanceof HTMLLinkElement
+          ? `<link rel="stylesheet" href="${node.href}">`
+          : `<style>${node.textContent}</style>`,
+      )
+      .join('');
     const d = notesWin.document;
     d.title = 'Speaker notes';
-    d.head.innerHTML = `<meta charset="utf-8">
+    d.head.innerHTML = `<meta charset="utf-8">${styles}
       <style>
-        ${theme}
-        body { margin: 0; padding: 28px 32px; background: var(--bg); color: var(--text); font-family: var(--font); }
+        html, body { height: auto; overflow: auto; }
+        body { display: block; margin: 0; padding: 28px 32px; background: var(--bg); color: var(--text);
+          font-family: var(--font); }
+        #n-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 44%); gap: 32px; align-items: start; }
+        #n-preview { position: relative; aspect-ratio: 16 / 9; margin-top: 10px; overflow: hidden;
+          border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+        #n-preview .slide { position: absolute; top: 0; left: 0; margin: 0; border: none; border-radius: 0;
+          transform: scale(var(--ns, 0.3)); transform-origin: top left; }
         #n-pos { color: var(--accent); font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
         #n-title { font-size: 24px; margin: 8px 0 18px; }
         #n-body { font-size: 22px; line-height: 1.5; color: var(--soft); white-space: pre-wrap; }
-        #n-next { margin-top: 26px; font-size: 16px; color: var(--muted); }
+        #n-next { font-size: 14px; letter-spacing: .04em; color: var(--muted); }
         #n-keys { margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--line); }
         #n-keys h2 { margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: .08em;
           text-transform: uppercase; color: var(--muted); }
@@ -191,7 +244,10 @@ export const createPlayer = (
         kbd { margin-left: 4px; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px;
           border-radius: 4px; background: var(--card); font-family: var(--mono); font-size: 11px; color: var(--text); }
       </style>`;
-    d.body.innerHTML = `<div id="n-pos"></div><div id="n-title"></div><div id="n-body"></div><div id="n-next"></div>
+    d.body.innerHTML = `<div id="n-top">
+        <div><div id="n-pos"></div><div id="n-title"></div><div id="n-body"></div></div>
+        <aside><div id="n-next"></div><div id="n-preview"></div></aside>
+      </div>
       <section id="n-keys"><h2>Shortcuts</h2><dl></dl></section>`;
     // Every shortcut, read from the one list the key handler uses.
     must(d.querySelector('#n-keys dl'), '#n-keys dl').append(
@@ -206,6 +262,10 @@ export const createPlayer = (
       }),
     );
     d.addEventListener('keydown', onKey);
+    notesWin.addEventListener('resize', () => {
+      const preview = d.getElementById('n-preview');
+      preview?.style.setProperty('--ns', (preview.clientWidth / 1200).toFixed(4));
+    });
     notesWin.addEventListener('pagehide', () => {
       notesWin = null;
       onChange();

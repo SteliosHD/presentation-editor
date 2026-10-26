@@ -13,8 +13,8 @@ to open: drop your own folder on it, which is read in your browser and never upl
 
 - **Slide list** with a live preview of every slide.
 - **Animation list** under the slide: each step of the slide's animation with its timing, targets and icons.
-- **Present** in the browser window, with speaker notes in a separate window, a laser pointer, slide numbers, and a
-  pen, highlighter and eraser for drawing on the slide. Animation steps can wait for a click or →, one at a time;
+- **Present** in the browser window, with speaker notes in a separate window that also previews the next click, a
+  laser pointer, slide numbers, and a pen, highlighter and eraser for drawing on the slide. Animation steps can wait for a click or →, one at a time;
   ← takes a step back and ↑ ↓ skip to the previous or next slide. Pop-ups lay a picture over the slide on its own
   click.
 - **Export** to one self-contained HTML file that plays anywhere, or to a PDF with one slide per page (plus a page

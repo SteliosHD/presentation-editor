@@ -896,6 +896,7 @@ surface SpeakerNotes {
         viewer.waiting_moments
         viewer.current.heading
         viewer.current.notes
+        next_click_preview(viewer)      -- this slide after its next waiting step, else the next slide as it arrives
 
     provides:
         NextRequested(viewer)
