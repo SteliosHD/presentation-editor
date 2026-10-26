@@ -5,6 +5,8 @@ type Options = {
   // The element whose size changes, and where the handle goes.
   target: HTMLElement;
   edge: 'right' | 'top';
+  // Tells apart handles on the same element (the animation list's and the notes'), as a resize-<name> class.
+  name?: string;
   // A CSS custom property on <body> that the stylesheet reads, falling back to its own default.
   property: string;
   key: string;
@@ -13,10 +15,10 @@ type Options = {
   label: string;
 };
 
-export const makeResizable = ({ target, edge, property, key, min, max, label }: Options) => {
+export const makeResizable = ({ target, edge, name, property, key, min, max, label }: Options) => {
   const vertical = edge === 'right';
   const handle = document.createElement('div');
-  handle.className = `resize-handle resize-${edge}`;
+  handle.className = `resize-handle resize-${edge}${name ? ` resize-${name}` : ''}`;
   handle.setAttribute('role', 'separator');
   handle.setAttribute('aria-orientation', vertical ? 'vertical' : 'horizontal');
   handle.setAttribute('aria-label', label);

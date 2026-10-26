@@ -2202,9 +2202,8 @@ body.presenting .change-note {
   }
 }
 
-/* Notes view (nav.ts): the slide smaller with its speaker notes under it, the first line of each slide's notes under
-   its preview, and no animation list. Presenting always shows the slide alone. */
-.stage-notes,
+/* Notes view (nav.ts): the bottom pane holds the slide's speaker notes, taller unless resized, and each preview shows
+   the first line of its notes. */
 .thumb-note {
   display: none;
 }
@@ -2213,32 +2212,19 @@ body.presenting .change-note {
   background: var(--ui-accent-soft);
   color: var(--ui-accent);
 }
-body.notes-view:not(.presenting) .viewport {
-  flex: 0 0 46%;
+body.notes-view .anim-strip {
+  height: var(--notes-user, 38vh);
 }
-body.notes-view:not(.presenting) .stage-notes {
-  display: block;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  margin: 0 12px 12px;
-  padding: 18px 24px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius-card);
-  background: var(--ui-panel);
-  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
-  font-size: 17px;
+body.notes-view .resize-animations,
+body:not(.notes-view) .resize-notes {
+  display: none;
+}
+.strip-notes {
+  margin: 0;
+  font-size: 16px;
   line-height: 1.6;
   color: var(--ui-ink-soft);
   white-space: pre-wrap;
-}
-body.notes-view:not(.presenting) .anim-strip,
-body.notes-view:not(.presenting) .resize-top,
-body.notes-view:not(.presenting) .pane-toggle-animations {
-  display: none !important;
-}
-body.notes-view:not(.presenting) .stage-foot {
-  margin-bottom: 0;
 }
 body.notes-view .slide-list button {
   flex-wrap: wrap;

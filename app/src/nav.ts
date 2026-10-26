@@ -271,11 +271,14 @@ export const mountNav = (
     sidebar: { open: PanelLeftOpen, close: PanelLeftClose, label: 'slide list' },
     animations: { open: PanelBottomOpen, close: PanelBottomClose, label: 'animation list' },
   } as const;
+  // The bottom pane holds the notes in the notes view.
+  const labelOf = (part: keyof typeof TOGGLES) =>
+    part === 'animations' && document.body.classList.contains('notes-view') ? 'notes' : TOGGLES[part].label;
   const toggles = (['sidebar', 'animations'] as const).map((part) => {
     const button = document.createElement('button');
     button.className = `pane-toggle pane-toggle-${part}`;
     button.dataset.part = part;
-    button.setAttribute('aria-label', `Show the ${TOGGLES[part].label}`);
+    button.setAttribute('aria-label', `Show the ${labelOf(part)}`);
     return button;
   });
   const sidebarHead = document.createElement('div');
@@ -290,7 +293,8 @@ export const mountNav = (
       else if (shown) must(document.querySelector('.strip-actions'), '.strip-actions').append(button);
       else must(document.querySelector('.stage-foot'), '.stage-foot').append(button);
       button.setAttribute('aria-pressed', String(shown));
-      button.title = `${shown ? 'Hide' : 'Show'} the ${TOGGLES[part].label}`;
+      button.title = `${shown ? 'Hide' : 'Show'} the ${labelOf(part)}`;
+      button.setAttribute('aria-label', button.title);
       button.replaceChildren(icon(shown ? TOGGLES[part].close : TOGGLES[part].open));
     }
   };
@@ -466,8 +470,8 @@ export const mountNav = (
     e.preventDefault();
   });
   open.addEventListener('click', dialog.show);
-  // And a switch to the notes view: each slide smaller with its speaker notes under it, the first line of its notes
-  // under each preview, and no animation list. Remembered in this browser.
+  // And a switch to the notes view: the bottom pane holds the slide's speaker notes instead of its animation steps,
+  // and each preview shows the first line of its notes. Remembered in this browser.
   const VIEW_KEY = 'presentation-viewer:notes-view';
   const view = document.createElement('button');
   view.className = 'nav-view';
@@ -483,6 +487,8 @@ export const mountNav = (
     } catch {
       // Storage blocked: the view holds for this visit.
     }
+    dispatchEvent(new Event('presentation-viewer:view'));
+    refreshToggles();
   };
   let saved = false;
   try {

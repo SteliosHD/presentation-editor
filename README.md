@@ -13,8 +13,8 @@ to open: drop your own folder on it, which is read in your browser and never upl
 
 - **Slide list** with a live preview of every slide.
 - **Animation list** under the slide: each step of the slide's animation with its timing, targets and icons.
-- **Notes view** (the button beside the folder button): each slide smaller with its speaker notes under it, for
-  rehearsing or editing notes.
+- **Notes view** (the button beside the folder button): the pane under the slide shows its speaker notes instead of
+  its animation steps, and folds and resizes the same way, for rehearsing or editing notes.
 - **Present** in the browser window, with speaker notes in a separate window that also previews the next click and
   times the talk, a laser pointer, slide numbers, and a pen, highlighter and eraser for drawing on the slide.
   Animation steps can wait for a click or →, one at a time; ← takes a step back and ↑ ↓ skip to the previous or next

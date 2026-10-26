@@ -7,7 +7,8 @@ import { must, reduceMotion, type Player } from './player.ts';
 
 // At the bottom of the slide area: every step of the current slide's animation, one per row, read from GSAP. The
 // step that is running lights up; Replay plays the whole animation again, and clicking a step plays just that one.
-// Rows read as plain sentences unless Show technical details is on in the menu's Animations settings.
+// Rows read as plain sentences unless Show technical details is on in the menu's Animations settings. In the notes view
+// (nav.ts) the same pane holds the slide's speaker notes instead, so they fold and resize the same way.
 export const createAnimationList = (
   presentation: Presentation,
   player: Player,
@@ -50,19 +51,38 @@ export const createAnimationList = (
 
   // Rebuilt only when the slide, its animation or the details setting changes, so other redraws (a tool switched
   // on, say) leave a lit row alone.
-  let shown: { current: number; animation: gsap.core.Animation | null; details: boolean } | null = null;
+  let shown: { current: number; animation: gsap.core.Animation | null; details: boolean; notes: boolean } | null = null;
   // Kept across rebuilds, for controls placed in the head from outside (the list's fold switch).
   const actions = el('span', 'strip-actions', '');
   const render = (current: number) => {
     const { details } = animationPrefs.get();
     const animation = player.entrance();
-    if (shown && shown.current === current && shown.animation === animation && shown.details === details) return;
-    shown = { current, animation, details };
+    const notes = document.body.classList.contains('notes-view');
+    if (
+      shown &&
+      shown.current === current &&
+      shown.animation === animation &&
+      shown.details === details &&
+      shown.notes === notes
+    )
+      return;
+    shown = { current, animation, details, notes };
     solo = null;
     if (empty) {
       const head = el('div', 'strip-head', '');
       head.append(el('span', 'strip-title', 'Animations'), actions);
       strip.replaceChildren(head, el('p', 'strip-empty', "Open a presentation to see each slide's animation steps."));
+      return;
+    }
+    if (notes) {
+      const head = el('div', 'strip-head', '');
+      head.append(
+        el('span', 'strip-title', 'Notes'),
+        el('span', 'strip-source', presentation.slides[current].file),
+        actions,
+      );
+      const text = player.elements[current].querySelector('.notes')?.textContent.trim();
+      strip.replaceChildren(head, el('p', text ? 'strip-notes' : 'strip-empty', text || 'No notes for this slide.'));
       return;
     }
     const slide = presentation.slides[current];
@@ -134,8 +154,10 @@ export const createAnimationList = (
     head.append(actions);
     strip.replaceChildren(head, ol);
   };
-  animationPrefs.onChange(() => {
+  const rerender = () => {
     if (shown) render(shown.current);
-  });
+  };
+  animationPrefs.onChange(rerender);
+  addEventListener('presentation-viewer:view', rerender);
   return { strip, render };
 };

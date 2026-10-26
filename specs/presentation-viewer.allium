@@ -133,7 +133,7 @@ entity Viewer {
     hide_popups: Boolean            -- while editing, keep a slide's pop-ups hidden; on by default
     popups_revealed: Boolean        -- shown on this slide by Replay or a played step, until the slide changes
     show_technical_details: Boolean
-    notes_view: Boolean             -- while editing: the slide smaller with its notes under it, no animation list
+    notes_view: Boolean             -- while editing: the bottom pane shows the slide's notes instead of its steps
     reduced_motion: Boolean         -- from the operating system
     recent_folders: List<Folder>    -- local app only
     ink: Ink with viewer = this

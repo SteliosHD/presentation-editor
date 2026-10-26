@@ -67,8 +67,6 @@ nameTab();
 // Above the slide, while editing: the presentation's title and the current slide's file.
 const stageHead = must(document.querySelector('.stage-head'), '.stage-head');
 const stageFile = must(document.querySelector('.stage-file'), '.stage-file');
-// The notes view's notes, under the slide.
-const stageNotes = must(document.querySelector('.stage-notes'), '.stage-notes');
 if (authoring) {
   const stageTitle = must(document.querySelector<HTMLElement>('.stage-title'), '.stage-title');
   stageTitle.textContent = presentation.title;
@@ -171,10 +169,12 @@ makeResizable({
 });
 const popups = authoring && !empty ? createPopupSwitch(player, stageHead) : null;
 const animationList = authoring ? createAnimationList(presentation, player, { empty, onPlay: popups?.reveal }) : null;
-if (animationList)
+// The bottom pane keeps one height for the animation list and another for the notes view's notes.
+if (animationList) {
   makeResizable({
     target: animationList.strip,
     edge: 'top',
+    name: 'animations',
     property: '--strip-user',
     key: 'presentation-viewer:animations-height',
     // Room for the head and two steps.
@@ -182,6 +182,17 @@ if (animationList)
     max: () => Math.min(480, innerHeight * 0.45),
     label: 'Resize the animation list',
   });
+  makeResizable({
+    target: animationList.strip,
+    edge: 'top',
+    name: 'notes',
+    property: '--notes-user',
+    key: 'presentation-viewer:notes-height',
+    min: 110,
+    max: () => innerHeight * 0.7,
+    label: 'Resize the notes',
+  });
+}
 const toolbar = createToolbar(
   {
     notes: { run: player.toggleNotes, isOn: player.notesOpen },
@@ -201,9 +212,6 @@ const render = () => {
   shownSlide = k;
   slideList.render(k);
   stageFile.textContent = empty ? '' : presentation.slides[k].file;
-  stageNotes.textContent = empty
-    ? ''
-    : player.elements[k].querySelector('.notes')?.textContent.trim() || 'No notes for this slide.';
   popups?.render(k);
   animationList?.render(k);
   toolbar.render(k, player.elements.length);
