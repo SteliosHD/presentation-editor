@@ -28,6 +28,13 @@ export const createSlideList = (presentation: Presentation, player: Player) => {
     return button;
   });
 
+  // Scrolls so the next two slides show below the current one, without losing the current one.
+  let shown = 0;
+  const reveal = () => {
+    items[Math.min(shown + 2, items.length - 1)]?.scrollIntoView({ block: 'nearest' });
+    items[shown]?.scrollIntoView({ block: 'nearest' });
+  };
+
   // Previews are 1200x675 slides scaled to the thumbnail's width, which changes with the screen size.
   const first = list.querySelector<HTMLElement>('.thumb');
   if (first) {
@@ -35,11 +42,15 @@ export const createSlideList = (presentation: Presentation, player: Player) => {
       list.style.setProperty('--thumb-scale', (first.clientWidth / 1200).toFixed(4));
     }).observe(first);
   }
+  // The list's room settles after the first render (the menu loads in later), so it scrolls again whenever it changes.
+  const room = list.closest('.sidebar');
+  if (room) new ResizeObserver(reveal).observe(room);
 
   return {
     render: (current: number) => {
       items.forEach((button, k) => button.classList.toggle('active', k === current));
-      items[current].scrollIntoView({ block: 'nearest' });
+      shown = current;
+      reveal();
     },
   };
 };
