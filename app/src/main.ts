@@ -2,6 +2,7 @@ import './theme.css';
 import './ui-theme.css';
 import './slides.css';
 import './app.css';
+import './scrollbars.css';
 import { createAnimationList } from './animation-list.ts';
 import { animationPrefs } from './animation-prefs.ts';
 import { noteChanges, showChanges, type Change } from './changes.ts';
