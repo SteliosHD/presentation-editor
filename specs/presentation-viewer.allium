@@ -905,11 +905,15 @@ surface SpeakerNotes {
         viewer.current.heading
         viewer.current.notes
         next_click_preview(viewer)      -- this slide after its next waiting step, else the next slide as it arrives
+        talk_clock(viewer)              -- how long the talk has run; starts when presenting first opens
 
     provides:
         NextRequested(viewer)
         PreviousRequested(viewer)
         NotesToggled(viewer)
+        TalkClockPaused(viewer)
+        TalkClockResumed(viewer)
+        TalkClockReset(viewer)          -- back to zero; starts again with the next presentation or Start
 }
 
 ------------------------------------------------------------

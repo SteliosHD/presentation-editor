@@ -2,6 +2,7 @@ import { gsap } from 'gsap';
 import { finish, stepThrough, withPopups, type Stepper } from './animations.ts';
 import type { PresentationSlide, SlideAnimation } from 'virtual:presentation';
 import { keyName, SHORTCUTS } from './shortcuts.ts';
+import { clockText, talkTimer } from './timer.ts';
 
 type Point = { x: number; y: number; t: number };
 
@@ -194,6 +195,16 @@ export const createPlayer = (
     preview.hidden = !picture;
     preview.style.setProperty('--ns', (preview.clientWidth / 1200).toFixed(4));
   };
+  const renderTimer = () => {
+    if (!notesWin || notesWin.closed) return;
+    const d = notesWin.document;
+    const time = d.getElementById('n-time');
+    const run = d.getElementById('n-run');
+    if (!time || !run) return;
+    time.textContent = clockText(talkTimer.elapsed());
+    run.textContent = talkTimer.running() ? 'Pause' : talkTimer.elapsed() > 0 ? 'Resume' : 'Start';
+    d.getElementById('n-timer')?.classList.toggle('paused', !talkTimer.running());
+  };
   const notesOpen = () => notesWin !== null && !notesWin.closed;
   const toggleNotes = () => {
     if (notesWin && !notesWin.closed) {
@@ -225,6 +236,12 @@ export const createPlayer = (
         html, body { height: auto; overflow: auto; }
         body { display: block; margin: 0; padding: 28px 32px; background: var(--bg); color: var(--text);
           font-family: var(--font); }
+        #n-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        #n-timer { display: flex; align-items: center; gap: 8px; }
+        #n-time { min-width: 5ch; margin-right: 6px; text-align: right; font-family: var(--mono); font-size: 28px;
+          font-variant-numeric: tabular-nums; color: var(--text); }
+        #n-timer.paused #n-time { color: var(--muted); }
+        #n-timer button { padding: 4px 14px; font-size: 13px; }
         #n-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 44%); gap: 32px; align-items: start; }
         #n-preview { position: relative; aspect-ratio: 16 / 9; margin-top: 10px; overflow: hidden;
           border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
@@ -244,8 +261,14 @@ export const createPlayer = (
         kbd { margin-left: 4px; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px;
           border-radius: 4px; background: var(--card); font-family: var(--mono); font-size: 11px; color: var(--text); }
       </style>`;
-    d.body.innerHTML = `<div id="n-top">
-        <div><div id="n-pos"></div><div id="n-title"></div><div id="n-body"></div></div>
+    d.body.innerHTML = `<header id="n-head">
+        <div id="n-pos"></div>
+        <div id="n-timer" title="How long the talk has run. It starts when you first present.">
+          <span id="n-time"></span><button id="n-run"></button><button id="n-reset">Reset</button>
+        </div>
+      </header>
+      <div id="n-top">
+        <div><div id="n-title"></div><div id="n-body"></div></div>
         <aside><div id="n-next"></div><div id="n-preview"></div></aside>
       </div>
       <section id="n-keys"><h2>Shortcuts</h2><dl></dl></section>`;
@@ -262,11 +285,28 @@ export const createPlayer = (
       }),
     );
     d.addEventListener('keydown', onKey);
+    // The clock's buttons never take focus, so Space and the arrows keep moving the slides.
+    for (const button of d.querySelectorAll('#n-timer button'))
+      button.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+    d.getElementById('n-run')?.addEventListener('click', () => {
+      if (talkTimer.running()) talkTimer.pause();
+      else talkTimer.start();
+      renderTimer();
+    });
+    d.getElementById('n-reset')?.addEventListener('click', () => {
+      talkTimer.reset();
+      renderTimer();
+    });
+    const tick = setInterval(renderTimer, 500);
+    renderTimer();
     notesWin.addEventListener('resize', () => {
       const preview = d.getElementById('n-preview');
       preview?.style.setProperty('--ns', (preview.clientWidth / 1200).toFixed(4));
     });
     notesWin.addEventListener('pagehide', () => {
+      clearInterval(tick);
       notesWin = null;
       onChange();
     });

@@ -16,6 +16,7 @@ import { applySavedTitle, makeTitleEditable } from './title.ts';
 import site from './site.ts';
 import { loadPresentation } from './source.ts';
 import { shortcutFor, type ShortcutId } from './shortcuts.ts';
+import { talkTimer } from './timer.ts';
 import { createToolbar, slideNumbers } from './toolbar.ts';
 
 // Loads the presentation and wires the parts together: player, slide list, toolbar, presentation mode,
@@ -145,6 +146,7 @@ const ink = createInk(must(document.querySelector<HTMLElement>('.slide-stack'), 
 const present = createPresentationMode({
   onChange: (on) => {
     if (!on) ink.stop();
+    if (on) talkTimer.presenting();
     // Entering presentation mode plays the current slide's animation, and leaving shows it as editing does.
     player.replay();
     render();
